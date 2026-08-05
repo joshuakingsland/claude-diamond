@@ -99,14 +99,23 @@ jobs:
           python ledger.py
 
       - name: Commit new quotes
-        if: steps.season.outputs.active == 'true'
+        # always(), because a snapshot already written to disk must be
+        # committed even when a later step failed. The credit floor is the
+        # case that matters: odds.py writes the lines and quotes and only then
+        # exits non-zero, so a success-gated commit would spend the credits,
+        # capture the data, and discard it at exactly the moment credits are
+        # scarce. A missed snapshot is only re-buyable at the historical
+        # price, which is five times the live one. The job still reports
+        # failure; this only stops the data going with it.
+        if: ${{ always() && steps.season.outputs.active == 'true' }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/lines_upcoming.csv data/market_quotes data/credit_log.csv \
-                  data/predictions_upcoming.csv data/weather_forecast.csv \
-                  data/paper_ledger.csv data/paper_rejections.csv
+          # -A over the directory rather than a list of paths: a run that dies
+          # before writing one of them would otherwise fail here on a pathspec
+          # that matches nothing, masking the original error.
+          git add -A data
           if git diff --cached --quiet; then
             echo "No new quotes."
             exit 0
