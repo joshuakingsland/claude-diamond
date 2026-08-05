@@ -1,0 +1,189 @@
+{
+  "games": 9917,
+  "seasons": [
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "moneyline": {
+    "home_win_rate": 0.52839,
+    "log_loss": 0.67937,
+    "log_loss_home_field_baseline": 0.69153,
+    "brier": 0.24318,
+    "calibration_error": 0.02131,
+    "calibration": [
+      {
+        "bin": "0.2-0.3",
+        "n": 141,
+        "predicted": 0.2718,
+        "realised": 0.3475,
+        "error": 0.0757
+      },
+      {
+        "bin": "0.3-0.4",
+        "n": 1102,
+        "predicted": 0.3631,
+        "realised": 0.4102,
+        "error": 0.0471
+      },
+      {
+        "bin": "0.4-0.5",
+        "n": 3384,
+        "predicted": 0.4551,
+        "realised": 0.4811,
+        "error": 0.026
+      },
+      {
+        "bin": "0.5-0.6",
+        "n": 3637,
+        "predicted": 0.5455,
+        "realised": 0.5617,
+        "error": 0.0162
+      },
+      {
+        "bin": "0.6-0.7",
+        "n": 1463,
+        "predicted": 0.6374,
+        "realised": 0.637,
+        "error": -0.0004
+      },
+      {
+        "bin": "0.7-0.8",
+        "n": 184,
+        "predicted": 0.7343,
+        "realised": 0.7283,
+        "error": -0.006
+      }
+    ],
+    "log_loss_ci90_season_clustered": [
+      0.6757,
+      0.68166
+    ]
+  },
+  "runline": {
+    "point": -1.5,
+    "cover_rate": 0.35555,
+    "log_loss": 0.64371,
+    "brier": 0.22602,
+    "calibration_error": 0.05214,
+    "calibration": [
+      {
+        "bin": "0.1-0.2",
+        "n": 60,
+        "predicted": 0.1799,
+        "realised": 0.1667,
+        "error": -0.0133
+      },
+      {
+        "bin": "0.2-0.3",
+        "n": 985,
+        "predicted": 0.2662,
+        "realised": 0.2305,
+        "error": -0.0357
+      },
+      {
+        "bin": "0.3-0.4",
+        "n": 3697,
+        "predicted": 0.3555,
+        "realised": 0.3097,
+        "error": -0.0458
+      },
+      {
+        "bin": "0.4-0.5",
+        "n": 3674,
+        "predicted": 0.4444,
+        "realised": 0.3857,
+        "error": -0.0587
+      },
+      {
+        "bin": "0.5-0.6",
+        "n": 1323,
+        "predicted": 0.5367,
+        "realised": 0.4777,
+        "error": -0.059
+      },
+      {
+        "bin": "0.6-0.7",
+        "n": 171,
+        "predicted": 0.6359,
+        "realised": 0.5322,
+        "error": -0.1038
+      }
+    ]
+  },
+  "total": {
+    "point": 8.5,
+    "over_rate": 0.48674,
+    "log_loss": 0.68945,
+    "brier": 0.24804,
+    "calibration_error": 0.02376,
+    "calibration": [
+      {
+        "bin": "0.2-0.3",
+        "n": 126,
+        "predicted": 0.2738,
+        "realised": 0.4048,
+        "error": 0.1309
+      },
+      {
+        "bin": "0.3-0.4",
+        "n": 1375,
+        "predicted": 0.3649,
+        "realised": 0.4175,
+        "error": 0.0525
+      },
+      {
+        "bin": "0.4-0.5",
+        "n": 4437,
+        "predicted": 0.4553,
+        "realised": 0.4674,
+        "error": 0.0122
+      },
+      {
+        "bin": "0.5-0.6",
+        "n": 3304,
+        "predicted": 0.5384,
+        "realised": 0.5139,
+        "error": -0.0244
+      },
+      {
+        "bin": "0.6-0.7",
+        "n": 502,
+        "predicted": 0.6344,
+        "realised": 0.6275,
+        "error": -0.0069
+      },
+      {
+        "bin": "0.7-0.8",
+        "n": 157,
+        "predicted": 0.7345,
+        "realised": 0.6815,
+        "error": -0.053
+      }
+    ]
+  },
+  "expected_runs": {
+    "home": {
+      "mean_predicted": 4.3861,
+      "mean_actual": 4.4329,
+      "mae": 2.3809,
+      "bias": -0.0468
+    },
+    "away": {
+      "mean_predicted": 4.3101,
+      "mean_actual": 4.4252,
+      "mae": 2.4869,
+      "bias": -0.1152
+    }
+  },
+  "market_comparison": {
+    "status": "unavailable",
+    "reason": "No historical odds are present. Predictive accuracy above says nothing about whether the model beats a price; edge, ROI, and closing-line value all require a priced market to compare against."
+  },
+  "live_gate": {
+    "status": "research_only",
+    "reason": "A market comparison with a season-clustered positive interval is required before any staking discussion. This repository does not place wagers."
+  },
+  "model_kind": "glm"
+}

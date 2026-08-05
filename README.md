@@ -1,0 +1,151 @@
+# claude-diamond
+
+MLB moneyline, run line, and totals modelling with an auditable market
+baseline, point-in-time features, and weather.
+
+This repository does not place wagers and does not claim an edge. It exists
+to answer one question honestly: **does a model beat the price?** Everything
+is arranged so that the answer can be no.
+
+## Why this exists
+
+A sibling project models UFC fights. Its problem is not the model, it is the
+sample: 3,227 fights since 2019, a forward test that produces roughly two
+wagers a month, and a live gate that is years away on current throughput.
+Every methodological question there — is the edge rule right, is the extreme
+bucket real, do sharp books lead — is unanswerable because the evidence
+arrives too slowly.
+
+MLB plays 2,430 regular-season games a year. Five seasons is 12,400 games,
+nearly four times the entire UFC record, and it can be pulled in under a
+minute from a free API. The point is not that baseball is a better bet. It
+is that baseball can *answer questions*, and the methodology is what is
+actually being tested.
+
+## What is established, and what is not
+
+| Question | Status |
+| --- | --- |
+| Does the model predict baseball? | Measurable now — calibration, log loss, Brier against 12,400 real games |
+| Does the model beat a price? | **Unknown.** No historical odds are present |
+| Should anyone stake money? | **No.** The live gate reads `research_only` and there is no path to `live` in this code |
+
+A well-calibrated model that loses money is the *normal* outcome in a liquid
+market. `validation.json` reports `market_comparison: unavailable` rather
+than presenting predictive accuracy as though it were edge, because those are
+different claims and conflating them is the most common way this kind of
+project fools its author.
+
+## Data, all free and keyless
+
+| Source | Used for | Notes |
+| --- | --- | --- |
+| MLB StatsAPI | schedules, results, linescores, probable pitchers, venues | one request per season; no key |
+| Open-Meteo | first-pitch weather, archive and forecast | reanalysis and forecast share units and variables |
+| The Odds API | prices for all three markets | needs `ODDS_API_KEY`; the only paid input |
+
+## Three decisions worth knowing about
+
+**One distribution, three markets.** Moneyline, run line, and total are read
+off a single joint distribution over (home runs, away runs) in `runs.py`.
+Pricing them with three separate models is how you end up quoting a total
+that contradicts your own moneyline and calling the contradiction an edge.
+Runs are modelled as negative binomial rather than Poisson because team runs
+per game have roughly twice the variance a Poisson allows.
+
+**Ties are resolved, not deleted.** Baseball has no draws. Zeroing the
+diagonal of the joint distribution would be the easy fix and would bias every
+total downward, because extra innings add runs. Tied mass is moved into extra
+innings using a home edge and run bump measured from the games themselves.
+
+**Weather comes from one source for training and serving.** StatsAPI reports
+observed conditions, but only once a game is under way. Training on that and
+serving on a forecast would fit the model to information the live path never
+has. Open-Meteo supplies both, so it is the single source of truth, and
+StatsAPI weather is used only to check the join. The same logic governs
+roofs: 1,764 games in 2021-2025 report "Roof Closed", but that is known
+after the fact, so the model sees the park's roof *category* and learns the
+average attenuation instead.
+
+## Point-in-time discipline
+
+`features.py` walks games in date order, emits each feature row from current
+state, and only then folds that game's result into state. A feature
+therefore cannot see its own outcome by construction rather than by care.
+
+This is enforced by a test that rewrites one game into a 30-0 blowout,
+rebuilds, and asserts every feature row up to and including that game is
+byte-identical — and that later rows *did* move, so the test cannot pass on a
+builder that ignores results entirely.
+
+## Layout
+
+```
+config.py     markets, regions, gates, staking policy
+results.py    StatsAPI schedule and result ingestion
+parks.py      venue coordinates, elevation, orientation, roof category
+weather.py    Open-Meteo archive/forecast, wind resolved onto park axes
+features.py   point-in-time feature construction
+runs.py       joint run distribution; the three markets are read off it
+models.py     expected-runs estimators and the pricing layer
+validate.py   walk-forward validation and the honest report
+odds.py       three-market odds capture with paired-book de-vig
+```
+
+## Running it
+
+```bash
+python -m pip install -r requirements.txt
+python parks.py --refresh
+python results.py --seasons 2021-2025
+python weather.py            # resumable; rerun to fill any failed venue
+python features.py
+python validate.py
+PYTHONPATH=. python -m unittest discover -s tests -t .
+```
+
+`weather.py` is resumable by design: a venue that fails a TLS handshake is
+reported and skipped, and rerunning fills only what is missing.
+
+## First result
+
+Walk-forward over 2022-2025, training only on prior seasons. 9,917 games.
+
+| Market | Model log loss | Baseline | Calibration error |
+| --- | ---: | ---: | ---: |
+| Moneyline | **0.67937** | 0.69153 (home-field constant) | 0.021 |
+| Total 8.5 | 0.68945 | — | 0.024 |
+| Run line -1.5 | 0.64371 | — | 0.052 |
+
+The moneyline interval is [0.6757, 0.6817] season-clustered, wholly below the
+baseline. The model predicts baseball. It is **not** established that it beats
+a price, because there are no prices here yet.
+
+### The bug that made this look impossible
+
+The first run scored 0.6954 on the moneyline — worse than a constant. The
+estimator was fine; the *width* of the distribution was measured wrong.
+
+`fit_dispersion` was being handed the model's own training predictions. A
+gradient boosted estimator's in-sample residuals are far too small, so the
+method-of-moments fit concluded the runs were not over-dispersed at all,
+pinned the negative binomial size at its clamp ceiling of 50, and produced a
+run distribution far tighter than baseball. Win probabilities then ran from
+0.05 to 0.97 on games that are close to coin flips, and the calibration table
+showed the damage plainly: games priced at 0.845 came in at 0.593.
+
+Measuring dispersion on a held-out fold instead moved it to 2.4-4.3 and the
+moneyline from 0.6954 to 0.68737 for the same estimator.
+
+The lesson generalises past this repository: an in-sample estimate of
+*uncertainty* is far more dangerous than an in-sample estimate of the mean,
+because it does not look wrong. The point predictions were unbiased the whole
+time — mean predicted runs 4.44 against 4.43 actual.
+
+### Why the linear model wins
+
+The Poisson GLM beats the gradient booster on every market. That is the
+expected result for a low signal-to-noise problem: a single MLB game is close
+to a coin flip, the honest spread of win probability is roughly 0.35-0.65, and
+a flexible learner spends its capacity fitting noise it cannot distinguish
+from signal. `--kind glm` is the default for that reason.
