@@ -178,12 +178,51 @@
     }
   },
   "market_comparison": {
-    "status": "unavailable",
-    "reason": "No historical odds are present. Predictive accuracy above says nothing about whether the model beats a price; edge, ROI, and closing-line value all require a priced market to compare against."
+    "status": "available",
+    "source": "market_comparison.json",
+    "coverage": {
+      "odds_events": 2395,
+      "unmatched_events": 21,
+      "priced_game_markets": 4314,
+      "with_entry": 2471,
+      "with_close": 4191,
+      "median_entry_lead_hours": 24.42,
+      "median_close_lead_hours": 2.91
+    },
+    "close": {
+      "h2h": {
+        "games": 2289,
+        "delta": 0.00542,
+        "delta_ci90_date_clustered": [
+          0.00128,
+          0.00971
+        ],
+        "verdict": "market better; interval excludes zero"
+      },
+      "spreads": {
+        "games": 1272,
+        "delta": 0.00846,
+        "delta_ci90_date_clustered": [
+          0.0033,
+          0.01353
+        ],
+        "verdict": "market better; interval excludes zero"
+      },
+      "totals": {
+        "games": 695,
+        "delta": 0.00191,
+        "delta_ci90_date_clustered": [
+          -0.00462,
+          0.00855
+        ],
+        "verdict": "undecided; interval spans zero"
+      }
+    },
+    "markets_model_beats_close": []
   },
   "live_gate": {
     "status": "research_only",
-    "reason": "A market comparison with a season-clustered positive interval is required before any staking discussion. This repository does not place wagers."
+    "reason": "The model beats the closing price on 0 of 3 markets with an interval excluding zero. Beating a closing price on log loss would in any case be a necessary condition for staking, not a sufficient one: it is measured before vig, stake sizing, and execution. This repository does not place wagers."
   },
   "model_kind": "glm"
 }

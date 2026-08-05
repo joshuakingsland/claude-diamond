@@ -1,0 +1,105 @@
+name: capture odds
+
+# Rolling capture of the upcoming card: one consensus row per game-market and
+# every paired book quote behind it.
+#
+# Cost. The standard odds endpoint bills one credit per region per market, so
+# a run costs len(ODDS_REGIONS) x len(MARKETS) = 2 x 3 = 6 credits and does not
+# scale with the number of games on the card. The schedule below is 13 hourly
+# runs plus 4 half-hour runs in the pre-first-pitch window, so:
+#
+#     17 runs/day x 6 credits = 102 credits/day, about 3,100 a month
+#
+# Tune by deleting cron lines, not by trimming MARKETS: the three markets are
+# read off one joint distribution and capturing them apart would leave the
+# comparison unable to say anything about two of them.
+#
+# Timing. Baseball's decisive information arrives late, so the runs cluster
+# near first pitch. The value of a capture is that some snapshot lands close
+# to the close for every game; the afternoon slate is the known weak spot and
+# the hourly runs from 15:00 UTC exist for it.
+#
+# GitHub only runs scheduled workflows on the default branch, and a schedule
+# is disabled automatically after 60 days without repository activity. A
+# silent gap in the data is a data problem, not just an ops one, so check the
+# manifest rather than assuming the cron is alive.
+
+on:
+  schedule:
+    # Hourly across the card (15:00-03:00 UTC covers afternoon through late
+    # West Coast first pitches).
+    - cron: "5 15-23,0-3 * * *"
+    # Extra ticks where most first pitches actually land, for a tighter close.
+    - cron: "35 22-23,0-1 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  # Two runs writing the same quote log would race on the commit. Queue them
+  # instead of cancelling: a cancelled run is a missing snapshot forever.
+  group: capture-odds
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Skip out of season
+        id: season
+        # The regular season runs late March to early October, postseason to
+        # early November. Polling a dead card burns credits for empty files.
+        run: |
+          month=$(date -u +%m)
+          if [ "$month" = "12" ] || [ "$month" = "01" ] || [ "$month" = "02" ]; then
+            echo "active=false" >> "$GITHUB_OUTPUT"
+            echo "Month $month is out of season; skipping."
+          else
+            echo "active=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.season.outputs.active == 'true'
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        if: steps.season.outputs.active == 'true'
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+
+      - name: Capture odds
+        if: steps.season.outputs.active == 'true'
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+        # --require-key turns a missing secret into a loud failure. Without it
+        # the script exits zero having fetched nothing, and the workflow would
+        # report green for weeks while capturing no data at all.
+        run: python odds.py --require-key
+
+      - name: Commit new quotes
+        if: steps.season.outputs.active == 'true'
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/lines_upcoming.csv data/market_quotes
+          if git diff --cached --quiet; then
+            echo "No new quotes."
+            exit 0
+          fi
+          git commit -m "data: odds snapshot $(date -u +%Y-%m-%dT%H:%MZ)"
+          for attempt in 1 2 3 4; do
+            if git push origin "HEAD:${GITHUB_REF_NAME}"; then
+              exit 0
+            fi
+            echo "push failed (attempt $attempt); rebasing on the remote"
+            git pull --rebase --autostash origin "${GITHUB_REF_NAME}" || exit 1
+            sleep $((2 ** attempt))
+          done
+          echo "could not push after 4 attempts"
+          exit 1

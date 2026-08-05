@@ -6,14 +6,15 @@ distinction is the whole point of the exercise:
 - It CAN establish whether the model predicts baseball. Calibration, log
   loss, and Brier score against realised outcomes need no odds at all.
 - It CANNOT establish whether the model beats a price. Edge, ROI, and
-  closing-line value require historical odds, and until those are present
-  every number here is predictive accuracy only.
+  closing-line value require historical odds, so that question belongs to
+  `market.py` and is imported here rather than inferred from the numbers
+  above.
 
 A model that is well calibrated and still loses money is the normal case in
 a liquid market, so the second question is the one that decides whether any
-of this is worth running. The report says `market_comparison: unavailable`
-until odds exist rather than quietly reporting accuracy as though it were
-edge.
+of this is worth running. The report carries whatever `market.py` last
+concluded, and `unavailable` when it has not run, rather than quietly
+reporting accuracy as though it were edge.
 
 Intervals are bootstrapped over whole seasons, not games. Games within a
 season share teams, parks, a run environment, and a rule set, so treating
@@ -92,7 +93,8 @@ def season_bootstrap(frame, statistic, draws=4000, seed=11):
             round(float(np.percentile(values, 95)), 5)]
 
 
-def evaluate(predictions, games, runline_point=-1.5, total_point=8.5):
+def evaluate(predictions, games, runline_point=-1.5, total_point=8.5,
+             comparison_path="market_comparison.json"):
     """Accuracy of every market the model prices, against realised outcomes."""
     merged = predictions.merge(
         games[["game_pk", "home_score", "away_score", "home_win", "total_runs",
@@ -160,24 +162,70 @@ def evaluate(predictions, games, runline_point=-1.5, total_point=8.5):
             "bias": round(float(np.mean(predicted - actual)), 4),
         }
 
-    report["market_comparison"] = {
-        "status": "unavailable",
-        "reason": (
-            "No historical odds are present. Predictive accuracy above says "
-            "nothing about whether the model beats a price; edge, ROI, and "
-            "closing-line value all require a priced market to compare "
-            "against."
-        ),
+    report["market_comparison"] = market_comparison(comparison_path)
+    report["live_gate"] = live_gate(report["market_comparison"])
+    return report
+
+
+def market_comparison(path):
+    """Read the market comparison if `market.py` has produced one.
+
+    This block used to be a hardcoded `unavailable`, which was true when it
+    was written and quietly false afterwards: historical odds arrived, the
+    comparison ran, and the validation report went on announcing that the
+    question could not be asked. A report that cannot notice its own evidence
+    is worse than one that has none.
+    """
+    path = Path(path)
+    if not path.exists():
+        return {
+            "status": "unavailable",
+            "reason": (
+                "No market comparison found. Predictive accuracy above says "
+                "nothing about whether the model beats a price; edge, ROI, and "
+                "closing-line value all require a priced market to compare "
+                "against. Run `python historical_odds.py` then `python "
+                "market.py` to produce one."
+            ),
+        }
+    comparison = json.loads(path.read_text(encoding="utf-8"))
+    close = comparison.get("close_prob", {})
+    keep = ("games", "delta", "delta_ci90_date_clustered", "verdict")
+    return {
+        "status": "available",
+        "source": str(path),
+        "coverage": comparison.get("coverage"),
+        "close": {market: {key: block[key] for key in keep if key in block}
+                  for market, block in close.items()},
+        "markets_model_beats_close": sorted(
+            market for market, block in close.items()
+            if (block.get("delta_ci90_date_clustered") or [0, 0])[1] < 0),
     }
-    report["live_gate"] = {
+
+
+def live_gate(comparison):
+    """No path to `live` exists in this code; this records why, not whether."""
+    if comparison.get("status") != "available":
+        return {
+            "status": "research_only",
+            "reason": (
+                "A market comparison with a positive clustered interval is "
+                "required before any staking discussion, and none has been "
+                "produced. This repository does not place wagers."
+            ),
+        }
+    beaten = comparison.get("markets_model_beats_close") or []
+    return {
         "status": "research_only",
         "reason": (
-            "A market comparison with a season-clustered positive interval is "
-            "required before any staking discussion. This repository does not "
-            "place wagers."
+            f"The model beats the closing price on {len(beaten)} of "
+            f"{len(comparison.get('close') or {})} markets with an interval "
+            "excluding zero. Beating a closing price on log loss would in any "
+            "case be a necessary condition for staking, not a sufficient one: "
+            "it is measured before vig, stake sizing, and execution. This "
+            "repository does not place wagers."
         ),
     }
-    return report
 
 
 def main():
@@ -187,6 +235,9 @@ def main():
     parser.add_argument("--kind", default="glm", choices=["gbm", "glm"])
     parser.add_argument("--report", default="validation.json")
     parser.add_argument("--predictions", default="data/predictions.csv")
+    parser.add_argument("--market-comparison", default="market_comparison.json",
+                        help="report from market.py; absent is reported as "
+                             "unavailable rather than assumed")
     args = parser.parse_args()
 
     from models import walk_forward
@@ -199,7 +250,7 @@ def main():
     if not len(predictions):
         raise SystemExit("no predictions produced")
     predictions.to_csv(args.predictions, index=False)
-    report = evaluate(predictions, games)
+    report = evaluate(predictions, games, comparison_path=args.market_comparison)
     report["model_kind"] = args.kind
     Path(args.report).write_text(json.dumps(report, indent=2), encoding="utf-8")
     summary = {key: report[key] for key in ("games", "seasons", "model_kind")}

@@ -5,11 +5,21 @@ baseball. This measures whether it beats a price, which is a different and
 much harder claim.
 
 The join is the delicate part. Odds carry sportsbook team names and a
-commence time; games carry MLBAM ids and an official date. They are matched
-on (date, home team, away team) after normalising names, and a game that does
-not match exactly is dropped rather than guessed at. A mismatched join would
-attach one game's price to another game's outcome and manufacture edge out of
-nothing.
+commence time; games carry MLBAM ids and a scheduled UTC start. They are
+matched on the team pair plus the closest scheduled start, and an odds event
+with no game within `MAX_START_DRIFT_HOURS` is dropped rather than guessed at.
+A mismatched join would attach one game's price to another game's outcome and
+manufacture edge out of nothing.
+
+Matching on the start time rather than on a calendar date is not fussiness.
+An 19:10 Pacific first pitch is 02:10 UTC the following day, so a date-keyed
+join loses every late West Coast game — and it loses them non-randomly, which
+is worse than losing them at random. Start-time matching also separates the
+two halves of a doubleheader, which share a date and a team pair and would
+otherwise collapse onto whichever game was seen first.
+
+Unmatched events are counted in full and reported. A join that quietly drops
+part of the card produces a comparison over a sample nobody chose.
 
 Each game gets two prices where available:
 
@@ -32,11 +42,30 @@ import pandas as pd
 
 MIN_ENTRY_LEAD_HOURS = 20
 
+# How far an odds event's advertised start may sit from a scheduled game
+# before the two are considered different games. Books and StatsAPI agree on
+# first pitch to within minutes; a gap of hours means a postponement, and the
+# price was struck on a game that did not happen then.
+MAX_START_DRIFT_HOURS = 12
+
+# Books and StatsAPI disagree on two franchises, and neither disagreement is
+# cosmetic. StatsAPI dropped the city from the Athletics' name for 2025 while
+# the books carried "Oakland Athletics" all season, so an unmapped name takes
+# every A's game out of the sample. Cleveland renamed inside the training
+# span, so the same key has to cover both spellings.
+TEAM_ALIASES = {
+    "oakland athletics": "athletics",
+    "sacramento athletics": "athletics",
+    "las vegas athletics": "athletics",
+    "cleveland indians": "cleveland guardians",
+}
+
 
 def normalise(name):
     """Team name to a comparable key. Books and StatsAPI mostly agree."""
     name = re.sub(r"[^a-z ]", "", str(name).lower()).strip()
-    return re.sub(r"\s+", " ", name)
+    name = re.sub(r"\s+", " ", name)
+    return TEAM_ALIASES.get(name, name)
 
 
 def _devig_consensus(quotes, market, point=None):
@@ -47,6 +76,39 @@ def _devig_consensus(quotes, market, point=None):
     if not len(subset):
         return None, 0
     return float(subset["devig_prob_home"].median()), int(subset["book_key"].nunique())
+
+
+def match_events_to_games(events, games):
+    """Map each odds event to a game_pk by team pair and scheduled start.
+
+    Each game is claimed at most once. Two events for the same team pair on
+    the same day are the two halves of a doubleheader, and letting both claim
+    the earlier game would score one set of prices against the wrong result.
+    Events are considered in start order so the earlier price meets the
+    earlier game.
+    """
+    schedule = {}
+    for game in games.to_dict("records"):
+        schedule.setdefault((game["home_key"], game["away_key"]), []).append(game)
+
+    matched, unmatched, claimed = {}, [], set()
+    for event in events.sort_values("commence").to_dict("records"):
+        best, best_gap = None, None
+        for game in schedule.get((event["home_key"], event["away_key"]), []):
+            if game["game_pk"] in claimed or pd.isna(game["start"]):
+                continue
+            gap = abs((event["commence"] - game["start"]).total_seconds()) / 3600.0
+            if gap > MAX_START_DRIFT_HOURS:
+                continue
+            if best_gap is None or gap < best_gap:
+                best, best_gap = game, gap
+        if best is None:
+            unmatched.append((event["commence"].strftime("%Y-%m-%d"),
+                              event["home_key"], event["away_key"]))
+            continue
+        claimed.add(best["game_pk"])
+        matched[event["event_id"]] = (best["game_pk"], best["official_date"])
+    return matched, unmatched
 
 
 def build_priced_games(quotes, games, min_books=3):
@@ -62,37 +124,41 @@ def build_priced_games(quotes, games, min_books=3):
                             .dt.total_seconds() / 3600.0)
     quotes["home_key"] = quotes["home_team"].map(normalise)
     quotes["away_key"] = quotes["away_team"].map(normalise)
-    quotes["date"] = quotes["commence"].dt.strftime("%Y-%m-%d")
 
     games = games.copy()
     games["home_key"] = games["home_team_name"].map(normalise)
     games["away_key"] = games["away_team_name"].map(normalise)
-    lookup = {}
-    for row in games.to_dict("records"):
-        lookup.setdefault(
-            (row["official_date"], row["home_key"], row["away_key"]), row)
+    games["start"] = pd.to_datetime(games["game_date_utc"], utc=True,
+                                    errors="coerce")
 
-    rows, unmatched = [], set()
-    grouped = quotes.groupby(["date", "home_key", "away_key"])
-    for (date, home_key, away_key), group in grouped:
-        game = lookup.get((date, home_key, away_key))
-        if game is None:
-            unmatched.add((date, home_key, away_key))
+    events = quotes.drop_duplicates("event_id")[
+        ["event_id", "home_key", "away_key", "commence"]]
+    matched, unmatched = match_events_to_games(events, games)
+
+    rows = []
+    for event_id, group in quotes.groupby("event_id"):
+        target = matched.get(event_id)
+        if target is None:
             continue
+        game_pk, official_date = target
         entry_pool = group[group["lead_hours"] >= MIN_ENTRY_LEAD_HOURS]
         close_pool = group
         for market, point in (("h2h", None), ("spreads", -1.5), ("totals", 8.5)):
-            record = {"game_pk": game["game_pk"], "official_date": date,
+            record = {"game_pk": game_pk, "official_date": official_date,
                       "market": market, "point": point}
             for label, pool in (("entry", entry_pool), ("close", close_pool)):
                 if not len(pool):
                     record[f"{label}_prob"], record[f"{label}_books"] = None, 0
                     continue
-                target = (pool["taken"].min() if label == "entry"
-                          else pool["taken"].max())
-                snap = pool[pool["taken"] == target]
+                target_time = (pool["taken"].min() if label == "entry"
+                               else pool["taken"].max())
+                snap = pool[pool["taken"] == target_time]
                 probability, books = _devig_consensus(snap, market, point)
-                record[f"{label}_prob"] = probability
+                # A consensus thinner than the gate is not a market price.
+                # Gating per column rather than per row matters because a game
+                # can carry a well-covered entry and a one-book close, and the
+                # comparison must not read that single book as the close.
+                record[f"{label}_prob"] = probability if books >= min_books else None
                 record[f"{label}_books"] = books
                 record[f"{label}_lead_hours"] = round(
                     float(snap["lead_hours"].iloc[0]), 2) if len(snap) else None
@@ -101,7 +167,7 @@ def build_priced_games(quotes, games, min_books=3):
     if len(frame):
         frame = frame[(frame["entry_books"] >= min_books)
                       | (frame["close_books"] >= min_books)]
-    return frame, sorted(unmatched)[:20]
+    return frame, unmatched
 
 
 def log_loss(probability, outcome):
@@ -109,6 +175,53 @@ def log_loss(probability, outcome):
     outcome = np.asarray(outcome, dtype=float)
     return float(-np.mean(outcome * np.log(probability)
                           + (1 - outcome) * np.log(1 - probability)))
+
+
+def delta_interval(frame, model_column, price_column, outcome, draws=2000,
+                   seed=11):
+    """90% interval on the model-minus-market log loss gap, clustered by date.
+
+    A bare point estimate of the gap is the trap this whole repository is
+    built to avoid. On one season of prices the totals gap came to -0.00007,
+    which flips `model_beats_market` to true and means nothing whatsoever.
+    Resampling is by slate rather than by game because games on the same day
+    share a run environment, a set of starters, and a market state.
+    """
+    dates = frame["official_date"].to_numpy()
+    unique = np.unique(dates)
+    if len(unique) < 10:
+        return None
+    positions = {date: np.flatnonzero(dates == date) for date in unique}
+    model = frame[model_column].to_numpy(dtype=float)
+    market = frame[price_column].to_numpy(dtype=float)
+    outcome = np.asarray(outcome, dtype=float)
+
+    rng = np.random.default_rng(seed)
+    values = []
+    for _ in range(draws):
+        picked = rng.choice(unique, len(unique), replace=True)
+        index = np.concatenate([positions[date] for date in picked])
+        drawn = outcome[index]
+        if drawn.min() == drawn.max():
+            continue
+        values.append(log_loss(model[index], drawn)
+                      - log_loss(market[index], drawn))
+    if len(values) < 100:
+        return None
+    return [round(float(np.percentile(values, 5)), 5),
+            round(float(np.percentile(values, 95)), 5)]
+
+
+def verdict(interval):
+    """Read the interval, not the sign of the point estimate."""
+    if interval is None:
+        return "insufficient sample for an interval"
+    low, high = interval
+    if low > 0:
+        return "market better; interval excludes zero"
+    if high < 0:
+        return "model better; interval excludes zero"
+    return "undecided; interval spans zero"
 
 
 def compare(priced, predictions, games, price_column="close_prob"):
@@ -139,6 +252,7 @@ def compare(priced, predictions, games, price_column="close_prob"):
         outcome = outcome_fn(subset).to_numpy()
         model = subset[column].to_numpy(dtype=float)
         market_probability = subset[price_column].to_numpy(dtype=float)
+        interval = delta_interval(subset, column, price_column, outcome)
         report[market] = {
             "games": int(len(subset)),
             "price": price_column,
@@ -146,10 +260,12 @@ def compare(priced, predictions, games, price_column="close_prob"):
             "log_loss_market": round(log_loss(market_probability, outcome), 5),
             "delta": round(log_loss(model, outcome)
                            - log_loss(market_probability, outcome), 5),
+            "delta_ci90_date_clustered": interval,
             "mean_abs_disagreement_pts": round(
                 float(np.mean(np.abs(model - market_probability)) * 100), 3),
             "model_beats_market": bool(
                 log_loss(model, outcome) < log_loss(market_probability, outcome)),
+            "verdict": verdict(interval),
         }
     return report
 
@@ -166,10 +282,15 @@ def main():
     games = pd.read_csv(args.games)
     predictions = pd.read_csv(args.predictions)
     priced, unmatched = build_priced_games(quotes, games)
+    events = quotes["event_id"].nunique()
     print(f"{len(quotes)} quotes -> {len(priced)} priced game-markets")
     if unmatched:
-        print(f"unmatched keys (first {len(unmatched)}): {unmatched[:5]}")
+        print(f"unmatched odds events: {len(unmatched)} of {events} "
+              f"({100.0 * len(unmatched) / max(events, 1):.1f}%); "
+              f"first: {unmatched[:5]}")
     coverage = {
+        "odds_events": int(events),
+        "unmatched_events": len(unmatched),
         "priced_game_markets": int(len(priced)),
         "with_entry": int((priced["entry_books"] >= 3).sum()) if len(priced) else 0,
         "with_close": int((priced["close_books"] >= 3).sum()) if len(priced) else 0,

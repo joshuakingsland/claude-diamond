@@ -1,0 +1,92 @@
+name: backfill historical odds
+
+# The historical endpoint is the only genuinely expensive thing this project
+# touches: it bills markets x regions x 10, so one snapshot of three markets
+# in one region costs 30 credits. A full season at one snapshot a day is
+# roughly 186 requests, about 5,600 credits.
+#
+# This workflow is therefore manual, capped, and defaults to a dry run. The
+# cap in historical_odds.py is checked before every call, and every completed
+# snapshot is written to the manifest immediately, so a run that stops halfway
+# resumes instead of paying twice.
+
+on:
+  workflow_dispatch:
+    inputs:
+      start:
+        description: "First snapshot date (YYYY-MM-DD)"
+        required: true
+        default: "2025-03-27"
+      end:
+        description: "Last snapshot date (YYYY-MM-DD)"
+        required: true
+        default: "2025-09-28"
+      max_requests:
+        description: "Hard ceiling on requests this run (~30 credits each)"
+        required: true
+        default: "10"
+      dry_run:
+        description: "Report what it would cost without spending anything"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  # Two backfills over overlapping ranges would both miss the other's manifest
+  # rows and buy the same snapshots twice.
+  group: backfill-odds
+  cancel-in-progress: false
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+
+      - name: Backfill
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+        run: |
+          python historical_odds.py \
+            --start "${{ inputs.start }}" \
+            --end "${{ inputs.end }}" \
+            --max-requests "${{ inputs.max_requests }}" \
+            ${{ inputs.dry_run && '--dry-run' || '' }}
+
+      - name: Commit snapshots
+        if: ${{ !inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/historical_quotes.csv data/historical_manifest.csv
+          if git diff --cached --quiet; then
+            echo "No new snapshots."
+            exit 0
+          fi
+          git commit -m "data: historical odds ${{ inputs.start }}..${{ inputs.end }}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+
+      - name: Report spend
+        if: ${{ !inputs.dry_run }}
+        # Credits are read back from the response headers, so this is what was
+        # actually billed rather than an estimate.
+        run: |
+          python - <<'PY'
+          import csv, pathlib
+          rows = list(csv.DictReader(pathlib.Path("data/historical_manifest.csv").open()))
+          spent = sum(int(r["credits_used"] or 0) for r in rows)
+          left = rows[-1]["credits_remaining"] if rows else "unknown"
+          print(f"{len(rows)} snapshots captured, {spent} credits spent, {left} remaining")
+          PY

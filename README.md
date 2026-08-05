@@ -26,15 +26,15 @@ actually being tested.
 
 | Question | Status |
 | --- | --- |
-| Does the model predict baseball? | Measurable now — calibration, log loss, Brier against 12,400 real games |
-| Does the model beat a price? | **Unknown.** No historical odds are present |
+| Does the model predict baseball? | **Yes.** Calibration, log loss, Brier against 12,400 real games |
+| Does the model beat a price? | **No.** 186 days of 2025 prices; the close wins on the moneyline and run line with intervals excluding zero |
 | Should anyone stake money? | **No.** The live gate reads `research_only` and there is no path to `live` in this code |
 
 A well-calibrated model that loses money is the *normal* outcome in a liquid
-market. `validation.json` reports `market_comparison: unavailable` rather
-than presenting predictive accuracy as though it were edge, because those are
-different claims and conflating them is the most common way this kind of
-project fools its author.
+market, and that is what happened here. The two claims are reported
+separately — `validate.py` imports the market verdict from `market.py` rather
+than inferring it from accuracy — because conflating them is the most common
+way this kind of project fools its author.
 
 ## Data, all free and keyless
 
@@ -90,7 +90,32 @@ runs.py       joint run distribution; the three markets are read off it
 models.py     expected-runs estimators and the pricing layer
 validate.py   walk-forward validation and the honest report
 odds.py       three-market odds capture with paired-book de-vig
+historical_odds.py  capped, resumable historical snapshots
+market.py     joins prices to predictions; asks whether the model beats them
 ```
+
+## Automation
+
+| Workflow | Trigger | What it does |
+| --- | --- | --- |
+| `tests.yml` | push, PR | Unit tests, plus a check that odds capture exits clean with no key |
+| `odds.yml` | hourly 15:00-03:00 UTC in season | Captures the upcoming card; commits lines and quotes |
+| `backfill-odds.yml` | manual | Capped historical capture; dry run by default |
+| `revalidate.yml` | weekly, manual | Rebuilds features, re-runs the comparison and validation |
+
+`odds.yml` needs an `ODDS_API_KEY` repository secret and runs
+`odds.py --require-key`, so a missing secret fails loudly rather than
+reporting green while capturing nothing.
+
+Capture costs one credit per region per market, so 6 per run and about 3,100 a
+month on the schedule above; it does not scale with the size of the card. The
+historical endpoint is far more expensive at 30 credits per snapshot, which is
+why the backfill is manual, capped, and resumable from its manifest.
+
+Scheduled workflows only run on the default branch, and GitHub disables them
+after 60 days without repository activity. A gap in `data/market_quotes/` is a
+data problem, not only an ops one, so check the files rather than trusting the
+cron.
 
 ## Running it
 
@@ -100,9 +125,12 @@ python parks.py --refresh
 python results.py --seasons 2021-2025
 python weather.py            # resumable; rerun to fill any failed venue
 python features.py
+python market.py             # before validate.py, which imports its verdict
 python validate.py
 PYTHONPATH=. python -m unittest discover -s tests -t .
 ```
+
+Or `./run_pipeline.sh`, which runs the same chain in the same order.
 
 `weather.py` is resumable by design: a venue that fails a TLS handshake is
 reported and skipped, and rerunning fills only what is missing.
@@ -118,8 +146,54 @@ Walk-forward over 2022-2025, training only on prior seasons. 9,917 games.
 | Run line -1.5 | 0.64371 | — | 0.052 |
 
 The moneyline interval is [0.6757, 0.6817] season-clustered, wholly below the
-baseline. The model predicts baseball. It is **not** established that it beats
-a price, because there are no prices here yet.
+baseline. The model predicts baseball.
+
+## Second result: it does not beat the price
+
+186 daily snapshots across the 2025 season, 2,395 priced events, joined to
+games on the team pair and the scheduled start. Model minus market log loss,
+so **positive means the market is better**, with a 90% interval resampled over
+slates rather than games.
+
+| Market | Games | Δ log loss vs close | 90% interval | Verdict |
+| --- | ---: | ---: | :---: | --- |
+| Moneyline | 2,289 | +0.00542 | [0.0013, 0.0097] | Market better |
+| Run line -1.5 | 1,272 | +0.00846 | [0.0033, 0.0135] | Market better |
+| Total 8.5 | 695 | +0.00191 | [-0.0046, 0.0086] | Undecided |
+
+This is the answer the repository was built to be able to receive. A model
+that beats a home-field constant by 0.012 of log loss loses to the closing
+price by 0.005, on the same games, in the same season. Nothing here is
+evidence of edge.
+
+The totals row is the one worth staring at. Against the *entry* price the
+model is ahead by 0.00007 of log loss, which sets `model_beats_market: true`
+and means nothing whatsoever — its interval is [-0.0075, 0.0073]. A boolean
+comparison of two point estimates is exactly the trap the rest of this
+project is arranged to avoid, so `market.py` now reports the interval and a
+verdict beside the flag.
+
+### The join that was hiding a tenth of the card
+
+The first comparison ran on 3,601 game-markets. It should have been 4,314.
+Two mechanical failures were dropping 9.5% of priced events, and neither was
+visible in the output, because a dropped game leaves a smaller clean sample
+rather than an error:
+
+- **The Athletics rename.** StatsAPI dropped the city for 2025 while the books
+  carried "Oakland Athletics" all season, so every A's game — 129 keys — fell
+  out of the join.
+- **UTC date rollover.** The join keyed on the UTC calendar date of first
+  pitch, but a 19:10 Pacific start is 02:10 UTC the *next* day. That removed
+  68 more, and removed them non-randomly: late West Coast games only.
+
+Matching on the team pair plus the closest scheduled start fixes both, and
+separates the two halves of a doubleheader as a side effect. Unmatched events
+fell from 201 to 21, and the corrected sample moved the moneyline gap *against*
+the model, from +0.0038 to +0.0054.
+
+The lesson rhymes with the dispersion bug below: the dangerous errors are the
+ones that leave the output looking reasonable.
 
 ### The bug that made this look impossible
 

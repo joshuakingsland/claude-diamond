@@ -1,0 +1,114 @@
+name: revalidate
+
+# Rebuild the whole chain and re-answer both questions: does the model predict
+# baseball (validate.py), and does it beat a price (market.py).
+#
+# The order is not arbitrary. market.py has to run before validate.py, because
+# validate.py imports the comparison rather than recomputing it, and a
+# validation report written first would carry the previous run's verdict.
+#
+# Nothing here touches the odds API. It reads the quotes already captured, so
+# it costs nothing to run and can be re-run freely after a code change.
+
+on:
+  schedule:
+    # Monday 08:00 UTC, after the weekend slate has settled.
+    - cron: "0 8 * * 1"
+  workflow_dispatch:
+    inputs:
+      seasons:
+        description: "Seasons to ingest, e.g. 2021-2025"
+        required: true
+        default: "2021-2025"
+      refresh_results:
+        description: "Re-pull schedules and results from StatsAPI"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: revalidate
+  cancel-in-progress: false
+
+jobs:
+  revalidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+
+      - name: Refresh results
+        # On a schedule `inputs` is empty, and an empty string compares equal
+        # to false in GitHub expressions, so the trigger has to be checked
+        # explicitly or the weekly run would silently skip ingestion.
+        if: ${{ github.event_name == 'schedule' || inputs.refresh_results }}
+        run: python results.py --seasons "${{ inputs.seasons || '2021-2025' }}"
+
+      - name: Fill weather
+        # Resumable by design: a venue that fails a TLS handshake is skipped
+        # and refilled on the next attempt, so retrying is the fix rather than
+        # a workaround.
+        run: |
+          for attempt in 1 2 3 4; do
+            python weather.py && break
+            echo "weather attempt $attempt incomplete; resuming"
+            sleep $((attempt * 5))
+          done
+
+      - name: Build point-in-time features
+        run: python features.py
+
+      - name: Compare against the market
+        # Runs first so validate.py reads a current verdict rather than a
+        # stale one.
+        run: python market.py
+
+      - name: Validate
+        run: |
+          python validate.py --kind glm --report validation_glm.json \
+            --predictions data/predictions_glm.csv
+          python validate.py --kind gbm --report validation_gbm.json \
+            --predictions data/predictions_gbm.csv
+
+      - name: Summarise
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          report = json.loads(pathlib.Path("validation_glm.json").read_text())
+          print(f"games {report['games']} seasons {report['seasons']}")
+          for market in ("moneyline", "runline", "total"):
+              block = report.get(market)
+              if block:
+                  print(f"{market}: log_loss={block['log_loss']} "
+                        f"calibration_error={block['calibration_error']}")
+          comparison = report["market_comparison"]
+          print(f"market comparison: {comparison['status']}")
+          for market, block in (comparison.get("close") or {}).items():
+              print(f"  close {market}: n={block['games']} "
+                    f"delta={block['delta']} {block['verdict']}")
+          print(f"live gate: {report['live_gate']['status']}")
+          PY
+
+      - name: Commit reports
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data validation_glm.json validation_gbm.json market_comparison.json
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+            exit 0
+          fi
+          git commit -m "data: revalidate $(date -u +%Y-%m-%d)"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
