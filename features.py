@@ -19,6 +19,7 @@ from collections import defaultdict, deque
 import numpy as np
 import pandas as pd
 
+from parks import venue_key
 from weather import air_density_index
 
 # League-average runs per team per game, used only as a prior before a team
@@ -180,7 +181,7 @@ def build(games, parks, weather=None):
         date = pd.Timestamp(game["official_date"])
         home_sp = pitchers[str(game.get("home_sp_id"))]
         away_sp = pitchers[str(game.get("away_sp_id"))]
-        venue = str(game["venue_id"])
+        venue = venue_key(game["venue_id"])
         park = parks.get(venue, {})
         league_mean = (league_runs / league_games) if league_games else PRIOR_RUNS * 2
         park_factor = park_states[venue].factor(league_mean)

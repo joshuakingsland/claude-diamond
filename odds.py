@@ -208,6 +208,15 @@ def consensus_lines(event, paired=None):
 
 
 def fetch_region(key, region, markets=MARKETS, timeout=30):
+    """Return ``(events, credits)``, matching ``historical_odds._request``.
+
+    The credit headers used to be discarded here. That left the cheap path
+    blind to a budget the expensive path was tracking carefully, which matters
+    because both draw on one quota: a backfill at 30 credits a snapshot can
+    drain the account, and the only symptom on this side is a capture that
+    stops returning data. A missing snapshot cannot be bought back later at
+    the live price.
+    """
     query = urllib.parse.urlencode({
         "apiKey": key,
         "regions": region,
@@ -217,7 +226,10 @@ def fetch_region(key, region, markets=MARKETS, timeout=30):
     request = urllib.request.Request(f"{API}?{query}",
                                      headers={"Accept": "application/json"})
     with urllib.request.urlopen(request, timeout=timeout) as response:
-        return json.load(response)
+        return json.load(response), {
+            "credits_used": response.headers.get("x-requests-last"),
+            "credits_remaining": response.headers.get("x-requests-remaining"),
+        }
 
 
 def collect_events(key, regions=ODDS_REGIONS, fetch=None):
@@ -226,13 +238,18 @@ def collect_events(key, regions=ODDS_REGIONS, fetch=None):
     Priced regions are read first so a book listed in more than one region
     keeps its priced quote and the consensus cannot depend on which region
     answered first.
+
+    Returns ``(events, credits)``. ``fetch`` must return ``(events, credits)``
+    for one region.
     """
     fetch = fetch_region if fetch is None else fetch
     ordered = ([r for r in regions if r in PRICED_ODDS_REGIONS]
                + [r for r in regions if r not in PRICED_ODDS_REGIONS])
-    merged = {}
+    merged, credits = {}, []
     for region in ordered:
-        for event in fetch(key, region):
+        events, spend = fetch(key, region)
+        credits.append({"region": region, **spend})
+        for event in events:
             event_id = event.get("id", "")
             slot = merged.setdefault(event_id,
                                      {"event": event, "paired": [], "seen": set()})
@@ -242,7 +259,7 @@ def collect_events(key, regions=ODDS_REGIONS, fetch=None):
                     continue
                 slot["seen"].add(fingerprint)
                 slot["paired"].append(quote)
-    return [(slot["event"], slot["paired"]) for slot in merged.values()]
+    return [(slot["event"], slot["paired"]) for slot in merged.values()], credits
 
 
 def _quote_rows(event, paired, stamp):
@@ -296,11 +313,49 @@ def append_quote_log(path, rows):
     _write_atomic(path, QUOTE_FIELDS, normalized)
 
 
+CREDIT_FIELDS = ["fetched_at", "region", "credits_used", "credits_remaining"]
+
+
+def record_credits(path, stamp, credits):
+    """Append this run's spend and return the lowest remaining balance seen.
+
+    The balance is what the API reports, not a local tally, so spend from any
+    other project on the same key shows up here too.
+    """
+    rows, balances = [], []
+    for entry in credits:
+        rows.append({
+            "fetched_at": stamp,
+            "region": entry.get("region", ""),
+            "credits_used": entry.get("credits_used") or "",
+            "credits_remaining": entry.get("credits_remaining") or "",
+        })
+        try:
+            balances.append(int(entry.get("credits_remaining")))
+        except (TypeError, ValueError):
+            continue
+    if rows:
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        write_header = not path.exists() or path.stat().st_size == 0
+        with path.open("a", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=CREDIT_FIELDS,
+                                    extrasaction="ignore")
+            if write_header:
+                writer.writeheader()
+            writer.writerows(rows)
+    return min(balances) if balances else None
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("--require-key", action="store_true")
     parser.add_argument("--lines", default="data/lines_upcoming.csv")
     parser.add_argument("--quotes-dir", default="data/market_quotes")
+    parser.add_argument("--credit-log", default="data/credit_log.csv")
+    parser.add_argument("--min-credits", type=int, default=0,
+                        help="fail the run when fewer credits remain than "
+                             "this; 0 disables the floor")
     args = parser.parse_args(argv)
 
     key = os.environ.get("ODDS_API_KEY")
@@ -318,7 +373,8 @@ def main(argv=None):
     stamp = f"{datetime.now(timezone.utc):%Y-%m-%dT%H:%M:%SZ}"
     now = datetime.now(timezone.utc)
     rows, quotes, in_play = [], [], 0
-    for event, paired in collect_events(key):
+    events, credits = collect_events(key)
+    for event, paired in events:
         commence = event.get("commence_time", "")
         # Fail closed on anything already under way. The odds endpoint keeps
         # returning a game after first pitch, but those are in-play prices
@@ -350,6 +406,17 @@ def main(argv=None):
           f"({priced} priced from {','.join(PRICED_ODDS_REGIONS)}; "
           f"regions {','.join(ODDS_REGIONS)}; markets {','.join(MARKETS)}; "
           f"{in_play} in-play event(s) rejected)")
+
+    remaining = record_credits(args.credit_log, stamp, credits)
+    if remaining is not None:
+        print(f"credits remaining: {remaining}")
+        if args.min_credits and remaining < args.min_credits:
+            raise SystemExit(
+                f"credit floor breached: {remaining} left, floor is "
+                f"{args.min_credits}. This quota is shared, so the likeliest "
+                f"cause is spend from elsewhere. Capture keeps failing until "
+                f"the floor is lowered or the plan is topped up."
+            )
 
 
 if __name__ == "__main__":

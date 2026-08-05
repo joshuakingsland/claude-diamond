@@ -117,7 +117,14 @@ def parse_game(game):
         "innings_played": len(innings) if innings else None,
     }
     if status != "Final" or home_score is None or away_score is None:
-        row.update({"home_win": None, "total_runs": None, "run_diff": None,
+        # The raw scores go too, not just the derived columns. StatsAPI opens
+        # a linescore at 0-0 as soon as a game is close to starting, so a
+        # scheduled game arrives carrying a real-looking nil-nil. Everything
+        # downstream tests `home_score.notna()` to mean "this game happened":
+        # `models.fit` would train on it as a genuine shutout and
+        # `predict_upcoming` would treat tonight's card as already played.
+        row.update({"home_score": None, "away_score": None, "home_win": None,
+                    "total_runs": None, "run_diff": None,
                     "home_batted_ninth": None})
         return row
     row["home_win"] = int(home_score > away_score)
@@ -167,16 +174,45 @@ def season_bounds(season):
     return f"{season}-02-15", f"{season}-11-15"
 
 
+def deduplicate(rows):
+    """One row per game_pk.
+
+    A postponed game is returned twice by the schedule endpoint, under its
+    original date and again under the date it was actually played, sharing a
+    game_pk. Left alone this is not a cosmetic duplicate: `features.py` walks
+    the table and folds each row's result into team state, so a duplicated
+    game counts twice toward Elo, run rates, and park factors, and its weather
+    is fetched for a date the game was not played on.
+
+    The kept row is the one whose UTC start agrees with its official date,
+    since that is the pair the rest of the pipeline joins on — `features.py`
+    keys off `official_date` and `market.py` matches on `game_date_utc`, and a
+    row where the two disagree would send them to different games. A played
+    row beats an unplayed one, and a later start breaks any remaining tie.
+    """
+    def rank(row):
+        agrees = str(row.get("game_date_utc", ""))[:10] == row.get("official_date")
+        played = row.get("home_score") not in (None, "")
+        return (agrees, played, str(row.get("game_date_utc", "")))
+
+    best = {}
+    for row in rows:
+        key = row.get("game_pk")
+        if key not in best or rank(row) > rank(best[key]):
+            best[key] = row
+    return list(best.values())
+
+
 def fetch_seasons(seasons, game_type="R"):
     rows = []
     for season in seasons:
         start, end = season_bounds(season)
         games = fetch_schedule(start, end, game_type=game_type)
-        parsed = build_table(games)
+        parsed = deduplicate(build_table(games))
         final = [row for row in parsed if row["status"] == "Final"]
         print(f"  {season}: {len(parsed)} scheduled, {len(final)} final")
         rows.extend(parsed)
-    return rows
+    return deduplicate(rows)
 
 
 def main():

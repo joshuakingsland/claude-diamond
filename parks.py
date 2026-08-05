@@ -46,7 +46,7 @@ def fetch_parks(season, timeout=30):
             "name": venue.get("name", ""),
             "latitude": float(latitude),
             "longitude": float(longitude),
-            "elevation_m": _optional_float(location.get("elevation")),
+            "elevation_m": _feet_to_metres(location.get("elevation")),
             "azimuth_angle": _optional_float(location.get("azimuthAngle")),
             "roof_type": field.get("roofType", ""),
             "turf_type": field.get("turfType", ""),
@@ -58,11 +58,63 @@ def fetch_parks(season, timeout=30):
     return parks
 
 
+FEET_TO_METRES = 0.3048
+
+
+def _feet_to_metres(value):
+    """StatsAPI reports venue elevation in feet, despite the field name here.
+
+    Coors Field comes back as 5190 and Fenway as 21, which are their heights
+    in feet; in metres they are 1582 and 6. Storing the raw number under
+    `elevation_m` inflated every altitude by 3.28, and `features.py` then
+    divided by 1000 to get a nominal `elevation_km` that was really
+    kilofeet. This went unnoticed because a separate lookup bug meant
+    elevation never reached the model at all — fixing that one exposed this.
+    """
+    feet = _optional_float(value)
+    return None if feet is None else round(feet * FEET_TO_METRES, 2)
+
+
 def _optional_float(value):
     try:
         return float(value)
     except (TypeError, ValueError):
         return None
+
+
+def fetch_parks_range(seasons, timeout=30, verbose=True):
+    """Union of every venue used across ``seasons``.
+
+    One season is not enough. A park retired before the snapshot season is
+    simply absent, and its games then fall back to a default 20C still-air day
+    that never happened. Tropicana Field and the Oakland Coliseum alone host
+    730 games in 2021-2024, and both are gone from a 2025 venue list.
+    """
+    parks = {}
+    for season in seasons:
+        found = fetch_parks(season, timeout=timeout)
+        added = [key for key in found if key not in parks]
+        parks.update(found)
+        if verbose:
+            print(f"  {season}: {len(found)} venues, {len(added)} new")
+    return parks
+
+
+def venue_key(value):
+    """Venue id as the string `parks.json` is keyed by.
+
+    Read through pandas a venue id arrives as ``3313.0``, because two games in
+    the schedule carry no venue at all and that types the whole column as
+    float. "3313.0" matches no key, so every park lookup misses at once — and
+    it misses quietly, because the caller falls back to an empty park rather
+    than raising. The visible symptom is an `elevation_km` of zero on every
+    row of the feature table, which is to say Coors Field's mile of altitude,
+    the largest park effect in baseball, never reaching the model.
+    """
+    text = str(value).strip()
+    if text.endswith(".0"):
+        text = text[:-2]
+    return text
 
 
 def load_parks(path=CACHE):
@@ -132,12 +184,19 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--season", type=int, default=2025)
+    parser.add_argument("--seasons", default="2021-2026",
+                        help="season or inclusive range, e.g. 2021-2026")
     parser.add_argument("--refresh", action="store_true")
     parser.add_argument("--cache", default=str(CACHE))
     args = parser.parse_args()
+    if "-" in args.seasons:
+        first, last = (int(part) for part in args.seasons.split("-", 1))
+        seasons = range(first, last + 1)
+    else:
+        seasons = [int(args.seasons)]
     if args.refresh or not Path(args.cache).exists():
-        parks = fetch_parks(args.season)
+        print(f"fetching venues for seasons {list(seasons)}")
+        parks = fetch_parks_range(seasons)
         print(f"wrote {save_parks(parks, args.cache)} parks to {args.cache}")
     else:
         print(f"{len(load_parks(args.cache))} parks cached at {args.cache}")

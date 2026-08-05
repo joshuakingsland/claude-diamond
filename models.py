@@ -166,6 +166,12 @@ class RunsModel:
         })
         for point in runline_points:
             out[f"p_home_rl_{point}"] = runline_probability(joint, point)
+            # Alternate run lines at whole numbers push, exactly as whole
+            # totals do. Only +-1.5 is quoted on most cards, so this stayed
+            # invisible until the live board offered a -1 and a +2.
+            push = push_probability(joint, point, "spreads")
+            if np.any(push > 0):
+                out[f"push_home_rl_{point}"] = push
         for point in total_points:
             out[f"p_over_{point}"] = total_over_probability(joint, point)
             push = push_probability(joint, point, "totals")

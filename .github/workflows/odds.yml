@@ -79,7 +79,24 @@ jobs:
         # --require-key turns a missing secret into a loud failure. Without it
         # the script exits zero having fetched nothing, and the workflow would
         # report green for weeks while capturing no data at all.
-        run: python odds.py --require-key
+        #
+        # --min-credits fails the run when the balance the API reports falls
+        # below the floor. The quota is shared with any other project on this
+        # key, so the balance can drop for reasons nothing here can see, and
+        # the symptom of running dry is a capture that quietly stops returning
+        # data. A missing snapshot cannot be bought back at the live price.
+        run: python odds.py --require-key --min-credits 500
+
+      - name: Price the card
+        if: steps.season.outputs.active == 'true'
+        # Runs on every capture rather than on its own schedule. The lock
+        # window, the edge rule and the day cap are all enforced inside
+        # ledger.py, and a wager is written once and never revised, so running
+        # this hourly is idempotent: quotes outside the window are rejected
+        # and games already locked are skipped.
+        run: |
+          python predict_upcoming.py
+          python ledger.py
 
       - name: Commit new quotes
         if: steps.season.outputs.active == 'true'
@@ -87,7 +104,9 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/lines_upcoming.csv data/market_quotes
+          git add data/lines_upcoming.csv data/market_quotes data/credit_log.csv \
+                  data/predictions_upcoming.csv data/weather_forecast.csv \
+                  data/paper_ledger.csv data/paper_rejections.csv
           if git diff --cached --quiet; then
             echo "No new quotes."
             exit 0

@@ -44,4 +44,7 @@ echo "=== VALIDATE (gbm) ==="
 "$PYTHON" validate.py --kind gbm --report validation_gbm.json \
   --predictions data/predictions_gbm.csv
 
+echo "=== SETTLE PAPER LEDGER ==="
+"$PYTHON" ledger.py --settle-only
+
 echo "=== PIPELINE COMPLETE ==="

@@ -27,6 +27,15 @@ FORECAST_API = "https://api.open-meteo.com/v1/forecast"
 HOURLY = ("temperature_2m", "relative_humidity_2m", "surface_pressure",
           "wind_speed_10m", "wind_direction_10m", "precipitation")
 
+# Each endpoint serves a bounded window: the reanalysis trails real time by a
+# few days, the forecast runs about a fortnight ahead. Requests are batched by
+# venue over one date range, so a single game outside the window returns 400
+# for that whole request and costs the venue its entire series. Once the
+# schedule includes the season still to be played that is every venue, every
+# run. Games outside the window are dropped here instead.
+ARCHIVE_LAG_DAYS = 2
+FORECAST_HORIZON_DAYS = 14
+
 WEATHER_FIELDS = [
     "game_pk", "weather_source", "weather_hour_utc",
     "temp_c", "humidity_pct", "pressure_hpa",
@@ -161,6 +170,19 @@ def air_density_index(temp_c, pressure_hpa, humidity_pct, elevation_m):
     return round(reference / density, 5)
 
 
+def servable_window(archive, today=None):
+    """The date range the chosen endpoint will actually answer for.
+
+    Returned as ``(low, high)`` ISO strings, either of which may be None for
+    an open end.
+    """
+    today = today or datetime.now(timezone.utc).date()
+    if archive:
+        return None, str(today - timedelta(days=ARCHIVE_LAG_DAYS))
+    return (str(today - timedelta(days=1)),
+            str(today + timedelta(days=FORECAST_HORIZON_DAYS)))
+
+
 def build_for_games(games, parks, archive=True, verbose=True, already=None):
     """Fetch weather for many games, one request per park and date span.
 
@@ -173,13 +195,20 @@ def build_for_games(games, parks, archive=True, verbose=True, already=None):
     resumable and a transient network fault costs one venue rather than all
     of them.
     """
+    from parks import venue_key
+
     already = already or set()
-    by_venue = {}
+    low, high = servable_window(archive)
+    by_venue, out_of_window = {}, 0
     for game in games:
-        venue_id = str(game.get("venue_id"))
+        venue_id = venue_key(game.get("venue_id"))
         if venue_id not in parks:
             continue
         if str(game.get("game_pk")) in already:
+            continue
+        date = game.get("official_date")
+        if not date or (low and date < low) or (high and date > high):
+            out_of_window += 1
             continue
         by_venue.setdefault(venue_id, []).append(game)
     rows, missing_hour, failed = [], 0, []
@@ -214,10 +243,12 @@ def build_for_games(games, parks, archive=True, verbose=True, already=None):
             print(f"  venue {venue_id} {park['name'][:28]:28s} "
                   f"{found:5d}/{len(venue_games):5d} {start}..{end}")
     missing_park = sum(1 for game in games
-                       if str(game.get("venue_id")) not in parks)
+                       if venue_key(game.get("venue_id")) not in parks)
     if verbose:
+        source = "archive" if archive else "forecast"
         print(f"weather rows {len(rows)}, unknown park {missing_park}, "
-              f"missing hour {missing_hour}, failed venues {len(failed)}")
+              f"missing hour {missing_hour}, failed venues {len(failed)}, "
+              f"outside the {source} window {out_of_window}")
         for venue_id, name, error in failed:
             print(f"    retry venue {venue_id} {name}: {error}")
     return rows, failed
