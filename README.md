@@ -146,6 +146,14 @@ Books disagreeing among themselves past `MARKET_DISAGREEMENT_WARNING` are
 flagged rather than dropped, because config calls it a warning and a forward
 test that silently discards its awkward rows is not measuring anything.
 
+The day cap is counted against the ledger, not against the run. The capture
+workflow screens the same card every hour, so a cap computed per call would
+hand out a fresh allowance each time — thirteen runs against a three-unit cap
+is thirty-nine units on a day the policy limits to three. That is not
+hypothetical: it happened on the first live day, six units before it was
+caught, which is why the paper ledger starts from the day the cap began
+holding across runs rather than from the first capture.
+
 **No money moves.** Wagers are recorded at a price that was on the board and
 settled against real results. The expected outcome is a loss, and the ledger is
 worth running because it is the measurement that would show that honestly.

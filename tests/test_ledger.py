@@ -13,7 +13,8 @@ import pandas as pd
 from config import (EDGE_RULE, GAME_DAY_STAKE_CAP, MAX_EXECUTION_DEVIATION,
                     MAX_ODDS_AGE_MINUTES, MIN_LOCK_LEAD_MINUTES,
                     MIN_MARKET_BOOKS)
-from ledger import _outcome, payout, screen, settle, summarise
+from ledger import (_outcome, payout, screen, settle, staked_by_day,
+                    summarise)
 
 NOW = datetime(2026, 8, 5, 18, 0, tzinfo=timezone.utc)
 
@@ -117,6 +118,55 @@ class DayCapTests(unittest.TestCase):
         self.assertEqual(taken, {5, 4, 3})
 
 
+class CapAcrossRunsTests(unittest.TestCase):
+    """The cap has to survive the ledger, not just the call.
+
+    The capture workflow screens the same card every hour. A cap computed
+    fresh per call grants a whole new allowance each run — thirteen runs
+    against a three-unit cap is thirty-nine units on a day limited to three,
+    and it cannot show up in a single-run test. It had already happened in
+    production before this was caught: six units on one day.
+    """
+
+    def _big_card(self):
+        rows = [_card(game_pk=index, disagreement=0.05 + index / 100.0,
+                      model_prob_home=0.55 + index / 100.0)
+                for index in range(GAME_DAY_STAKE_CAP + 3)]
+        return pd.concat(rows, ignore_index=True)
+
+    def test_a_full_day_blocks_every_later_run(self):
+        card = self._big_card()
+        first, _ = screen(card, now=NOW)
+        self.assertEqual(sum(w["stake"] for w in first), GAME_DAY_STAKE_CAP)
+
+        ledger = pd.DataFrame(first)
+        second, rejections = screen(
+            card, open_ids=set(ledger["wager_id"]),
+            prior_stakes=staked_by_day(ledger), now=NOW)
+        self.assertEqual(second, [])
+        self.assertIn("day_cap", _gates(rejections))
+
+    def test_a_partly_used_day_allows_only_the_remainder(self):
+        card = self._big_card()
+        wagers, _ = screen(card, prior_stakes={"2026-08-05": 2.0}, now=NOW)
+        self.assertEqual(sum(w["stake"] for w in wagers),
+                         GAME_DAY_STAKE_CAP - 2.0)
+
+    def test_another_day_is_unaffected(self):
+        card = self._big_card()
+        wagers, _ = screen(card, prior_stakes={"2026-09-01": 99.0}, now=NOW)
+        self.assertEqual(sum(w["stake"] for w in wagers), GAME_DAY_STAKE_CAP)
+
+    def test_stakes_are_totalled_off_a_reloaded_ledger(self):
+        ledger = pd.DataFrame([
+            {"official_date": "2026-08-05", "stake": 1.0},
+            {"official_date": "2026-08-05", "stake": 1.0},
+            {"official_date": "2026-08-06", "stake": 1.0},
+        ])
+        self.assertEqual(staked_by_day(ledger),
+                         {"2026-08-05": 2.0, "2026-08-06": 1.0})
+
+
 class SettlementTests(unittest.TestCase):
     def _wager(self, **overrides):
         row = {"market": "h2h", "point": "", "side": "home"}
@@ -160,6 +210,43 @@ class SettlementTests(unittest.TestCase):
         settled_ledger, count = settle(ledger, games)
         self.assertEqual(count, 0)
         self.assertEqual(settled_ledger.iloc[0]["outcome"], "")
+
+
+class WagerIdTests(unittest.TestCase):
+    """The id is the dedupe key; it must not depend on how pandas typed a
+    column.
+
+    A moneyline row has no point, and a card read back through pandas delivers
+    that as NaN. Formatting NaN into the key gave `1|h2h|nan|away`, stable only
+    while the column keeps typing as float — otherwise every moneyline id
+    changes and every open moneyline wager is locked again.
+    """
+
+    def test_a_missing_point_is_empty_however_it_arrives(self):
+        blank = screen(_card(market="h2h", point=""), now=NOW)[0][0]["wager_id"]
+        nan = screen(_card(market="h2h", point=float("nan")),
+                     now=NOW)[0][0]["wager_id"]
+        none = screen(_card(market="h2h", point=None), now=NOW)[0][0]["wager_id"]
+        self.assertEqual(blank, nan)
+        self.assertEqual(blank, none)
+        self.assertNotIn("nan", blank)
+
+    def test_a_real_point_still_reaches_the_id(self):
+        wager = screen(_card(market="totals", point=8.5), now=NOW)[0][0]
+        self.assertIn("8.5", wager["wager_id"])
+
+    def test_a_reloaded_moneyline_wager_is_not_locked_twice(self):
+        import tempfile
+
+        wagers, _ = screen(_card(market="h2h", point=float("nan")), now=NOW)
+        with tempfile.NamedTemporaryFile(suffix=".csv") as handle:
+            pd.DataFrame(wagers).to_csv(handle.name, index=False)
+            reloaded = pd.read_csv(handle.name)
+        open_ids = set(reloaded["wager_id"].astype(str))
+        again, rejections = screen(_card(market="h2h", point=""),
+                                   open_ids=open_ids, now=NOW)
+        self.assertEqual(again, [])
+        self.assertIn("already_locked", _gates(rejections))
 
 
 class RoundTripTests(unittest.TestCase):

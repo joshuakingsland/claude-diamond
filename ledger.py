@@ -75,18 +75,50 @@ def payout(price, stake=1.0):
 
 
 def _wager_id(row, side):
-    point = "" if row.get("point") in (None, "") else row["point"]
+    """Stable identity for one wager. This is the key that stops a re-lock.
+
+    The moneyline has no point, and a card read back through pandas delivers
+    that absence as NaN rather than "". Formatting NaN straight into the key
+    produced ids like `824082|h2h|nan|away`, which work only for as long as
+    the column keeps typing as float: a card whose points all parse, or a
+    different reader, yields "" instead, every moneyline id changes, and every
+    open moneyline wager is locked a second time.
+    """
+    point = "" if unset(row.get("point")) else row["point"]
     return f"{row['game_pk']}|{row['market']}|{point}|{side}"
 
 
-def screen(card, open_ids=None, now=None):
+def staked_by_day(ledger):
+    """Units already committed per game day, from the ledger on disk."""
+    totals = {}
+    if not len(ledger):
+        return totals
+    for row in ledger.to_dict("records"):
+        day = row.get("official_date")
+        if unset(day):
+            continue
+        try:
+            totals[day] = totals.get(day, 0.0) + float(row.get("stake") or 0)
+        except (TypeError, ValueError):
+            continue
+    return totals
+
+
+def screen(card, open_ids=None, prior_stakes=None, now=None):
     """Apply the staking policy to a priced card.
 
     Returns ``(wagers, rejections)``. Every row that does not become a wager
     leaves a rejection carrying the gate that stopped it, so the ledger can be
     audited for what it declined as well as what it took.
+
+    ``prior_stakes`` carries units already committed per day. Without it the
+    day cap only holds inside a single call, which is worthless: the capture
+    workflow screens the same card every hour, and each run would grant a
+    fresh cap. Thirteen runs against a three-unit cap is thirty-nine units on
+    a day the policy limits to three.
     """
     open_ids = open_ids or set()
+    prior_stakes = dict(prior_stakes or {})
     now = now or datetime.now(timezone.utc)
     stamp = f"{now:%Y-%m-%dT%H:%M:%SZ}"
 
@@ -156,7 +188,7 @@ def screen(card, open_ids=None, now=None):
             "home_team": row["home_team"],
             "away_team": row["away_team"],
             "market": row["market"],
-            "point": row["point"],
+            "point": "" if unset(row["point"]) else row["point"],
             "side": side,
             "model_prob": round(model_probability, 6),
             "market_prob": round(market_probability, 6),
@@ -184,7 +216,7 @@ def screen(card, open_ids=None, now=None):
     # it while scanning would hand the cap to whichever games happened to sort
     # earliest, which is a property of the file rather than of the card.
     candidates.sort(key=lambda item: -item["disagreement"])
-    taken, per_day = [], {}
+    taken, per_day = [], prior_stakes
     for candidate in candidates:
         day = candidate["official_date"]
         if per_day.get(day, 0.0) + candidate["stake"] > GAME_DAY_STAKE_CAP:
@@ -349,7 +381,8 @@ def main(argv=None):
         card = pd.read_csv(card_path)
         if len(card):
             open_ids = set(ledger["wager_id"].astype(str)) if len(ledger) else set()
-            wagers, rejections = screen(card, open_ids)
+            wagers, rejections = screen(card, open_ids,
+                                        prior_stakes=staked_by_day(ledger))
             _append(args.ledger, LEDGER_FIELDS, wagers)
             _append(args.rejections, REJECTION_FIELDS, rejections)
             counts = {}
@@ -359,7 +392,8 @@ def main(argv=None):
             if counts:
                 print(f"  rejected: {counts}")
             for wager in wagers:
-                point = "" if wager["point"] == "" else f" {float(wager['point']):+g}"
+                point = ("" if unset(wager["point"])
+                         else f" {float(wager['point']):+g}")
                 print(f"  {wager['away_team']} @ {wager['home_team']} "
                       f"{wager['market']}{point} {wager['side']} "
                       f"at {wager['price']:+g} ({wager['book']}), "
