@@ -97,6 +97,7 @@ jobs:
         run: |
           python predict_upcoming.py
           python ledger.py
+          python model_card.py
 
       - name: Commit new quotes
         # always(), because a snapshot already written to disk must be
@@ -115,7 +116,7 @@ jobs:
           # -A over the directory rather than a list of paths: a run that dies
           # before writing one of them would otherwise fail here on a pathspec
           # that matches nothing, masking the original error.
-          git add -A data
+          git add -A data docs
           if git diff --cached --quiet; then
             echo "No new quotes."
             exit 0

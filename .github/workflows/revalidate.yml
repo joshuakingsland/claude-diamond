@@ -81,6 +81,9 @@ jobs:
           python validate.py --kind gbm --report validation_gbm.json \
             --predictions data/predictions_gbm.csv
 
+      - name: Regenerate the model card
+        run: python model_card.py
+
       - name: Settle the paper ledger
         # Settle only. New wagers are screened by the capture workflow, which
         # is the only place that sees a live board inside the lock window.
@@ -110,7 +113,7 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data data/parks.json validation_glm.json validation_gbm.json \
+          git add -A data docs validation_glm.json validation_gbm.json \
                   market_comparison.json
           if git diff --cached --quiet; then
             echo "Nothing changed."

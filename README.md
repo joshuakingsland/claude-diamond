@@ -94,7 +94,29 @@ historical_odds.py  capped, resumable historical snapshots
 market.py     joins prices to predictions; asks whether the model beats them
 predict_upcoming.py  prices the live card; the only forward-looking path
 ledger.py     the paper forward test, and where the staking policy is applied
+model_card.py generates the public page at docs/index.html
 ```
+
+## The public page
+
+`model_card.py` renders `docs/index.html` from files already in the repository
+— the board, the ledger, the rejections, the market comparison, the validation
+report. Nothing is recomputed, so if a number on the page disagrees with the
+repo the page is stale rather than right, which is why the header carries the
+timestamp of the data rather than of the render. It regenerates on every
+capture.
+
+The layout deliberately mirrors the sibling UFC project's page so the two read
+the same way. The content does not, because the results are not the same:
+the verdict — that the closing price beats this model on the moneyline and the
+run line — sits *above* tonight's card rather than below it. A model card that
+opens with picks and buries the measurement is advertising.
+
+The module is `model_card.py` and not `site.py` because Python imports a
+stdlib module called `site` at interpreter startup; a file of that name in the
+repository root is a trap.
+
+To serve it: **Settings → Pages → Source: Deploy from a branch → `main` /docs**.
 
 ## The live path
 
