@@ -640,3 +640,111 @@ screened_at,game_pk,market,point,side,disagreement,gate,detail
 2026-08-07T19:13:36Z,823349,spreads,-1.5,home,0.044825,day_cap,2026-08-07 at 3u
 2026-08-07T19:13:36Z,823428,spreads,-1.5,away,0.043797,day_cap,2026-08-07 at 3u
 2026-08-07T19:13:36Z,823349,h2h,,away,0.030781,day_cap,2026-08-07 at 3u
+2026-08-07T20:56:46Z,823428,h2h,nan,away,-0.123167,already_locked,
+2026-08-07T20:56:46Z,823428,totals,7.5,home,0.132766,already_locked,
+2026-08-07T20:56:46Z,823428,totals,8.0,home,0.140166,already_locked,
+2026-08-07T20:56:46Z,822699,spreads,-1.5,home,0.009982,below_edge_rule,0.0100 < 0.03
+2026-08-07T20:56:46Z,823515,h2h,nan,home,0.011746,below_edge_rule,0.0117 < 0.03
+2026-08-07T20:56:46Z,824727,spreads,-1.5,home,0.004104,below_edge_rule,0.0041 < 0.03
+2026-08-07T20:56:46Z,823836,h2h,nan,away,-0.01709,below_edge_rule,0.0171 < 0.03
+2026-08-07T20:56:46Z,823836,totals,9.0,away,-0.069077,too_few_books,2
+2026-08-07T20:56:46Z,823750,h2h,nan,away,-0.020099,below_edge_rule,0.0201 < 0.03
+2026-08-07T20:56:46Z,824081,h2h,nan,home,0.010899,below_edge_rule,0.0109 < 0.03
+2026-08-07T20:56:46Z,824081,spreads,1.5,away,-0.011227,below_edge_rule,0.0112 < 0.03
+2026-08-07T20:56:46Z,824081,totals,9.0,away,-0.013097,below_edge_rule,0.0131 < 0.03
+2026-08-07T20:56:46Z,824081,totals,9.5,away,-0.003109,below_edge_rule,0.0031 < 0.03
+2026-08-07T20:56:46Z,823024,h2h,nan,away,-0.016803,below_edge_rule,0.0168 < 0.03
+2026-08-07T20:56:46Z,825051,h2h,nan,home,0.075676,outside_lock_window,284 min
+2026-08-07T20:56:46Z,825051,spreads,1.5,home,0.046387,outside_lock_window,284 min
+2026-08-07T20:56:46Z,825051,totals,8.5,home,0.100118,too_few_books,1
+2026-08-07T20:56:46Z,825051,totals,9.0,home,0.109606,outside_lock_window,284 min
+2026-08-07T20:56:46Z,823266,h2h,nan,home,0.01902,below_edge_rule,0.0190 < 0.03
+2026-08-07T20:56:46Z,823266,spreads,-1.5,home,0.079975,outside_lock_window,284 min
+2026-08-07T20:56:46Z,823266,spreads,1.5,home,0.002732,below_edge_rule,0.0027 < 0.03
+2026-08-07T20:56:46Z,823266,totals,8.5,away,-0.04934,outside_lock_window,284 min
+2026-08-07T20:56:46Z,823103,h2h,nan,away,-0.079453,outside_lock_window,289 min
+2026-08-07T20:56:46Z,823103,spreads,-1.5,away,-0.00393,below_edge_rule,0.0039 < 0.03
+2026-08-07T20:56:46Z,823103,spreads,1.5,away,-0.10887,outside_lock_window,289 min
+2026-08-07T20:56:46Z,823103,totals,7.0,home,0.078527,outside_lock_window,289 min
+2026-08-07T20:56:46Z,823191,h2h,nan,home,0.005993,below_edge_rule,0.0060 < 0.03
+2026-08-07T20:56:46Z,823191,spreads,1.5,away,-0.019613,below_edge_rule,0.0196 < 0.03
+2026-08-07T20:56:46Z,823191,totals,8.0,away,-0.03954,too_few_books,2
+2026-08-07T20:56:46Z,823191,totals,8.5,away,-0.054157,outside_lock_window,319 min
+2026-08-07T20:56:46Z,823514,h2h,nan,home,0.095209,outside_lock_window,1329 min
+2026-08-07T20:56:46Z,823514,spreads,1.5,home,0.06364,outside_lock_window,1329 min
+2026-08-07T20:56:46Z,823514,totals,7.5,home,0.106343,outside_lock_window,1329 min
+2026-08-07T20:56:46Z,824726,h2h,nan,away,-0.024918,below_edge_rule,0.0249 < 0.03
+2026-08-07T20:56:46Z,824726,spreads,-1.5,home,0.063473,outside_lock_window,1394 min
+2026-08-07T20:56:46Z,824726,totals,9.0,home,0.048452,too_few_books,2
+2026-08-07T20:56:46Z,824726,totals,9.5,home,0.030291,outside_lock_window,1394 min
+2026-08-07T20:56:46Z,823834,h2h,nan,away,-0.031862,outside_lock_window,1394 min
+2026-08-07T20:56:46Z,823834,spreads,-1.5,home,0.053249,outside_lock_window,1394 min
+2026-08-07T20:56:46Z,823834,totals,8.0,home,0.010624,below_edge_rule,0.0106 < 0.03
+2026-08-07T20:56:46Z,823426,h2h,nan,away,-0.074008,outside_lock_window,1509 min
+2026-08-07T20:56:46Z,823426,spreads,-1.5,home,0.003734,below_edge_rule,0.0037 < 0.03
+2026-08-07T20:56:46Z,823426,totals,9.5,away,-0.057711,too_few_books,2
+2026-08-07T20:56:46Z,823426,totals,10.0,away,-0.094051,outside_lock_window,1509 min
+2026-08-07T20:56:46Z,823348,h2h,nan,away,-0.034995,outside_lock_window,1544 min
+2026-08-07T20:56:46Z,823348,spreads,-1.5,home,0.038546,outside_lock_window,1544 min
+2026-08-07T20:56:46Z,823348,totals,8.5,home,0.035664,outside_lock_window,1544 min
+2026-08-07T20:56:46Z,822701,h2h,nan,home,0.035441,outside_lock_window,1549 min
+2026-08-07T20:56:46Z,822701,spreads,1.5,home,0.016827,below_edge_rule,0.0168 < 0.03
+2026-08-07T20:56:46Z,822701,totals,8.5,home,0.020093,below_edge_rule,0.0201 < 0.03
+2026-08-07T20:56:46Z,824079,h2h,nan,home,0.00281,below_edge_rule,0.0028 < 0.03
+2026-08-07T20:56:46Z,824079,spreads,1.5,away,-0.007921,below_edge_rule,0.0079 < 0.03
+2026-08-07T20:56:46Z,824079,totals,9.5,away,-0.007052,below_edge_rule,0.0071 < 0.03
+2026-08-07T20:56:46Z,823752,h2h,nan,home,0.02156,below_edge_rule,0.0216 < 0.03
+2026-08-07T20:56:46Z,823752,spreads,-1.5,home,0.099833,outside_lock_window,1574 min
+2026-08-07T20:56:46Z,823752,totals,8.0,home,0.075171,outside_lock_window,1574 min
+2026-08-07T20:56:46Z,822864,h2h,nan,away,-0.032273,outside_lock_window,1579 min
+2026-08-07T20:56:46Z,822864,spreads,-1.5,home,0.039805,outside_lock_window,1579 min
+2026-08-07T20:56:46Z,822864,totals,7.0,home,0.162547,too_few_books,2
+2026-08-07T20:56:46Z,822864,totals,7.5,home,0.134962,outside_lock_window,1579 min
+2026-08-07T20:56:46Z,824565,h2h,nan,home,0.024577,below_edge_rule,0.0246 < 0.03
+2026-08-07T20:56:46Z,824565,spreads,1.5,home,0.009005,below_edge_rule,0.0090 < 0.03
+2026-08-07T20:56:46Z,824565,totals,8.0,home,0.047012,outside_lock_window,1579 min
+2026-08-07T20:56:46Z,823021,h2h,nan,away,-0.022494,below_edge_rule,0.0225 < 0.03
+2026-08-07T20:56:46Z,823021,spreads,-1.5,home,0.074214,outside_lock_window,1579 min
+2026-08-07T20:56:46Z,823021,totals,9.0,home,0.086416,outside_lock_window,1579 min
+2026-08-07T20:56:46Z,823188,h2h,nan,away,-0.038299,outside_lock_window,1579 min
+2026-08-07T20:56:46Z,823188,spreads,1.5,away,-0.0537,outside_lock_window,1579 min
+2026-08-07T20:56:46Z,823188,totals,7.5,home,0.031518,too_few_books,2
+2026-08-07T20:56:46Z,823188,totals,8.0,home,0.013936,below_edge_rule,0.0139 < 0.03
+2026-08-07T20:56:46Z,823188,totals,8.5,away,-0.003791,below_edge_rule,0.0038 < 0.03
+2026-08-07T20:56:46Z,823267,h2h,nan,away,-0.030618,outside_lock_window,1579 min
+2026-08-07T20:56:46Z,823267,spreads,-1.5,home,0.048375,outside_lock_window,1579 min
+2026-08-07T20:56:46Z,823267,spreads,1.5,away,-0.034438,too_few_books,2
+2026-08-07T20:56:46Z,823267,totals,7.5,home,0.044804,too_few_books,2
+2026-08-07T20:56:46Z,823267,totals,8.0,home,0.042866,outside_lock_window,1579 min
+2026-08-07T20:56:46Z,823267,totals,8.5,home,0.01043,below_edge_rule,0.0104 < 0.03
+2026-08-07T20:56:46Z,825049,h2h,nan,home,0.029863,below_edge_rule,0.0299 < 0.03
+2026-08-07T20:56:46Z,825049,spreads,1.5,home,0.004812,below_edge_rule,0.0048 < 0.03
+2026-08-07T20:56:46Z,825049,totals,8.0,home,0.123739,too_few_books,2
+2026-08-07T20:56:46Z,825049,totals,8.5,home,0.099936,outside_lock_window,1634 min
+2026-08-07T20:56:46Z,823102,h2h,nan,away,-0.053798,outside_lock_window,1733 min
+2026-08-07T20:56:46Z,823102,spreads,-1.5,home,0.012509,below_edge_rule,0.0125 < 0.03
+2026-08-07T20:56:46Z,823102,totals,7.5,home,0.044171,outside_lock_window,1733 min
+2026-08-07T20:56:46Z,822863,totals,7.5,home,0.154851,day_cap,2026-08-07 at 3u
+2026-08-07T20:56:46Z,823750,totals,8.0,home,0.096199,day_cap,2026-08-07 at 3u
+2026-08-07T20:56:46Z,822699,spreads,1.5,away,0.090874,day_cap,2026-08-07 at 3u
+2026-08-07T20:56:46Z,824566,totals,7.5,home,0.086394,day_cap,2026-08-07 at 3u
+2026-08-07T20:56:46Z,823515,spreads,-1.5,home,0.076994,day_cap,2026-08-07 at 3u
+2026-08-07T20:56:46Z,823349,totals,8.0,home,0.075375,day_cap,2026-08-07 at 3u
+2026-08-07T20:56:46Z,824727,totals,8.5,home,0.071497,day_cap,2026-08-07 at 3u
+2026-08-07T20:56:46Z,822699,h2h,,away,0.071242,day_cap,2026-08-07 at 3u
+2026-08-07T20:56:46Z,823349,totals,8.5,home,0.066627,day_cap,2026-08-07 at 3u
+2026-08-07T20:56:46Z,823024,totals,8.5,home,0.065764,day_cap,2026-08-07 at 3u
+2026-08-07T20:56:46Z,823024,spreads,-1.5,home,0.065445,day_cap,2026-08-07 at 3u
+2026-08-07T20:56:46Z,824727,h2h,,away,0.063522,day_cap,2026-08-07 at 3u
+2026-08-07T20:56:46Z,824566,h2h,,home,0.063516,day_cap,2026-08-07 at 3u
+2026-08-07T20:56:46Z,823750,spreads,-1.5,home,0.061217,day_cap,2026-08-07 at 3u
+2026-08-07T20:56:46Z,822699,totals,9.0,home,0.060408,day_cap,2026-08-07 at 3u
+2026-08-07T20:56:46Z,823836,totals,8.5,away,0.057446,day_cap,2026-08-07 at 3u
+2026-08-07T20:56:46Z,823515,totals,8.0,home,0.05191,day_cap,2026-08-07 at 3u
+2026-08-07T20:56:46Z,823836,spreads,-1.5,home,0.049049,day_cap,2026-08-07 at 3u
+2026-08-07T20:56:46Z,822863,spreads,-1.5,home,0.04821,day_cap,2026-08-07 at 3u
+2026-08-07T20:56:46Z,823349,spreads,-1.5,home,0.045255,day_cap,2026-08-07 at 3u
+2026-08-07T20:56:46Z,822863,h2h,,away,0.041727,day_cap,2026-08-07 at 3u
+2026-08-07T20:56:46Z,823428,spreads,-1.5,away,0.040745,day_cap,2026-08-07 at 3u
+2026-08-07T20:56:46Z,824566,spreads,1.5,home,0.032828,day_cap,2026-08-07 at 3u
+2026-08-07T20:56:46Z,823349,h2h,,away,0.031761,day_cap,2026-08-07 at 3u
