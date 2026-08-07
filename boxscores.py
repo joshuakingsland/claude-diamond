@@ -88,8 +88,51 @@ def parse_boxscore(game_pk, official_date, payload):
     return rows
 
 
+def deduplicate(out_path, verbose=True):
+    """Drop repeated (game_pk, player_id) lines before appending more.
+
+    A pitcher appears once per game, so a repeat is damage rather than data,
+    and it is damage that does not announce itself: `features.py` folds every
+    line it is given, so a duplicated start counts a pitcher's strikeouts and
+    home runs twice and the resulting rate looks entirely plausible.
+
+    This file is written in append mode over a long run, which makes it easy
+    to corrupt from outside — anything that rewrites it while the ingester
+    holds it open leaves the writer appending at a stale offset. That happened
+    here: a `git stash` of this file mid-run cost 4,479 games and left 1,552
+    duplicated rows. Repairing on resume costs one pass and means the next run
+    heals the file instead of building on it.
+    """
+    out_path = Path(out_path)
+    if not out_path.exists() or out_path.stat().st_size == 0:
+        return 0
+    with out_path.open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    seen, kept = set(), []
+    for row in rows:
+        marker = (row.get("game_pk"), row.get("player_id"))
+        if marker in seen:
+            continue
+        seen.add(marker)
+        kept.append(row)
+    removed = len(rows) - len(kept)
+    if not removed:
+        return 0
+    temporary = out_path.with_suffix(out_path.suffix + ".tmp")
+    with temporary.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=PITCHER_FIELDS,
+                                extrasaction="ignore")
+        writer.writeheader()
+        writer.writerows(kept)
+    os.replace(temporary, out_path)
+    if verbose:
+        print(f"repaired {removed} duplicated line(s) before resuming")
+    return removed
+
+
 def run(games, out_path, limit=None, verbose=True):
     out_path = Path(out_path)
+    deduplicate(out_path, verbose=verbose)
     done = set()
     if out_path.exists():
         with out_path.open(newline="", encoding="utf-8") as handle:
