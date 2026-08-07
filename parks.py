@@ -100,16 +100,22 @@ def fetch_parks_range(seasons, timeout=30, verbose=True):
     return parks
 
 
-def venue_key(value):
-    """Venue id as the string `parks.json` is keyed by.
+def id_key(value):
+    """A numeric id as the string every lookup table is keyed by.
 
-    Read through pandas a venue id arrives as ``3313.0``, because two games in
-    the schedule carry no venue at all and that types the whole column as
-    float. "3313.0" matches no key, so every park lookup misses at once — and
-    it misses quietly, because the caller falls back to an empty park rather
-    than raising. The visible symptom is an `elevation_km` of zero on every
-    row of the feature table, which is to say Coors Field's mile of altitude,
-    the largest park effect in baseball, never reaching the model.
+    Generic, despite living beside the parks: venue ids, team ids and player
+    ids all take this path. The name used to say `venue`, which hid that it
+    was the fix for a whole class of bug and meant the same mistake was made
+    again with starting pitchers.
+
+    Read through pandas an id arrives as ``3313.0`` whenever any row in its
+    column is missing, because that types the whole column as float, and
+    "3313.0" matches no key. It misses quietly, because callers fall back to
+    an empty record rather than raising. It has cost this project twice: an
+    `elevation_km` of zero on every row, so Coors Field's mile of altitude
+    never reached the model; and every starting pitcher resolving to the
+    league average, which made the entire pitcher feature set inert while
+    looking perfectly reasonable.
     """
     text = str(value).strip()
     if text.endswith(".0"):

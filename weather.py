@@ -195,13 +195,13 @@ def build_for_games(games, parks, archive=True, verbose=True, already=None):
     resumable and a transient network fault costs one venue rather than all
     of them.
     """
-    from parks import venue_key
+    from parks import id_key
 
     already = already or set()
     low, high = servable_window(archive)
     by_venue, out_of_window = {}, 0
     for game in games:
-        venue_id = venue_key(game.get("venue_id"))
+        venue_id = id_key(game.get("venue_id"))
         if venue_id not in parks:
             continue
         if str(game.get("game_pk")) in already:
@@ -243,7 +243,7 @@ def build_for_games(games, parks, archive=True, verbose=True, already=None):
             print(f"  venue {venue_id} {park['name'][:28]:28s} "
                   f"{found:5d}/{len(venue_games):5d} {start}..{end}")
     missing_park = sum(1 for game in games
-                       if venue_key(game.get("venue_id")) not in parks)
+                       if id_key(game.get("venue_id")) not in parks)
     if verbose:
         source = "archive" if archive else "forecast"
         print(f"weather rows {len(rows)}, unknown park {missing_park}, "

@@ -146,7 +146,8 @@ def build_card(lines, games, features, kind="glm", now=None, verbose=True):
     model = RunsModel(kind=kind).fit(trained, games)
     if verbose:
         print(f"trained on {len(trained)} completed games, "
-              f"dispersion {model.dispersion:.2f}")
+              f"dispersion {model.dispersion[0]:.2f}/"
+              f"{model.dispersion[1]:.2f}")
 
     card_pks = {game_pk for game_pk, _ in matched.values()}
     card = features[features["game_pk"].isin(card_pks)]
@@ -208,7 +209,8 @@ def build_card(lines, games, features, kind="glm", now=None, verbose=True):
         "events": int(len(events)),
         "unmatched_events": len(unmatched),
         "priced_rows": len(rows),
-        "dispersion": round(float(model.dispersion), 4),
+        "dispersion_home": round(float(model.dispersion[0]), 4),
+        "dispersion_away": round(float(model.dispersion[1]), 4),
     }
     return pd.DataFrame(rows), summary
 
@@ -234,7 +236,7 @@ def main(argv=None):
         Path(args.out).write_text(",".join(CARD_FIELDS) + "\n", encoding="utf-8")
         return
 
-    games, parks, weather = load_inputs(args.games, args.weather)
+    games, parks, weather, pitching = load_inputs(args.games, args.weather)
     card_games = [game for game in games.to_dict("records")
                   if game.get("home_score") != game.get("home_score")]
 
@@ -251,7 +253,7 @@ def main(argv=None):
     combined = pd.concat([weather, forecast], ignore_index=True)
     combined = combined.drop_duplicates(subset="game_pk", keep="first")
 
-    features = build(games, parks, combined)
+    features = build(games, parks, combined, pitching)
     card, summary = build_card(lines, games, features, kind=args.kind)
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     if len(card):

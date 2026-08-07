@@ -10,24 +10,24 @@ replaced, because it looks plausible.
 
 import unittest
 
-from parks import _feet_to_metres, venue_key
+from parks import _feet_to_metres, id_key
 
 
 class VenueKeyTests(unittest.TestCase):
     def test_a_float_venue_id_matches_the_parks_key(self):
         """pandas types the column as float because two games have no venue."""
-        self.assertEqual(venue_key(3313.0), "3313")
+        self.assertEqual(id_key(3313.0), "3313")
 
     def test_an_integer_or_string_id_is_unchanged(self):
-        self.assertEqual(venue_key(3313), "3313")
-        self.assertEqual(venue_key("3313"), "3313")
+        self.assertEqual(id_key(3313), "3313")
+        self.assertEqual(id_key("3313"), "3313")
 
     def test_a_real_park_is_found_through_the_key(self):
         parks = {"3313": {"name": "Yankee Stadium"}}
-        self.assertIn(venue_key(3313.0), parks)
+        self.assertIn(id_key(3313.0), parks)
 
     def test_an_id_that_only_looks_like_a_float_is_not_truncated(self):
-        self.assertEqual(venue_key("3313.05"), "3313.05")
+        self.assertEqual(id_key("3313.05"), "3313.05")
 
 
 class ElevationTests(unittest.TestCase):

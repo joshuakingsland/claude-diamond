@@ -24,6 +24,10 @@ def _games(n=60, seed=0):
             "game_date_utc": date.strftime("%Y-%m-%dT23:00:00Z"),
             "season": 2024,
             "home_team_id": home, "away_team_id": away,
+            # Starter ids, so the boxscore fold has something to key on. Real
+            # data agrees with the scheduled probable 99.8% of the time; the
+            # rest are late scratches, which the live path cannot know either.
+            "home_sp_id": 900 + home, "away_sp_id": 900 + away,
             "home_score": int(rng.integers(0, 10)),
             "away_score": int(rng.integers(0, 10)),
             "venue_id": 1 if index % 2 else 19,
@@ -129,3 +133,70 @@ class RoofCategoryTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def _pitching(games, seed=1):
+    """Boxscore lines for the synthetic season: one starter plus two relievers."""
+    rng = np.random.default_rng(seed)
+    rows = []
+    for game in games.to_dict("records"):
+        for team, runs in ((game["home_team_id"], game["away_score"]),
+                           (game["away_team_id"], game["home_score"])):
+            rows.append({
+                "game_pk": game["game_pk"], "official_date": game["official_date"],
+                "team_id": team, "player_id": 900 + team, "is_starter": 1,
+                "outs": 18, "batters_faced": 24, "hits": 5,
+                "runs": max(runs - 1, 0), "earned_runs": max(runs - 1, 0),
+                "home_runs": int(rng.integers(0, 3)), "walks": int(rng.integers(0, 4)),
+                "hit_batsmen": 0, "strike_outs": int(rng.integers(2, 11)),
+                "pitches": 90, "strikes": 60,
+            })
+            rows.append({
+                "game_pk": game["game_pk"], "official_date": game["official_date"],
+                "team_id": team, "player_id": 800 + team, "is_starter": 0,
+                "outs": 9, "batters_faced": 12, "hits": 2, "runs": 1,
+                "earned_runs": 1, "home_runs": 0, "walks": 1, "hit_batsmen": 0,
+                "strike_outs": 3, "pitches": 40, "strikes": 25,
+            })
+    return pd.DataFrame(rows)
+
+
+class PitchingLookaheadTests(unittest.TestCase):
+    """A starter's own line must not inform the game it was thrown in.
+
+    The boxscore fold is the newest state in the builder and the easiest place
+    to reintroduce lookahead, because unlike a score it is tempting to attach
+    a pitching line to the game it describes.
+    """
+
+    def test_changing_a_pitching_line_cannot_move_its_own_or_earlier_rows(self):
+        games = _games()
+        pitching = _pitching(games)
+        base = build(games, PARKS, None, pitching)
+
+        target = games["game_pk"].iloc[30]
+        tampered = pitching.copy()
+        mask = (tampered["game_pk"] == target) & (tampered["is_starter"] == 1)
+        tampered.loc[mask, "strike_outs"] = 20
+        tampered.loc[mask, "home_runs"] = 9
+        after = build(games, PARKS, None, tampered)
+
+        upto = base["game_pk"] <= target
+        pd.testing.assert_frame_equal(base[upto], after[upto])
+        # and later rows must move, or the fold is doing nothing at all
+        self.assertFalse(base[~upto].equals(after[~upto]))
+
+    def test_pitching_is_optional_and_falls_back_to_league_priors(self):
+        games = _games()
+        frame = build(games, PARKS, None, None)
+        for column in ("home_sp_k_rate", "home_bp_rate", "home_bp_workload"):
+            self.assertIn(column, frame.columns)
+        self.assertTrue(frame["home_sp_k_rate"].notna().all())
+        # With no boxscores every starter looks league-average.
+        self.assertEqual(frame["home_sp_k_rate"].nunique(), 1)
+
+    def test_boxscores_actually_separate_pitchers(self):
+        games = _games()
+        frame = build(games, PARKS, None, _pitching(games))
+        self.assertGreater(frame["home_sp_k_rate"].nunique(), 1)
+        self.assertGreater(frame["home_bp_workload"].max(), 0)

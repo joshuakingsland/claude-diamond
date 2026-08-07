@@ -19,7 +19,7 @@ from collections import defaultdict, deque
 import numpy as np
 import pandas as pd
 
-from parks import venue_key
+from parks import id_key
 from weather import air_density_index
 
 # League-average runs per team per game, used only as a prior before a team
@@ -85,11 +85,10 @@ class PitcherState:
     """Runs allowed by the team in games this pitcher started.
 
     This is a proxy, not a pitcher's own earned-run average: it includes the
-    bullpen that followed him. It is used because it costs nothing — the
+    bullpen that followed him. It is kept because it costs nothing — the
     starter's identity is already on every schedule row — and because it is
-    point-in-time by construction. A true FIP needs per-start boxscore lines
-    and is a separate ingestion job; the column names here do not pretend
-    otherwise.
+    point-in-time by construction. `PitcherComponents` below adds what it
+    cannot see.
     """
 
     def __init__(self):
@@ -109,6 +108,148 @@ class PitcherState:
         if self.last_date is None:
             return 5
         return int(np.clip((date - self.last_date).days, 0, 15))
+
+
+# Batters faced carried by the league prior before a pitcher has a record of
+# his own. A starter faces roughly 24 a start, so this is about eight starts:
+# enough that a two-start sample cannot dominate, not so much that a
+# established starter is dragged to average.
+PRIOR_BATTERS_FACED = 200.0
+# Outs a bullpen throws in three days before it is meaningfully taxed. Roughly
+# two full games' worth of relief.
+BULLPEN_WINDOW_DAYS = 3
+
+
+class PitcherComponents:
+    """A starter's own strikeout, walk and home-run rates, and how deep he goes.
+
+    This is the first thing in the feature set that is not a rearrangement of
+    runs scored and allowed. Everything else is downstream of the scoreboard,
+    which is precisely what the market has already priced; a starter's own
+    contact profile is a different input, and it stabilises far faster than
+    runs allowed because it strips out the fielding and bullpen behind him.
+
+    Rates are per batter faced rather than per inning, so a pitcher who is
+    pulled early is not rewarded for the outs he never recorded.
+    """
+
+    def __init__(self):
+        self.batters = 0.0
+        self.strikeouts = 0.0
+        self.walks = 0.0
+        self.home_runs = 0.0
+        self.outs = 0.0
+        self.starts = 0
+
+    def _rate(self, count, league):
+        return ((count + league * PRIOR_BATTERS_FACED)
+                / (self.batters + PRIOR_BATTERS_FACED))
+
+    def strikeout_rate(self, league):
+        return self._rate(self.strikeouts, league)
+
+    def walk_rate(self, league):
+        return self._rate(self.walks, league)
+
+    def home_run_rate(self, league):
+        return self._rate(self.home_runs, league)
+
+    def depth(self):
+        """Average outs recorded per start; league starters sit near 16."""
+        if self.starts < 2:
+            return 16.0
+        return self.outs / self.starts
+
+    def fold(self, line):
+        self.batters += _number(line.get("batters_faced"))
+        self.strikeouts += _number(line.get("strike_outs"))
+        self.walks += (_number(line.get("walks"))
+                       + _number(line.get("hit_batsmen")))
+        self.home_runs += _number(line.get("home_runs"))
+        self.outs += _number(line.get("outs"))
+        self.starts += 1
+
+
+class BullpenState:
+    """Relief quality, and how much of it has been used lately.
+
+    Fatigue is the point. A bullpen that threw six innings yesterday and four
+    the day before is a different opponent tonight, and it is knowable before
+    first pitch, which is more than can be said for most of what moves a
+    baseball game.
+    """
+
+    def __init__(self):
+        self.runs = 0.0
+        self.outs = 0.0
+        self.recent = deque()
+
+    def rate(self, league):
+        """Runs allowed per 27 outs, shrunk toward the league."""
+        prior_outs = 300.0
+        return ((self.runs + league * prior_outs / 27.0)
+                / (self.outs + prior_outs)) * 27.0
+
+    def workload(self, date):
+        """Relief outs thrown in the trailing window."""
+        cutoff = date - pd.Timedelta(days=BULLPEN_WINDOW_DAYS)
+        return float(sum(outs for day, outs in self.recent if day > cutoff))
+
+    def fold(self, date, outs, runs):
+        self.runs += runs
+        self.outs += outs
+        self.recent.append((date, outs))
+        cutoff = date - pd.Timedelta(days=BULLPEN_WINDOW_DAYS * 2)
+        while self.recent and self.recent[0][0] <= cutoff:
+            self.recent.popleft()
+
+
+class LeagueRates:
+    """Running league averages, so a prior is measured rather than assumed."""
+
+    def __init__(self):
+        self.batters = 0.0
+        self.strikeouts = 0.0
+        self.walks = 0.0
+        self.home_runs = 0.0
+        self.relief_outs = 0.0
+        self.relief_runs = 0.0
+
+    def _rate(self, count, fallback):
+        return count / self.batters if self.batters > 5000 else fallback
+
+    @property
+    def strikeout(self):
+        return self._rate(self.strikeouts, 0.225)
+
+    @property
+    def walk(self):
+        return self._rate(self.walks, 0.090)
+
+    @property
+    def home_run(self):
+        return self._rate(self.home_runs, 0.033)
+
+    @property
+    def relief(self):
+        if self.relief_outs < 3000:
+            return 4.2
+        return self.relief_runs / self.relief_outs * 27.0
+
+    def fold(self, line):
+        self.batters += _number(line.get("batters_faced"))
+        self.strikeouts += _number(line.get("strike_outs"))
+        self.walks += (_number(line.get("walks"))
+                       + _number(line.get("hit_batsmen")))
+        self.home_runs += _number(line.get("home_runs"))
+        if not int(_number(line.get("is_starter"))):
+            self.relief_outs += _number(line.get("outs"))
+            self.relief_runs += _number(line.get("runs"))
+
+
+def _number(value):
+    result = _float(value)
+    return 0.0 if result is None else result
 
 
 class ParkState:
@@ -137,6 +278,12 @@ FEATURE_COLUMNS = [
     "home_games_played", "away_games_played",
     "home_sp_rate", "away_sp_rate", "home_sp_recent", "away_sp_recent",
     "home_sp_starts", "away_sp_starts", "home_sp_rest", "away_sp_rest",
+    "home_sp_k_rate", "away_sp_k_rate",
+    "home_sp_bb_rate", "away_sp_bb_rate",
+    "home_sp_hr_rate", "away_sp_hr_rate",
+    "home_sp_depth", "away_sp_depth",
+    "home_bp_rate", "away_bp_rate",
+    "home_bp_workload", "away_bp_workload",
     "park_factor", "elevation_km",
     "temp_c", "air_density_index", "wind_out_to_center_ms",
     "wind_left_to_right_ms", "precip_mm", "roof_retractable", "roof_dome",
@@ -151,42 +298,58 @@ def _rest_days(previous, current):
     return int(np.clip(delta, 0, 10))
 
 
-def build(games, parks, weather=None):
+def build(games, parks, weather=None, pitching=None):
     """Return a feature frame aligned to ``games``, in chronological order.
 
     ``games`` must contain final results; unfinished games are kept so the
     same builder can produce a live card, but they contribute nothing to
     state.
+
+    ``pitching`` is optional per-start boxscore lines. Without it the starter
+    and bullpen columns fall back to league priors, so a card can still be
+    priced on a day the boxscore ingestion has not caught up — the model then
+    sees an average pitcher rather than a wrong one.
     """
     weather = weather if weather is not None else pd.DataFrame()
     weather_by_game = {}
     if len(weather):
         for row in weather.to_dict("records"):
-            weather_by_game[str(row["game_pk"])] = row
+            weather_by_game[id_key(row["game_pk"])] = row
+
+    pitching_by_game = {}
+    if pitching is not None and len(pitching):
+        for row in pitching.to_dict("records"):
+            pitching_by_game.setdefault(id_key(row["game_pk"]), []).append(row)
 
     games = games.sort_values(["official_date", "game_pk"]).reset_index(drop=True)
     teams = defaultdict(TeamState)
     pitchers = defaultdict(PitcherState)
+    components = defaultdict(PitcherComponents)
+    bullpens = defaultdict(BullpenState)
+    league = LeagueRates()
     park_states = defaultdict(ParkState)
     league_runs, league_games = 0.0, 0
 
     rows = []
     for game in games.to_dict("records"):
         season = game["season"]
-        home_id, away_id = str(game["home_team_id"]), str(game["away_team_id"])
+        home_id, away_id = id_key(game["home_team_id"]), id_key(game["away_team_id"])
         home, away = teams[home_id], teams[away_id]
         home.roll_season(season)
         away.roll_season(season)
 
         date = pd.Timestamp(game["official_date"])
-        home_sp = pitchers[str(game.get("home_sp_id"))]
-        away_sp = pitchers[str(game.get("away_sp_id"))]
-        venue = venue_key(game["venue_id"])
+        home_sp = pitchers[id_key(game.get("home_sp_id"))]
+        away_sp = pitchers[id_key(game.get("away_sp_id"))]
+        home_sp_parts = components[id_key(game.get("home_sp_id"))]
+        away_sp_parts = components[id_key(game.get("away_sp_id"))]
+        home_pen, away_pen = bullpens[home_id], bullpens[away_id]
+        venue = id_key(game["venue_id"])
         park = parks.get(venue, {})
         league_mean = (league_runs / league_games) if league_games else PRIOR_RUNS * 2
         park_factor = park_states[venue].factor(league_mean)
 
-        conditions = weather_by_game.get(str(game["game_pk"]), {})
+        conditions = weather_by_game.get(id_key(game["game_pk"]), {})
         temp_c = _float(conditions.get("temp_c"))
         density = air_density_index(
             temp_c, _float(conditions.get("pressure_hpa")),
@@ -230,6 +393,18 @@ def build(games, parks, weather=None):
             "away_sp_starts": away_sp.starts,
             "home_sp_rest": home_sp.rest(date),
             "away_sp_rest": away_sp.rest(date),
+            "home_sp_k_rate": home_sp_parts.strikeout_rate(league.strikeout),
+            "away_sp_k_rate": away_sp_parts.strikeout_rate(league.strikeout),
+            "home_sp_bb_rate": home_sp_parts.walk_rate(league.walk),
+            "away_sp_bb_rate": away_sp_parts.walk_rate(league.walk),
+            "home_sp_hr_rate": home_sp_parts.home_run_rate(league.home_run),
+            "away_sp_hr_rate": away_sp_parts.home_run_rate(league.home_run),
+            "home_sp_depth": home_sp_parts.depth(),
+            "away_sp_depth": away_sp_parts.depth(),
+            "home_bp_rate": home_pen.rate(league.relief),
+            "away_bp_rate": away_pen.rate(league.relief),
+            "home_bp_workload": home_pen.workload(date),
+            "away_bp_workload": away_pen.workload(date),
             "park_factor": park_factor,
             "elevation_km": (park.get("elevation_m") or 0.0) / 1000.0,
             "temp_c": temp_c if temp_c is not None else 20.0,
@@ -278,6 +453,18 @@ def build(games, parks, weather=None):
             pitcher.recent.append(allowed)
             pitcher.last_date = date
 
+        # Boxscore lines fold in here with everything else, after the row for
+        # this game has already been emitted, so a starter's own line can
+        # never inform the game it was thrown in.
+        for line in pitching_by_game.get(id_key(game["game_pk"]), ()):
+            league.fold(line)
+            team = id_key(line.get("team_id"))
+            if int(_number(line.get("is_starter"))):
+                components[id_key(line.get("player_id"))].fold(line)
+            else:
+                bullpens[team].fold(date, _number(line.get("outs")),
+                                    _number(line.get("runs")))
+
         park_states[venue].runs += home_score + away_score
         park_states[venue].games += 1
         league_runs += home_score + away_score
@@ -297,7 +484,8 @@ def _float(value):
 
 
 def load_inputs(games_path="data/games.csv", weather_path="data/weather.csv",
-                parks_path="data/parks.json"):
+                parks_path="data/parks.json",
+                pitching_path="data/pitching.csv"):
     import json
     from pathlib import Path
 
@@ -305,7 +493,9 @@ def load_inputs(games_path="data/games.csv", weather_path="data/weather.csv",
     parks = json.loads(Path(parks_path).read_text(encoding="utf-8"))
     weather = (pd.read_csv(weather_path) if Path(weather_path).exists()
                else pd.DataFrame())
-    return games, parks, weather
+    pitching = (pd.read_csv(pitching_path) if Path(pitching_path).exists()
+                else pd.DataFrame())
+    return games, parks, weather, pitching
 
 
 def main():
@@ -314,10 +504,12 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--games", default="data/games.csv")
     parser.add_argument("--weather", default="data/weather.csv")
+    parser.add_argument("--pitching", default="data/pitching.csv")
     parser.add_argument("--out", default="data/features.csv")
     args = parser.parse_args()
-    games, parks, weather = load_inputs(args.games, args.weather)
-    frame = build(games, parks, weather)
+    games, parks, weather, pitching = load_inputs(
+        args.games, args.weather, pitching_path=args.pitching)
+    frame = build(games, parks, weather, pitching)
     frame.to_csv(args.out, index=False)
     print(f"wrote {len(frame)} feature rows and {len(FEATURE_COLUMNS)} "
           f"columns to {args.out}")
