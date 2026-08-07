@@ -1,0 +1,114 @@
+{
+  "games": 4155,
+  "bands": [
+    {
+      "band": "0-3",
+      "games": 1719,
+      "model_says": 50.2,
+      "market_says": 48.7,
+      "actually_won": 48.1,
+      "no_vig_roi_pct": -0.9
+    },
+    {
+      "band": "3-5",
+      "games": 890,
+      "model_says": 50.1,
+      "market_says": 46.2,
+      "actually_won": 46.6,
+      "no_vig_roi_pct": 0.8
+    },
+    {
+      "band": "5-8",
+      "games": 884,
+      "model_says": 51.1,
+      "market_says": 44.8,
+      "actually_won": 44.6,
+      "no_vig_roi_pct": -1.8
+    },
+    {
+      "band": "8-10",
+      "games": 318,
+      "model_says": 51.7,
+      "market_says": 42.7,
+      "actually_won": 42.5,
+      "no_vig_roi_pct": 0.7
+    },
+    {
+      "band": "10-12",
+      "games": 179,
+      "model_says": 52.5,
+      "market_says": 41.6,
+      "actually_won": 43.0,
+      "no_vig_roi_pct": 0.5
+    },
+    {
+      "band": "12-13",
+      "games": 51,
+      "model_says": 52.4,
+      "market_says": 39.9,
+      "actually_won": 43.1,
+      "no_vig_roi_pct": 4.6
+    },
+    {
+      "band": "13-14",
+      "games": 44,
+      "model_says": 55.4,
+      "market_says": 42.1,
+      "actually_won": 27.3,
+      "no_vig_roi_pct": -37.8
+    },
+    {
+      "band": "14-15",
+      "games": 36,
+      "model_says": 53.7,
+      "market_says": 39.3,
+      "actually_won": 52.8,
+      "no_vig_roi_pct": 35.1
+    },
+    {
+      "band": "15-17",
+      "games": 20,
+      "model_says": 56.6,
+      "market_says": 40.8,
+      "actually_won": 50.0,
+      "no_vig_roi_pct": 18.2
+    },
+    {
+      "band": "17+",
+      "games": 14,
+      "model_says": 55.1,
+      "market_says": 36.5,
+      "actually_won": 64.3,
+      "no_vig_roi_pct": 76.2
+    }
+  ],
+  "wide_disagreements": {
+    "threshold_pts": 10,
+    "games": 344,
+    "model_says": 53.3,
+    "market_says": 40.9,
+    "actually_won": 43.3
+  },
+  "threshold_search": {
+    "cuts_searched": [
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
+    "best_observed_roi_pct": 76.2,
+    "p_value_after_search": 0.1234,
+    "null_best_cut_mean_roi_pct": 32.8,
+    "null_share_above_30pct": 0.433
+  },
+  "measured_overround_pct": 4.55,
+  "verdict": "No support for large disagreements being profitable. Adjacent bands of similar size swing from heavily negative to heavily positive, the apparent edge at the widest cut does not survive pricing the threshold search, and in every band the market's probability is the accurate one while the model's is not. All figures are before vig."
+}

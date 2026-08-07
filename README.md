@@ -92,6 +92,7 @@ validate.py   walk-forward validation and the honest report
 odds.py       three-market odds capture with paired-book de-vig
 historical_odds.py  capped, resumable historical snapshots
 market.py     joins prices to predictions; asks whether the model beats them
+extremes.py   does a large disagreement pay? no, and here is why it looks like it does
 predict_upcoming.py  prices the live card; the only forward-looking path
 ledger.py     the paper forward test, and where the staking policy is applied
 model_card.py generates the public page at docs/index.html
@@ -300,6 +301,50 @@ the model, from +0.0038 to +0.0059.
 
 The lesson rhymes with the dispersion bug below: the dangerous errors are the
 ones that leave the output looking reasonable.
+
+### Are the big disagreements worth betting?
+
+The natural question, and the one the UFC project cannot answer at two wagers
+a month. A season of baseball fills the tail, so `extremes.py` asks it
+properly. Positive ROI means backing the model's side pays at the market's own
+de-vigged price; every figure is **before vig**, and the measured overround is
+4.55%, about 2.3 points a side.
+
+| Disagreement | Games | Model says | Market says | Actually won | No-vig ROI |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 0-3 pts | 1,719 | 50.2% | 48.7% | 48.1% | -0.9% |
+| 3-5 | 890 | 50.1% | 46.2% | 46.6% | +0.8% |
+| 5-8 | 884 | 51.1% | 44.8% | 44.6% | -1.8% |
+| 8-10 | 318 | 51.7% | 42.7% | 42.5% | +0.7% |
+| 10-12 | 179 | 52.5% | 41.6% | 43.0% | +0.5% |
+| 12-13 | 51 | 52.4% | 39.9% | 43.1% | +4.6% |
+| **13-14** | 44 | 55.4% | 42.1% | **27.3%** | **-37.8%** |
+| **14-15** | 36 | 53.7% | 39.3% | **52.8%** | **+35.1%** |
+| 15-17 | 20 | 56.6% | 40.8% | 50.0% | +18.2% |
+| 17+ | 14 | 55.1% | 36.5% | 64.3% | +76.2% |
+
+Cut the table at 14 points and the tail returns +38.5% over 70 games with a
+bootstrap interval excluding zero. It is not real, for three reasons.
+
+**The shape.** The bands are disjoint, and 13-14 loses 37.8% over 44 games
+while 14-15 wins 35.1% over 36. Nothing makes a 13.5-point disagreement lose
+badly and a 14.5-point one win big. The edge at 14+ exists because the cut
+excludes the bad band; a cumulative threshold hides exactly this.
+
+**The search.** Thresholds from 8 to 20 were tried. Under a null where the
+market price is simply correct, the best cut a searcher finds still averages
+**+33%** and clears +30% in **43%** of simulated seasons. After pricing that
+search the observed result gives p = 0.12. Finding a spectacular bucket is what
+searching produces.
+
+**The direction.** In every band the market's number is the accurate one. At
+10-15 points the market implied 41.6-42.1% and 43.0% came in; the model said
+52.5%. The model is not finding value where it disagrees most — it is most
+wrong there, which is what a large disagreement with a sharper counterparty
+should be expected to mean.
+
+Across all 4,155 rows the trend of return against disagreement is Spearman
+rho = +0.03 (p = 0.08). There is no gradient to ride.
 
 ### Four more of the same kind
 
