@@ -140,8 +140,29 @@ def build_board(card, ledger, rejections):
         market = market_home if side == "home" else 1 - market_home
         price = row[f"best_price_{side}"]
         book = row[f"best_book_{side}"]
+        books = int(_float(row["market_books"], 0))
+        spread = _float(row["market_spread"], 0)
+        lead = int(_float(row["lead_minutes"], 0))
         key = (str(row["game_pk"]), row["market"], point_key(row["point"]))
         wager = locked.get(key)
+        if wager is not None:
+            # A locked wager is shown as it was struck, not as the board reads
+            # now. The market moves after a lock — one taken at five books was
+            # displaying the one book still quoting it, which makes a wager
+            # that cleared the gate look like it breached it. The recorded
+            # quote is also the one it will be settled against.
+            # .get throughout: the ledger is append-only, so it can still hold
+            # rows written before a column existed. A page regenerated every
+            # hour must not fail on its own history.
+            side = wager.get("side") or side
+            model = _float(wager.get("model_prob"), model)
+            market = _float(wager.get("market_prob"), market)
+            gap = _float(wager.get("disagreement"), abs(gap))
+            price = _float(wager.get("price"), price)
+            book = wager.get("book") or book
+            books = int(_float(wager.get("market_books"), books))
+            spread = _float(wager.get("market_spread"), spread)
+            lead = int(_float(wager.get("lead_minutes"), lead))
         board.append({
             "game": f"{row['away_team']} @ {row['home_team']}",
             "home": row["home_team"], "away": row["away_team"],
@@ -154,9 +175,9 @@ def build_board(card, ledger, rejections):
             "gap": round(abs(gap) * 100, 1),
             "price": _float(price),
             "book": book,
-            "books": int(_float(row["market_books"], 0)),
-            "spread": round(_float(row["market_spread"], 0) * 100, 1),
-            "lead": int(_float(row["lead_minutes"], 0)),
+            "books": books,
+            "spread": round(spread * 100, 1),
+            "lead": lead,
             "commence": row["commence_time"],
             "date": row["official_date"],
             "runs": f"{_float(row['expected_away_runs'], 0):.2f}-"
@@ -244,9 +265,21 @@ TEMPLATE = """<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Diamond Ledger | Model Card Read</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+  /* Fonts are served from this repository rather than fetched from Google.
+     They are static files under docs/fonts, committed once, while this page is
+     rewritten every capture — embedding them as data URIs would add ~190KB of
+     base64 to an hourly commit. Latin subsets only: team names, prices and
+     probabilities are all ASCII. */
+  @font-face{font-family:'Anton';font-style:normal;font-weight:400;font-display:swap;
+    src:url(fonts/anton-400.woff2) format('woff2')}
+  @font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:400;font-display:swap;
+    src:url(fonts/plexmono-400.woff2) format('woff2')}
+  @font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:600;font-display:swap;
+    src:url(fonts/plexmono-600.woff2) format('woff2')}
+  /* Inter ships as a variable font, so one file covers every weight used. */
+  @font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;
+    src:url(fonts/inter-var.woff2) format('woff2')}
   :root{--ink:#0b0e14;--surface:#141926;--line:#232b40;--text:#e8eaf0;--muted:#7a8299;
     --faint:#4a5268;--market:#8b93a7;--gold:#e8b54d;--gold-dim:#8a6f35;--warn:#c9705b}
   *{box-sizing:border-box;margin:0;padding:0}

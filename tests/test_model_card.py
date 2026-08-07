@@ -87,6 +87,32 @@ class BoardTests(unittest.TestCase):
         self.assertTrue(board[0]["bet"])
         self.assertEqual(board[0]["stake"], 1.0)
 
+    def test_a_locked_wager_is_shown_as_it_was_struck(self):
+        """The board moves after a lock; the recorded quote is what settles.
+
+        A wager taken at five books was displaying the one book still quoting
+        the line, which reads as a wager that breached the book-count gate.
+        """
+        wager = {"game_pk": "1", "market": "h2h", "point": "", "stake": "1.0",
+                 "official_date": "2026-08-05", "home_team": HOME,
+                 "away_team": AWAY, "side": "home", "model_prob": "0.61",
+                 "market_prob": "0.49", "disagreement": "0.12",
+                 "price": "-101", "book": "Locked Book", "market_books": "5",
+                 "market_spread": "0.02", "lead_minutes": "45",
+                 "outcome": "", "profit": ""}
+        thin = _card_row(market_books="1", best_price_home="-300",
+                         best_book_home="Last Book")
+        row = build_board([thin], [wager], [])[0]
+        self.assertEqual(row["books"], 5)
+        self.assertEqual(row["price"], -101.0)
+        self.assertEqual(row["book"], "Locked Book")
+        self.assertEqual(row["model"], 61.0)
+        self.assertEqual(row["gap"], 12.0)
+
+    def test_an_unlocked_row_still_reads_the_live_board(self):
+        row = build_board([_card_row(market_books="4")], [], [])[0]
+        self.assertEqual(row["books"], 4)
+
     def test_a_rejected_row_shows_the_gate_that_stopped_it(self):
         rejection = {"game_pk": "1", "market": "h2h", "point": "",
                      "gate": "below_edge_rule"}

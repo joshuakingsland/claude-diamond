@@ -95,6 +95,8 @@ market.py     joins prices to predictions; asks whether the model beats them
 predict_upcoming.py  prices the live card; the only forward-looking path
 ledger.py     the paper forward test, and where the staking policy is applied
 model_card.py generates the public page at docs/index.html
+merge_data.py union/replace rules for two runs committing at once
+commit_data.sh  commit and push generated data, merging on collision
 ```
 
 ## The public page
@@ -115,6 +117,16 @@ opens with picks and buries the measurement is advertising.
 The module is `model_card.py` and not `site.py` because Python imports a
 stdlib module called `site` at interpreter startup; a file of that name in the
 repository root is a trap.
+
+Fonts are served from `docs/fonts` rather than fetched from Google: static
+files committed once, while the page itself is rewritten every capture.
+Embedding them as data URIs would add about 190KB of base64 to an hourly
+commit, and the latin subsets are all this needs.
+
+A locked wager is displayed as it was struck, not as the board reads now. The
+market moves after a lock — one taken at five books was showing the single
+book still quoting the line, which reads as a wager that breached the
+book-count gate. The recorded quote is also the one it settles against.
 
 To serve it: **Settings → Pages → Source: Deploy from a branch → `main` /docs**.
 
