@@ -36,11 +36,16 @@ on:
 permissions:
   contents: write
 
-concurrency:
-  # Two runs writing the same quote log would race on the commit. Queue them
-  # instead of cancelling: a cancelled run is a missing snapshot forever.
-  group: capture-odds
-  cancel-in-progress: false
+# No concurrency group. One was here to stop two captures racing on the quote
+# log, on the assumption that a second run would queue behind the first. It
+# does not: GitHub holds only one pending run per group, so a third arrival
+# cancels the second outright. Scheduled runs fire at irregular times and
+# sometimes bunch, and two captures were cancelled that way — a lost snapshot
+# is only re-buyable from the historical endpoint at five times the price.
+#
+# Overlap is allowed instead, and the commit step merges: append-only logs are
+# unioned so neither run's rows are lost, regenerated snapshots take the later
+# version. See merge_data.py.
 
 jobs:
   capture:
@@ -110,25 +115,4 @@ jobs:
         # failure; this only stops the data going with it.
         if: ${{ always() && steps.season.outputs.active == 'true' }}
         run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          # -A over the directory rather than a list of paths: a run that dies
-          # before writing one of them would otherwise fail here on a pathspec
-          # that matches nothing, masking the original error.
-          git add -A data docs
-          if git diff --cached --quiet; then
-            echo "No new quotes."
-            exit 0
-          fi
-          git commit -m "data: odds snapshot $(date -u +%Y-%m-%dT%H:%MZ)"
-          for attempt in 1 2 3 4; do
-            if git push origin "HEAD:${GITHUB_REF_NAME}"; then
-              exit 0
-            fi
-            echo "push failed (attempt $attempt); rebasing on the remote"
-            git pull --rebase --autostash origin "${GITHUB_REF_NAME}" || exit 1
-            sleep $((2 ** attempt))
-          done
-          echo "could not push after 4 attempts"
-          exit 1
+          bash commit_data.sh "data: odds snapshot $(date -u +%Y-%m-%dT%H:%MZ)" data docs
