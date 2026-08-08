@@ -97,6 +97,7 @@ odds.py       three-market odds capture with paired-book de-vig
 historical_odds.py  capped, resumable historical snapshots
 market.py     joins prices to predictions; asks whether the model beats them
 extremes.py   does a large disagreement pay? no, and here is why it looks like it does
+mean_calibration.py  the predicted means are over-spread; correcting them makes pricing worse
 umpires.py    home-plate umpire assignments, one per game
 umpire_effect.py  permutation tests for an umpire main effect
 leverage.py   win expectancy, for leverage-weighting bullpen workload
@@ -563,11 +564,73 @@ An order of magnitude smaller than the censoring fix above, and the same kind
 of thing: an assumption removed, not information added. The tally is now five
 information sources that did nothing and two wrong assumptions that paid.
 
-**What this does not fix.** The remaining shape error is in the same place,
-just smaller — and the model's predicted means are themselves too widely
-spread, under-predicting the quietest fifth of games by 0.25 runs and
-over-predicting the loudest by 0.27. That is a miscalibrated *mean*, not a
-miscalibrated shape, and it is the next thing to look at.
+**What this does not fix** is the predicted means themselves, which are too
+widely spread. That was the next thing looked at, and the answer was
+surprising enough to get its own section.
+
+### A real defect that must not be fixed
+
+The means are over-spread, and unambiguously so. Regress observed runs on
+predicted across the walk-forward and the slope is **0.712**, not 1. Split the
+predictions into quintiles and the pattern is sharper than a slope:
+
+| Predicted runs | Games | Observed − predicted | Seasons with that sign |
+| --- | ---: | ---: | :---: |
+| 2.31–3.85 | 4,571 | **+0.236** | 5/5 |
+| 3.85–4.23 | 4,571 | +0.103 | 4/5 |
+| 4.23–4.57 | 4,571 | −0.032 | 1/5 |
+| 4.57–5.01 | 4,571 | +0.009 | 2/5 |
+| 5.01–9.77 | 4,572 | **−0.374** | 0/5 |
+
+The middle three quintiles are within 0.10 and their per-season gaps change
+sign. The extremes are off in the same direction every single season. This is
+regression to the mean — the ordinary consequence of conditioning on a noisy
+estimate — and it is exactly the kind of measured, persistent defect that the
+rest of this repository says is worth fixing.
+
+Fixing it makes the model worse. Both standard corrections, fitted out of
+sample, with the dispersion and inning shape refitted on the corrected
+predictions so the comparison is fair:
+
+| Market | Uncorrected | Linear Δ | Isotonic Δ |
+| --- | ---: | ---: | ---: |
+| Moneyline | 0.68078 | +0.00076 [−0.0003, +0.0018] | +0.00176 [+0.0004, +0.0032] |
+| Run line | 0.63896 | +0.00156 [+0.0005, +0.0026] | +0.00265 [+0.0014, +0.0041] |
+| Total | 0.68701 | +0.00246 [+0.0014, +0.0035] | +0.00274 [+0.0013, +0.0042] |
+
+Five of six intervals exclude zero, on the wrong side.
+
+**Why.** The run-scoring mean and the price are not the same quantity. The
+between-game spread of predicted means is 0.743 runs against a residual spread
+of 3.143 — the signal is under a quarter of the per-game noise — and the
+dispersion is fitted from residuals around the *unshrunk* mean, so the priced
+distribution has already absorbed the attenuation. Correcting the mean on top
+charges for the same uncertainty twice, and it shows up precisely where that
+account predicts:
+
+| | Calibration slope | Calibration error | sd(predicted probability) |
+| --- | ---: | ---: | ---: |
+| Uncorrected | 0.876 | 0.01341 | 0.0837 |
+| Linear | **1.286** | 0.02109 | 0.0557 |
+| Isotonic | **1.100** | 0.01354 | 0.0652 |
+
+The correction does not move the model toward calibrated, it carries it
+through 1.0 and out the other side into under-confidence. Isotonic is the
+instructive case: calibration error essentially unchanged, log loss clearly
+worse, and the spread of predicted probabilities down 22%. The loss is not in
+calibration, it is in discrimination — and a model that answers 0.5 to
+everything is perfectly calibrated and worth nothing.
+
+The conclusion is *not* that the means are fine. An estimator that fixed the
+attenuation at source, by being less noisy, would be a genuine improvement.
+What does not work is repairing the symptom downstream of a width that already
+accounts for it. `mean_calibration.py` reproduces all of it.
+
+This is the counterexample to the pattern the rest of this file reports. Two
+wrong assumptions removed paid; five information sources did nothing; and here
+a real, persistent, correctly measured defect turns out to be one that should
+be left alone. "Removing wrong assumptions pays" is a summary of what has
+happened, not a rule that can be applied without checking.
 
 ### Three more wrong assumptions
 
