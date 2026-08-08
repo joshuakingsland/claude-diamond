@@ -17,9 +17,11 @@ from sklearn.linear_model import PoissonRegressor
 from sklearn.preprocessing import StandardScaler
 
 from features import FEATURE_COLUMNS
-from runs import (DEFAULT_WALK_OFF_MARGINS, calibrate_extra_innings,
+from runs import (DEFAULT_EXTRA_INNING_MARGINS, DEFAULT_WALK_OFF_MARGINS,
+                  calibrate_extra_innings,
                   calibrate_walk_off,
                   fit_dispersion, joint_distribution,
+                  uncensor_home_mean,
                   moneyline_probability, push_probability,
                   runline_probability, total_over_probability)
 
@@ -75,7 +77,7 @@ class RunsModel:
         self.estimator = None
         self.dispersion = (4.0, 4.0)
         self.extra_home_edge = 0.52
-        self.extra_total_runs = 1.0
+        self.extra_margins = DEFAULT_EXTRA_INNING_MARGINS
         self.walk_off_margins = DEFAULT_WALK_OFF_MARGINS
 
     def fit(self, features, games):
@@ -114,7 +116,7 @@ class RunsModel:
         # 0.97 on baseball games and the moneyline scored worse than a
         # constant. The estimator was fine; the width was measured wrong.
         self.dispersion = self._holdout_dispersion(merged)
-        self.extra_home_edge, self.extra_total_runs = calibrate_extra_innings(merged)
+        self.extra_home_edge, self.extra_margins = calibrate_extra_innings(merged)
         # Measured from the games rather than assumed, like the extra-innings
         # parameters: a walk-off ends on the go-ahead run most of the time but
         # not always, and the run line is decided at exactly that boundary.
@@ -160,6 +162,40 @@ class RunsModel:
                 fit_dispersion(held["away_score"].to_numpy(dtype=float),
                                predicted[cut:]))
 
+    def _joint(self, home_mean, away_mean, scheduled):
+        """Price each scheduled length separately, then reassemble in order.
+
+        Almost always one group. The loop exists because a seven-inning game
+        has a different ninth — there is not one — and a different run
+        expectation.
+        """
+        joint = None
+        for length in np.unique(scheduled):
+            rows = np.flatnonzero(scheduled == length)
+            share = length / 9.0
+            # The estimator predicts a nine-inning game; a shorter one scores
+            # proportionally less.
+            home = home_mean[rows] * share
+            away = away_mean[rows] * share
+            # The estimator learned a censored home mean, because observed
+            # home scores are censored. Recover the full-length mean so the
+            # distribution does not truncate the same innings twice.
+            home = uncensor_home_mean(
+                home, away, self.dispersion, innings=int(length),
+                walk_off_margins=self.walk_off_margins,
+                extra_inning_home_edge=self.extra_home_edge,
+                extra_inning_margins=self.extra_margins)
+            block = joint_distribution(
+                home, away, self.dispersion, innings=int(length),
+                walk_off_margins=self.walk_off_margins,
+                extra_inning_home_edge=self.extra_home_edge,
+                extra_inning_margins=self.extra_margins,
+            )
+            if joint is None:
+                joint = np.empty((len(scheduled),) + block.shape[1:])
+            joint[rows] = block
+        return joint
+
     def _raw(self, design):
         if self.kind == "glm":
             return self.estimator.predict(self.scaler.transform(design))
@@ -171,15 +207,26 @@ class RunsModel:
         away = self._raw(_design(mirror(features)))
         return np.clip(home, 0.2, 20.0), np.clip(away, 0.2, 20.0)
 
-    def price(self, features, runline_points=(-1.5,), total_points=(8.5,)):
-        """Return a probability frame for every market and line requested."""
+    def price(self, features, runline_points=(-1.5,), total_points=(8.5,),
+              innings=None):
+        """Return a probability frame for every market and line requested.
+
+        ``innings`` is the scheduled length per game, nine unless a
+        doubleheader rule shortened it. 121 games in this dataset were seven
+        innings and were being priced as nine, which inflates both sides'
+        expected runs by a fifth.
+        """
         home_mean, away_mean = self.expected_runs(features)
-        joint = joint_distribution(
-            home_mean, away_mean, self.dispersion,
-            walk_off_margins=self.walk_off_margins,
-            extra_inning_home_edge=self.extra_home_edge,
-            extra_inning_total_runs=self.extra_total_runs,
-        )
+        scheduled = (np.full(len(features), 9.0) if innings is None
+                     else np.asarray(innings, dtype=float))
+        scheduled = np.where(np.isfinite(scheduled) & (scheduled > 0),
+                             scheduled, 9.0)
+        joint = self._joint(home_mean, away_mean, scheduled)
+        # Report what was priced. A seven-inning game expects proportionally
+        # fewer runs, and showing the nine-inning number beside a total priced
+        # for seven would contradict the card it appears on.
+        share = scheduled / 9.0
+        home_mean, away_mean = home_mean * share, away_mean * share
         out = pd.DataFrame({
             "game_pk": features["game_pk"].to_numpy(),
             "expected_home_runs": home_mean,
@@ -222,7 +269,10 @@ def walk_forward(features, games, seasons, kind="gbm", min_train_games=1500,
         if not len(test_features):
             continue
         model = RunsModel(kind=kind).fit(train_features, games)
-        priced = model.price(test_features)
+        lengths = (test_features[["game_pk"]]
+                   .merge(games[["game_pk", "scheduled_innings"]],
+                          on="game_pk", how="left")["scheduled_innings"])
+        priced = model.price(test_features, innings=lengths.to_numpy())
         priced["season"] = season
         priced["dispersion_home"] = model.dispersion[0]
         priced["dispersion_away"] = model.dispersion[1]

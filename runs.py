@@ -59,6 +59,24 @@ def _pair(dispersion):
 DEFAULT_WALK_OFF_MARGINS = (0.872, 0.075, 0.037, 0.016)
 MAX_WALK_OFF_MARGIN = len(DEFAULT_WALK_OFF_MARGINS)
 
+# Extra innings end by one run 69% of the time. The mean margin is 1.58, which
+# rounds to two, and rounding it was the bug: every one of the 8.8% of games
+# that go past regulation was being resolved two runs apart, on the exact
+# boundary the run line is decided at. Measured over 1,214 games.
+DEFAULT_EXTRA_INNING_MARGINS = (0.688, 0.159, 0.086, 0.067)
+MAX_EXTRA_INNING_MARGIN = len(DEFAULT_EXTRA_INNING_MARGINS)
+
+
+def _margin_shares(margin, buckets):
+    """Share of wins by 1, 2, ... runs, with the last bucket absorbing the tail."""
+    counts = np.zeros(buckets)
+    for index in range(buckets):
+        runs = index + 1
+        counts[index] = float((margin == runs).sum() if runs < buckets
+                              else (margin >= runs).sum())
+    total = counts.sum()
+    return None if total <= 0 else tuple(counts / total)
+
 
 def calibrate_walk_off(games):
     """Measure the winning margin when the home side bats last and wins.
@@ -74,17 +92,8 @@ def calibrate_walk_off(games):
     if len(walked) < 200:
         return DEFAULT_WALK_OFF_MARGINS
     margin = (walked["home_score"] - walked["away_score"]).astype(int)
-    counts = np.zeros(MAX_WALK_OFF_MARGIN)
-    for index in range(MAX_WALK_OFF_MARGIN):
-        runs = index + 1
-        # Everything past the last bucket lands in it; those margins are rare
-        # and their exact value does not move any line that is quoted.
-        counts[index] = float((margin == runs).sum() if runs < MAX_WALK_OFF_MARGIN
-                              else (margin >= runs).sum())
-    total = counts.sum()
-    if total <= 0:
-        return DEFAULT_WALK_OFF_MARGINS
-    return tuple(counts / total)
+    shares = _margin_shares(margin, MAX_WALK_OFF_MARGIN)
+    return shares or DEFAULT_WALK_OFF_MARGINS
 
 
 def _censored_home(home_pmf, away_pmf, mean_home, dispersion_home, innings=9,
@@ -149,9 +158,45 @@ def _censored_home(home_pmf, away_pmf, mean_home, dispersion_home, innings=9,
     return joint * away_pmf[..., None, :]
 
 
+def uncensor_home_mean(target, mean_away, dispersion, innings=9,
+                       walk_off_margins=DEFAULT_WALK_OFF_MARGINS,
+                       extra_inning_home_edge=0.52,
+                       extra_inning_margins=DEFAULT_EXTRA_INNING_MARGINS,
+                       rounds=6):
+    """The full-nine mean whose priced distribution has expectation ``target``.
+
+    The estimator is trained on observed home scores, and those are already
+    censored — the home side did not bat the ninth in roughly 43% of them. Its
+    output is therefore a censored mean, and feeding it into a distribution
+    that censors again truncates twice. Measured over 11,428 games that put the
+    implied home mean at 4.31 against 4.45 actual: the home side biased 0.14
+    runs low, on the market that matters most.
+
+    The target is the expectation of the *finished* distribution, extra
+    innings included, because that is what the estimator was fitted to. A
+    fixed point on the ratio converges in a few rounds and each round is one
+    build, where bisecting to the same precision would be many.
+
+    A single global inflation factor would not do: censoring bites harder on a
+    home favourite, which leads after eight more often. The factor runs from
+    about 1.04 for an underdog to 1.07 for a favourite.
+    """
+    target = np.asarray(target, dtype=float)
+    mean_home = target.copy()
+    for _ in range(rounds):
+        joint = joint_distribution(
+            mean_home, mean_away, dispersion,
+            extra_inning_home_edge=extra_inning_home_edge,
+            extra_inning_margins=extra_inning_margins,
+            innings=innings, walk_off_margins=walk_off_margins)
+        implied = (joint * GRID[:, None]).sum(axis=(-2, -1))
+        mean_home = mean_home * target / np.maximum(implied, 1e-9)
+    return mean_home
+
+
 def joint_distribution(mean_home, mean_away, dispersion,
                        extra_inning_home_edge=0.52,
-                       extra_inning_total_runs=1.0,
+                       extra_inning_margins=DEFAULT_EXTRA_INNING_MARGINS,
                        censor_home_ninth=True, innings=9,
                        walk_off_margins=DEFAULT_WALK_OFF_MARGINS):
     """Return the joint pmf over (home, away) runs with ties resolved.
@@ -190,36 +235,49 @@ def joint_distribution(mean_home, mean_away, dispersion,
     diagonal = np.einsum("...ii->...i", joint).copy()
     np.einsum("...ii->...i", joint)[...] = 0.0
 
-    winner_runs = max(1, int(round(float(extra_inning_total_runs))))
+    # Spread across the measured margins rather than one rounded number. The
+    # mean extra-inning margin is 1.58, which rounds to two, while 69% of them
+    # are decided by one — so rounding put every extra-inning game on the wrong
+    # side of the run line.
     for score in range(MAX_RUNS + 1):
         mass = diagonal[..., score]
-        winner_cell = min(score + winner_runs, MAX_RUNS)
-        if winner_cell <= score:
-            # Only possible at the top of the grid, where the pmf is
-            # negligible; park it on the diagonal rather than lose it.
-            joint[..., score, score] += mass
-            continue
-        joint[..., winner_cell, score] += mass * extra_inning_home_edge
-        joint[..., score, winner_cell] += mass * (1.0 - extra_inning_home_edge)
+        for index, share in enumerate(extra_inning_margins):
+            winner_cell = min(score + index + 1, MAX_RUNS)
+            if winner_cell <= score:
+                # Only at the top of the grid, where the pmf is negligible;
+                # park it on the diagonal rather than lose it.
+                joint[..., score, score] += mass * share
+                continue
+            joint[..., winner_cell, score] += (mass * share
+                                               * extra_inning_home_edge)
+            joint[..., score, winner_cell] += (mass * share
+                                               * (1.0 - extra_inning_home_edge))
 
     total = joint.sum(axis=(-2, -1), keepdims=True)
     return joint / np.where(total > 0, total, 1.0)
 
 
 def calibrate_extra_innings(games):
-    """Measure the home edge and run bump in games that went past regulation.
+    """Measure the home edge and the winning margin past regulation.
 
     ``games`` needs ``innings_played``, ``home_win``, ``home_score`` and
-    ``away_score``. Returns ``(home_edge, total_runs)`` suitable for
-    `joint_distribution`, falling back to neutral values on a thin sample.
+    ``away_score``. Returns ``(home_edge, margins)`` suitable for
+    `joint_distribution`, falling back to measured defaults on a thin sample.
+
+    The margin is returned as a distribution rather than a mean. Its mean is
+    1.58 and rounding that to two runs resolved every extra-inning game two
+    apart, when 69% of them end one apart — 8.8% of the schedule, landing
+    exactly on the run line.
     """
     extra = games[(games["innings_played"] > games["scheduled_innings"])
                   & games["home_win"].notna()]
     if len(extra) < 100:
-        return 0.52, 1.0
+        return 0.52, DEFAULT_EXTRA_INNING_MARGINS
     home_edge = float(extra["home_win"].mean())
-    margin = (extra["home_score"] - extra["away_score"]).abs()
-    return float(np.clip(home_edge, 0.40, 0.60)), float(np.clip(margin.mean(), 1.0, 3.0))
+    margin = (extra["home_score"] - extra["away_score"]).abs().astype(int)
+    shares = _margin_shares(margin, MAX_EXTRA_INNING_MARGIN)
+    return (float(np.clip(home_edge, 0.40, 0.60)),
+            shares or DEFAULT_EXTRA_INNING_MARGINS)
 
 
 def moneyline_probability(joint):

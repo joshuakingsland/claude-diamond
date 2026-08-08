@@ -155,7 +155,11 @@ def build_card(lines, games, features, kind="glm", now=None, verbose=True):
         return pd.DataFrame(), {"reason": "no card games have feature rows",
                                 "unmatched_events": len(unmatched)}
     runlines, totals = offered_points(lines)
-    priced = model.price(card, runline_points=runlines, total_points=totals)
+    lengths = (card[["game_pk"]]
+               .merge(games[["game_pk", "scheduled_innings"]],
+                      on="game_pk", how="left")["scheduled_innings"])
+    priced = model.price(card, runline_points=runlines, total_points=totals,
+                         innings=lengths.to_numpy())
     priced = priced.set_index("game_pk")
 
     stamp = f"{datetime.now(timezone.utc):%Y-%m-%dT%H:%M:%SZ}"

@@ -263,9 +263,9 @@ slates rather than games.
 
 | Market | Games | Δ log loss vs close | 90% interval | Verdict |
 | --- | ---: | ---: | :---: | --- |
-| Moneyline | 2,230 | +0.00641 | [0.0028, 0.0100] | Market better |
-| Run line -1.5 | 1,245 | +0.00342 | [-0.0010, 0.0078] | Undecided |
-| Total 8.5 | 680 | +0.00296 | [-0.0045, 0.0102] | Undecided |
+| Moneyline | 2,230 | +0.00542 | [0.0020, 0.0088] | Market better |
+| Run line -1.5 | 1,245 | +0.00391 | [-0.0012, 0.0088] | Undecided |
+| Total 8.5 | 680 | +0.00386 | [-0.0031, 0.0107] | Undecided |
 
 This is the answer the repository was built to be able to receive. A model
 that beats a home-field constant by 0.010 of log loss loses to the closing
@@ -336,6 +336,44 @@ That is the whole of it. The run line was one of two markets where the closing
 price demonstrably beat the model; it is now undecided. This did not come from
 new information but from removing a wrong assumption, which on the evidence of
 this repository is the better-paying kind of work.
+
+### Three more wrong assumptions
+
+Fixing the ninth inning exposed the next layer. All three are defects rather
+than hypotheses, and each is verifiable directly rather than through a metric.
+
+**The home mean was censored twice.** The estimator is trained on observed
+home scores, and those are already censored — the home side did not bat the
+ninth in 43% of them. Its output is a censored mean, and the new distribution
+censored it again. The priced expectation came out at 4.34 against an
+estimator saying 4.51: the home side biased 0.14 runs low, on the largest
+market. The fix inverts the transform, solving for the full-length mean whose
+*priced* expectation matches what the estimator learned. A single global
+factor would not do — censoring bites harder on a home favourite, which leads
+after eight more often, so the inflation runs from 1.02 for an underdog to
+1.06 for a favourite. Priced E[home] now equals the estimator exactly, and
+P(home win) moves from 0.520 to 0.534 against 0.538 observed.
+
+**Extra innings were resolved two runs apart.** `calibrate_extra_innings`
+measured a mean margin of 1.58 and rounded it, so every one of the 8.8% of
+games that go past regulation was resolved by two — while 69% of them end one
+apart. The same mistake the first walk-off attempt made, and it lands on the
+same boundary. Now measured as a distribution.
+
+**121 games were seven innings, priced as nine.** The 2021 doubleheader rule.
+`scheduled_innings` was already in the data and the joint ignored it, inflating
+both sides' run expectation by a fifth. A seven-inning total now prices at
+0.29 where nine prices at 0.49, and the moneyline barely moves, which is the
+right shape.
+
+Together they are not detectable in log loss — the paired intervals all span
+zero. Calibration error is another matter, improving on all three markets at
+once: moneyline 0.0184 to 0.0163, run line 0.0167 to **0.0093**, total 0.0251
+to 0.0235. The moneyline gap to the close narrows from +0.00641 to +0.00542,
+still excluding zero.
+
+That is the honest reading: three real errors removed, one metric clearly
+better, the metric that decides still unmoved.
 
 ### Does new information help? Not detectably
 

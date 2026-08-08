@@ -3,7 +3,9 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from runs import (DEFAULT_WALK_OFF_MARGINS, GRID, calibrate_walk_off,
+from runs import (DEFAULT_EXTRA_INNING_MARGINS, DEFAULT_WALK_OFF_MARGINS,
+                  GRID, calibrate_extra_innings, calibrate_walk_off,
+                  uncensor_home_mean,
                   joint_distribution, moneyline_probability,
                   negative_binomial_pmf, push_probability,
                   runline_probability, total_over_probability)
@@ -160,3 +162,80 @@ class WalkOffCalibrationTests(unittest.TestCase):
             "home_score": [2] * 300, "away_score": [5] * 300,
         })
         self.assertEqual(calibrate_walk_off(games), DEFAULT_WALK_OFF_MARGINS)
+
+
+class ExtraInningMarginTests(unittest.TestCase):
+    """The mean extra-inning margin is 1.58, which rounds to two.
+
+    69% of them end one apart. Rounding put all 8.8% of games that go past
+    regulation two runs apart, on the exact boundary the run line is decided
+    at — the same mistake the first walk-off attempt made.
+    """
+
+    def test_the_margin_is_measured_not_averaged(self):
+        games = pd.DataFrame({
+            "innings_played": [10] * 400, "scheduled_innings": [9] * 400,
+            "home_win": [1] * 200 + [0] * 200,
+            "home_score": [5] * 200 + [3] * 200,
+            "away_score": [4] * 200 + [5] * 200,
+        })
+        edge, margins = calibrate_extra_innings(games)
+        self.assertAlmostEqual(margins[0], 0.5, places=6)   # 200 won by 1
+        self.assertAlmostEqual(margins[1], 0.5, places=6)   # 200 lost by 2
+        self.assertAlmostEqual(edge, 0.5, places=6)
+
+    def test_most_extra_inning_mass_lands_one_run_apart(self):
+        margin = GRID[:, None] - GRID[None, :]
+        joint = joint_distribution(4.5, 4.5, 4.0, extra_inning_home_edge=0.5,
+                                   extra_inning_margins=(1.0, 0.0, 0.0, 0.0))
+        spread = joint_distribution(4.5, 4.5, 4.0, extra_inning_home_edge=0.5,
+                                    extra_inning_margins=(0.0, 1.0, 0.0, 0.0))
+        one = lambda j: float((j * (np.abs(margin) == 1)).sum())
+        self.assertGreater(one(joint), one(spread))
+
+    def test_a_thin_sample_keeps_the_defaults(self):
+        games = pd.DataFrame({"innings_played": [10] * 10,
+                              "scheduled_innings": [9] * 10, "home_win": [1] * 10,
+                              "home_score": [5] * 10, "away_score": [4] * 10})
+        self.assertEqual(calibrate_extra_innings(games)[1],
+                         DEFAULT_EXTRA_INNING_MARGINS)
+
+
+class UncensorTests(unittest.TestCase):
+    """The estimator learns a censored home mean; censoring it again truncates
+    the same innings twice."""
+
+    def test_the_priced_distribution_recovers_the_target(self):
+        for target, away in ((5.2, 3.8), (4.4, 4.4), (3.6, 5.2)):
+            full = uncensor_home_mean(target, away, (3.8, 3.2))
+            joint = joint_distribution(full, away, (3.8, 3.2))
+            implied = float((joint * GRID[:, None]).sum())
+            self.assertAlmostEqual(implied, target, places=3)
+
+    def test_the_correction_is_larger_for_a_home_favourite(self):
+        """A favourite leads after eight more often, so it loses the ninth
+        more often — a single global factor would be wrong for both ends."""
+        favourite = uncensor_home_mean(5.2, 3.8, (3.8, 3.2)) / 5.2
+        underdog = uncensor_home_mean(3.6, 5.2, (3.8, 3.2)) / 3.6
+        self.assertGreater(float(favourite), float(underdog))
+
+    def test_it_is_vectorised(self):
+        full = uncensor_home_mean(np.array([4.4, 5.2]), np.array([4.4, 3.8]),
+                                  (3.8, 3.2))
+        self.assertEqual(full.shape, (2,))
+
+
+class ShortGameTests(unittest.TestCase):
+    """121 seven-inning doubleheader games were priced as nine."""
+
+    def test_a_seven_inning_total_is_far_lower(self):
+        nine = joint_distribution(4.5, 4.5, 4.0, innings=9)
+        seven = joint_distribution(4.5 * 7 / 9, 4.5 * 7 / 9, 4.0, innings=7)
+        self.assertGreater(float(total_over_probability(nine, 8.5)),
+                           float(total_over_probability(seven, 8.5)) + 0.10)
+
+    def test_the_moneyline_barely_moves(self):
+        nine = joint_distribution(4.8, 4.2, 4.0, innings=9)
+        seven = joint_distribution(4.8 * 7 / 9, 4.2 * 7 / 9, 4.0, innings=7)
+        self.assertLess(abs(float(moneyline_probability(nine))
+                            - float(moneyline_probability(seven))), 0.05)
