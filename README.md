@@ -302,6 +302,47 @@ the model, from +0.0038 to +0.0059.
 The lesson rhymes with the dispersion bug below: the dangerous errors are the
 ones that leave the output looking reasonable.
 
+### Does new information help? Not detectably
+
+`boxscores.py` had been ingesting per-start pitcher lines since 2021 and
+nothing read them. Its own docstring names the reason to care: everything in
+`features.py` was derived from runs scored and allowed, which is what the
+market has already priced, while a starter's own strikeout, walk and home-run
+rates are a different input. That is the most plausible place for edge to
+live, so it was wired in — with bullpen quality and three-day workload
+alongside — and the run distribution was given a dispersion per side, since
+home scoring is censored and away is not.
+
+The coefficients behave. Strikeout rate carries **-0.056** on the away
+starter against **0.085** for team defence, the strongest established feature,
+and five of the six new terms take the sign baseball says they should.
+Calibration error on the moneyline fell from 0.0223 to 0.0183.
+
+None of it beat noise.
+
+| | Before | After |
+| --- | ---: | ---: |
+| Moneyline log loss | 0.68102 | 0.68022 |
+| Paired change | | **-0.00080** |
+| 90% interval, season-clustered | | **[-0.00205, +0.00042]** |
+| Gap to the closing price | +0.00594 | +0.00641 |
+
+The interval spans zero, so the improvement is not established. Per season the
+change is +0.0016, -0.0030, -0.0020, +0.0004, -0.0011 — three better, two
+worse, none of them large. The gap to the close widened rather than narrowed,
+and that is inside its own interval too.
+
+The reading worth taking is not that starting pitching does not matter. It is
+that starting pitching is the single most discussed input in this market, so a
+crude component model of it is the last place a price is likely to be soft.
+Adding genuinely new information moved nothing measurable, which is evidence
+about the market rather than about the feature.
+
+Both changes are kept. They are principled — the censoring is real and the
+variance measurement was unambiguous — and the pitcher history will carry more
+weight as seasons accumulate than it does over five. But nothing here is a
+result, and the live gate is unchanged.
+
 ### Are the big disagreements worth betting?
 
 The natural question, and the one the UFC project cannot answer at two wagers

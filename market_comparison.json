@@ -12,42 +12,42 @@
     "h2h": {
       "games": 2230,
       "price": "close_prob",
-      "log_loss_model": 0.68203,
+      "log_loss_model": 0.6825,
       "log_loss_market": 0.67609,
-      "delta": 0.00594,
+      "delta": 0.00641,
       "delta_ci90_date_clustered": [
-        0.00165,
-        0.0101
+        0.00282,
+        0.00997
       ],
-      "mean_abs_disagreement_pts": 4.849,
+      "mean_abs_disagreement_pts": 4.06,
       "model_beats_market": false,
       "verdict": "market better; interval excludes zero"
     },
     "spreads": {
       "games": 1245,
       "price": "close_prob",
-      "log_loss_model": 0.67375,
+      "log_loss_model": 0.67484,
       "log_loss_market": 0.66529,
-      "delta": 0.00845,
+      "delta": 0.00955,
       "delta_ci90_date_clustered": [
-        0.00308,
-        0.01374
+        0.00379,
+        0.01507
       ],
-      "mean_abs_disagreement_pts": 4.485,
+      "mean_abs_disagreement_pts": 4.768,
       "model_beats_market": false,
       "verdict": "market better; interval excludes zero"
     },
     "totals": {
       "games": 680,
       "price": "close_prob",
-      "log_loss_model": 0.69331,
+      "log_loss_model": 0.69666,
       "log_loss_market": 0.69257,
-      "delta": 0.00074,
+      "delta": 0.00409,
       "delta_ci90_date_clustered": [
-        -0.00585,
-        0.0072
+        -0.00276,
+        0.01079
       ],
-      "mean_abs_disagreement_pts": 3.494,
+      "mean_abs_disagreement_pts": 3.636,
       "model_beats_market": false,
       "verdict": "undecided; interval spans zero"
     }
@@ -56,42 +56,42 @@
     "h2h": {
       "games": 1483,
       "price": "entry_prob",
-      "log_loss_model": 0.67935,
+      "log_loss_model": 0.68086,
       "log_loss_market": 0.67458,
-      "delta": 0.00477,
+      "delta": 0.00627,
       "delta_ci90_date_clustered": [
-        -0.0002,
-        0.00993
+        0.00224,
+        0.01039
       ],
-      "mean_abs_disagreement_pts": 4.661,
+      "mean_abs_disagreement_pts": 3.935,
       "model_beats_market": false,
-      "verdict": "undecided; interval spans zero"
+      "verdict": "market better; interval excludes zero"
     },
     "spreads": {
       "games": 501,
       "price": "entry_prob",
-      "log_loss_model": 0.67833,
+      "log_loss_model": 0.68132,
       "log_loss_market": 0.66949,
-      "delta": 0.00884,
+      "delta": 0.01183,
       "delta_ci90_date_clustered": [
-        0.00088,
-        0.01694
+        0.00309,
+        0.02079
       ],
-      "mean_abs_disagreement_pts": 4.45,
+      "mean_abs_disagreement_pts": 4.915,
       "model_beats_market": false,
       "verdict": "market better; interval excludes zero"
     },
     "totals": {
       "games": 455,
       "price": "entry_prob",
-      "log_loss_model": 0.69279,
+      "log_loss_model": 0.69456,
       "log_loss_market": 0.6946,
-      "delta": -0.00181,
+      "delta": -4e-05,
       "delta_ci90_date_clustered": [
-        -0.00921,
-        0.00523
+        -0.00739,
+        0.00787
       ],
-      "mean_abs_disagreement_pts": 3.459,
+      "mean_abs_disagreement_pts": 3.472,
       "model_beats_market": true,
       "verdict": "undecided; interval spans zero"
     }

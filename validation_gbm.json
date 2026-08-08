@@ -9,180 +9,187 @@
   ],
   "moneyline": {
     "home_win_rate": 0.52861,
-    "log_loss": 0.69006,
+    "log_loss": 0.6887,
     "log_loss_home_field_baseline": 0.69151,
-    "brier": 0.24832,
-    "calibration_error": 0.02776,
+    "brier": 0.24765,
+    "calibration_error": 0.02563,
     "calibration": [
       {
         "bin": "0.2-0.3",
-        "n": 100,
-        "predicted": 0.2714,
-        "realised": 0.37,
-        "error": 0.0986
+        "n": 99,
+        "predicted": 0.2725,
+        "realised": 0.4747,
+        "error": 0.2023
       },
       {
         "bin": "0.3-0.4",
-        "n": 1017,
-        "predicted": 0.3671,
-        "realised": 0.4533,
-        "error": 0.0862
+        "n": 992,
+        "predicted": 0.3622,
+        "realised": 0.4315,
+        "error": 0.0693
       },
       {
         "bin": "0.4-0.5",
-        "n": 4093,
-        "predicted": 0.459,
-        "realised": 0.4933,
-        "error": 0.0343
+        "n": 3846,
+        "predicted": 0.4581,
+        "realised": 0.4865,
+        "error": 0.0284
       },
       {
         "bin": "0.5-0.6",
-        "n": 4653,
-        "predicted": 0.5438,
-        "realised": 0.5508,
-        "error": 0.007
+        "n": 4678,
+        "predicted": 0.5452,
+        "realised": 0.5517,
+        "error": 0.0066
       },
       {
         "bin": "0.6-0.7",
-        "n": 1420,
-        "predicted": 0.635,
-        "realised": 0.619,
-        "error": -0.016
+        "n": 1575,
+        "predicted": 0.6373,
+        "realised": 0.6057,
+        "error": -0.0316
       },
       {
         "bin": "0.7-0.8",
-        "n": 142,
-        "predicted": 0.7318,
-        "realised": 0.5634,
-        "error": -0.1685
+        "n": 223,
+        "predicted": 0.735,
+        "realised": 0.6726,
+        "error": -0.0624
       }
     ],
     "log_loss_ci90_season_clustered": [
-      0.68595,
-      0.69431
+      0.68324,
+      0.69489
     ]
   },
   "runline": {
     "point": -1.5,
     "cover_rate": 0.35728,
-    "log_loss": 0.65607,
-    "brier": 0.2318,
-    "calibration_error": 0.05704,
+    "log_loss": 0.65553,
+    "brier": 0.23151,
+    "calibration_error": 0.06143,
     "calibration": [
       {
         "bin": "0.1-0.2",
-        "n": 45,
-        "predicted": 0.1771,
-        "realised": 0.2,
-        "error": 0.0229
+        "n": 44,
+        "predicted": 0.1819,
+        "realised": 0.3864,
+        "error": 0.2045
       },
       {
         "bin": "0.2-0.3",
-        "n": 807,
-        "predicted": 0.2687,
-        "realised": 0.2838,
-        "error": 0.015
+        "n": 856,
+        "predicted": 0.2664,
+        "realised": 0.2617,
+        "error": -0.0047
       },
       {
         "bin": "0.3-0.4",
-        "n": 4253,
-        "predicted": 0.3594,
-        "realised": 0.3285,
-        "error": -0.031
+        "n": 3955,
+        "predicted": 0.3593,
+        "realised": 0.3143,
+        "error": -0.045
       },
       {
         "bin": "0.4-0.5",
-        "n": 4797,
-        "predicted": 0.4428,
-        "realised": 0.3704,
-        "error": -0.0724
+        "n": 4824,
+        "predicted": 0.4442,
+        "realised": 0.3767,
+        "error": -0.0675
       },
       {
         "bin": "0.5-0.6",
-        "n": 1356,
-        "predicted": 0.5339,
-        "realised": 0.4476,
-        "error": -0.0863
+        "n": 1504,
+        "predicted": 0.5381,
+        "realised": 0.4435,
+        "error": -0.0946
       },
       {
         "bin": "0.6-0.7",
-        "n": 162,
-        "predicted": 0.6304,
-        "realised": 0.3704,
-        "error": -0.26
+        "n": 223,
+        "predicted": 0.638,
+        "realised": 0.4664,
+        "error": -0.1717
+      },
+      {
+        "bin": "0.7-0.8",
+        "n": 22,
+        "predicted": 0.7188,
+        "realised": 0.5,
+        "error": -0.2188
       }
     ]
   },
   "total": {
     "point": 8.5,
     "over_rate": 0.48819,
-    "log_loss": 0.70239,
-    "brier": 0.254,
-    "calibration_error": 0.04251,
+    "log_loss": 0.69605,
+    "brier": 0.25109,
+    "calibration_error": 0.03815,
     "calibration": [
       {
         "bin": "0.1-0.2",
-        "n": 61,
-        "predicted": 0.1743,
-        "realised": 0.4754,
-        "error": 0.3011
+        "n": 49,
+        "predicted": 0.1729,
+        "realised": 0.4286,
+        "error": 0.2557
       },
       {
         "bin": "0.2-0.3",
-        "n": 385,
-        "predicted": 0.2615,
-        "realised": 0.4597,
-        "error": 0.1982
+        "n": 338,
+        "predicted": 0.2646,
+        "realised": 0.3905,
+        "error": 0.1259
       },
       {
         "bin": "0.3-0.4",
-        "n": 1331,
-        "predicted": 0.3586,
-        "realised": 0.4658,
-        "error": 0.1073
+        "n": 1166,
+        "predicted": 0.3608,
+        "realised": 0.4511,
+        "error": 0.0903
       },
       {
         "bin": "0.4-0.5",
-        "n": 4495,
-        "predicted": 0.4571,
-        "realised": 0.461,
-        "error": 0.0038
+        "n": 4264,
+        "predicted": 0.4574,
+        "realised": 0.4606,
+        "error": 0.0032
       },
       {
         "bin": "0.5-0.6",
-        "n": 4037,
-        "predicted": 0.541,
-        "realised": 0.5115,
-        "error": -0.0295
+        "n": 4242,
+        "predicted": 0.5428,
+        "realised": 0.5101,
+        "error": -0.0326
       },
       {
         "bin": "0.6-0.7",
-        "n": 961,
-        "predicted": 0.6374,
-        "realised": 0.5536,
-        "error": -0.0838
+        "n": 1154,
+        "predicted": 0.6378,
+        "realised": 0.5546,
+        "error": -0.0832
       },
       {
         "bin": "0.7-0.8",
-        "n": 153,
-        "predicted": 0.7281,
-        "realised": 0.5229,
-        "error": -0.2052
+        "n": 206,
+        "predicted": 0.7297,
+        "realised": 0.5971,
+        "error": -0.1326
       }
     ]
   },
   "expected_runs": {
     "home": {
-      "mean_predicted": 4.4712,
+      "mean_predicted": 4.5242,
       "mean_actual": 4.4536,
       "mae": 2.4601,
-      "bias": 0.0175
+      "bias": 0.0705
     },
     "away": {
-      "mean_predicted": 4.3605,
+      "mean_predicted": 4.4326,
       "mean_actual": 4.4335,
-      "mae": 2.5575,
-      "bias": -0.073
+      "mae": 2.5523,
+      "bias": -0.0009
     }
   },
   "market_comparison": {
@@ -200,28 +207,28 @@
     "close": {
       "h2h": {
         "games": 2230,
-        "delta": 0.00594,
+        "delta": 0.00641,
         "delta_ci90_date_clustered": [
-          0.00165,
-          0.0101
+          0.00282,
+          0.00997
         ],
         "verdict": "market better; interval excludes zero"
       },
       "spreads": {
         "games": 1245,
-        "delta": 0.00845,
+        "delta": 0.00955,
         "delta_ci90_date_clustered": [
-          0.00308,
-          0.01374
+          0.00379,
+          0.01507
         ],
         "verdict": "market better; interval excludes zero"
       },
       "totals": {
         "games": 680,
-        "delta": 0.00074,
+        "delta": 0.00409,
         "delta_ci90_date_clustered": [
-          -0.00585,
-          0.0072
+          -0.00276,
+          0.01079
         ],
         "verdict": "undecided; interval spans zero"
       }
