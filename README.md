@@ -27,7 +27,7 @@ actually being tested.
 | Question | Status |
 | --- | --- |
 | Does the model predict baseball? | **Yes.** Calibration, log loss, Brier against 13,857 completed games |
-| Does the model beat a price? | **No.** 186 days of 2025 prices; the close wins on the moneyline and run line with intervals excluding zero |
+| Does the model beat a price? | **No.** 186 days of 2025 prices. The close still wins the moneyline with an interval excluding zero; the run line and total are undecided |
 | Should anyone stake money? | **No.** The live gate reads `research_only` and there is no path to `live` in this code |
 
 A well-calibrated model that loses money is the *normal* outcome in a liquid
@@ -111,8 +111,8 @@ capture.
 
 The layout deliberately mirrors the sibling UFC project's page so the two read
 the same way. The content does not, because the results are not the same:
-the verdict — that the closing price beats this model on the moneyline and the
-run line — sits *above* tonight's card rather than below it. A model card that
+the verdict — that the closing price beats this model on the moneyline — sits
+*above* tonight's card rather than below it. A model card that
 opens with picks and buries the measurement is advertising.
 
 The module is `model_card.py` and not `site.py` because Python imports a
@@ -263,9 +263,9 @@ slates rather than games.
 
 | Market | Games | Δ log loss vs close | 90% interval | Verdict |
 | --- | ---: | ---: | :---: | --- |
-| Moneyline | 2,230 | +0.00594 | [0.0017, 0.0101] | Market better |
-| Run line -1.5 | 1,245 | +0.00845 | [0.0031, 0.0137] | Market better |
-| Total 8.5 | 680 | +0.00074 | [-0.0059, 0.0072] | Undecided |
+| Moneyline | 2,230 | +0.00641 | [0.0028, 0.0100] | Market better |
+| Run line -1.5 | 1,245 | +0.00342 | [-0.0010, 0.0078] | Undecided |
+| Total 8.5 | 680 | +0.00296 | [-0.0045, 0.0102] | Undecided |
 
 This is the answer the repository was built to be able to receive. A model
 that beats a home-field constant by 0.010 of log loss loses to the closing
