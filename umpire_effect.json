@@ -1,0 +1,187 @@
+{
+  "games": 13857,
+  "umpires": 122,
+  "strikeouts_per_game": {
+    "pooled": {
+      "umpires": 114,
+      "games": 13857,
+      "observed_spread": 0.42652,
+      "null_spread_median": 0.3848,
+      "p_value": 0.052,
+      "excess": 0.04172,
+      "implied_true_sd": 0.18398
+    },
+    "by_season": {
+      "2021": {
+        "umpires": 85,
+        "games": 2429,
+        "observed_spread": 0.86002,
+        "null_spread_median": 0.80758,
+        "p_value": 0.222,
+        "excess": 0.05243,
+        "implied_true_sd": 0.2957
+      },
+      "2022": {
+        "umpires": 84,
+        "games": 2430,
+        "observed_spread": 0.73505,
+        "null_spread_median": 0.78107,
+        "p_value": 0.781,
+        "excess": -0.04603,
+        "implied_true_sd": 0.0
+      },
+      "2023": {
+        "umpires": 81,
+        "games": 2430,
+        "observed_spread": 0.86566,
+        "null_spread_median": 0.78766,
+        "p_value": 0.123,
+        "excess": 0.078,
+        "implied_true_sd": 0.35911
+      },
+      "2024": {
+        "umpires": 83,
+        "games": 2429,
+        "observed_spread": 0.85112,
+        "null_spread_median": 0.79052,
+        "p_value": 0.149,
+        "excess": 0.06059,
+        "implied_true_sd": 0.31539
+      },
+      "2025": {
+        "umpires": 83,
+        "games": 2430,
+        "observed_spread": 0.70677,
+        "null_spread_median": 0.76073,
+        "p_value": 0.821,
+        "excess": -0.05396,
+        "implied_true_sd": 0.0
+      },
+      "2026": {
+        "umpires": 75,
+        "games": 1709,
+        "observed_spread": 0.9265,
+        "null_spread_median": 0.90988,
+        "p_value": 0.392,
+        "excess": 0.01662,
+        "implied_true_sd": 0.17469
+      }
+    }
+  },
+  "residual_total_runs": {
+    "pooled": {
+      "umpires": 105,
+      "games": 11428,
+      "observed_spread": 0.47557,
+      "null_spread_median": 0.42833,
+      "p_value": 0.0655,
+      "excess": 0.04724,
+      "implied_true_sd": 0.20664
+    },
+    "by_season": {
+      "2022": {
+        "umpires": 84,
+        "games": 2430,
+        "observed_spread": 0.78044,
+        "null_spread_median": 0.82193,
+        "p_value": 0.754,
+        "excess": -0.04149,
+        "implied_true_sd": 0.0
+      },
+      "2023": {
+        "umpires": 81,
+        "games": 2430,
+        "observed_spread": 0.90339,
+        "null_spread_median": 0.83957,
+        "p_value": 0.168,
+        "excess": 0.06382,
+        "implied_true_sd": 0.33353
+      },
+      "2024": {
+        "umpires": 83,
+        "games": 2429,
+        "observed_spread": 0.95298,
+        "null_spread_median": 0.79198,
+        "p_value": 0.002,
+        "excess": 0.161,
+        "implied_true_sd": 0.53004
+      },
+      "2025": {
+        "umpires": 83,
+        "games": 2430,
+        "observed_spread": 0.77831,
+        "null_spread_median": 0.83687,
+        "p_value": 0.84,
+        "excess": -0.05856,
+        "implied_true_sd": 0.0
+      },
+      "2026": {
+        "umpires": 75,
+        "games": 1709,
+        "observed_spread": 1.05649,
+        "null_spread_median": 0.98547,
+        "p_value": 0.194,
+        "excess": 0.07101,
+        "implied_true_sd": 0.3808
+      }
+    }
+  },
+  "residual_home_win": {
+    "pooled": {
+      "umpires": 105,
+      "games": 11428,
+      "observed_spread": 0.04886,
+      "null_spread_median": 0.04691,
+      "p_value": 0.2795,
+      "excess": 0.00195,
+      "implied_true_sd": 0.01367
+    },
+    "by_season": {
+      "2022": {
+        "umpires": 84,
+        "games": 2430,
+        "observed_spread": 0.08682,
+        "null_spread_median": 0.09196,
+        "p_value": 0.78,
+        "excess": -0.00515,
+        "implied_true_sd": 0.0
+      },
+      "2023": {
+        "umpires": 81,
+        "games": 2430,
+        "observed_spread": 0.09223,
+        "null_spread_median": 0.09139,
+        "p_value": 0.462,
+        "excess": 0.00084,
+        "implied_true_sd": 0.01242
+      },
+      "2024": {
+        "umpires": 83,
+        "games": 2429,
+        "observed_spread": 0.08874,
+        "null_spread_median": 0.09141,
+        "p_value": 0.65,
+        "excess": -0.00267,
+        "implied_true_sd": 0.0
+      },
+      "2025": {
+        "umpires": 83,
+        "games": 2430,
+        "observed_spread": 0.09514,
+        "null_spread_median": 0.09101,
+        "p_value": 0.301,
+        "excess": 0.00413,
+        "implied_true_sd": 0.02771
+      },
+      "2026": {
+        "umpires": 75,
+        "games": 1709,
+        "observed_spread": 0.10268,
+        "null_spread_median": 0.10861,
+        "p_value": 0.747,
+        "excess": -0.00593,
+        "implied_true_sd": 0.0
+      }
+    }
+  }
+}

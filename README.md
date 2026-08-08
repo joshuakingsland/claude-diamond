@@ -302,6 +302,43 @@ the model, from +0.0038 to +0.0059.
 The lesson rhymes with the dispersion bug below: the dangerous errors are the
 ones that leave the output looking reasonable.
 
+### Do umpires move the moneyline? Not measurably
+
+The plate umpire is the one input assigned to every game rather than a
+fraction of them, which is why it was worth ingesting all 13,857 of them
+before building anything on top. An interaction between an umpire's zone and a
+pitcher's arsenal is necessarily *smaller* than the umpire main effect, so the
+main effect is the precursor: if it is not there, nothing built on it can be.
+
+Each test compares the spread of per-umpire means against the spread from
+shuffling assignments within season. Umpires work different schedules, so some
+spread is guaranteed by sample size alone; reporting the widest umpire instead
+would be the mistake `extremes.py` documents.
+
+| Measure | Implied between-umpire SD | p |
+| --- | ---: | ---: |
+| Strikeouts per game | 0.18 K | 0.052 |
+| Residual total runs | 0.21 runs | 0.066 |
+| **Residual home win probability** | **0.014** | **0.28** |
+
+The moneyline — the market this would be bet into — shows nothing at all, and
+no individual season comes below p = 0.30. Strikeouts and total runs are
+marginal pooled and consistent in no season. One cell of sixteen season-level
+tests came in at p = 0.002, which the null produces somewhere about 3% of the
+time, and it sits in 2024 with neither adjacent season showing anything.
+
+Taking the point estimates at face value anyway: one standard deviation of
+umpire is worth 1.4 points of win probability, so an extreme umpire is worth
+under three. The arsenal interaction is a fraction of that, and it would have
+to be extracted from pitch-level data the repository does not have.
+
+**What this cannot say** is anything about the challenge system. Teams now
+carry two challenges a game and keep them when correct, which should erode
+exactly this kind of bias, and the test was built to measure that. It cannot:
+2026 shows no signal, but neither does 2025, so there is no established
+pre-challenge baseline to have lost. The honest statement is that the effect is
+too small to detect in either era, not that challenges removed it.
+
 ### The one change that worked: the home ninth inning
 
 The home team bats the bottom of the ninth only when it is not already ahead,
