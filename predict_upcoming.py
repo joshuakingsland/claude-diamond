@@ -240,7 +240,8 @@ def main(argv=None):
         Path(args.out).write_text(",".join(CARD_FIELDS) + "\n", encoding="utf-8")
         return
 
-    games, parks, weather, pitching = load_inputs(args.games, args.weather)
+    games, parks, weather, pitching, umpires = load_inputs(args.games,
+                                                            args.weather)
     card_games = [game for game in games.to_dict("records")
                   if game.get("home_score") != game.get("home_score")]
 
@@ -257,7 +258,7 @@ def main(argv=None):
     combined = pd.concat([weather, forecast], ignore_index=True)
     combined = combined.drop_duplicates(subset="game_pk", keep="first")
 
-    features = build(games, parks, combined, pitching)
+    features = build(games, parks, combined, pitching, umpires)
     card, summary = build_card(lines, games, features, kind=args.kind)
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     if len(card):

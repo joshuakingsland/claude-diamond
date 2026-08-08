@@ -200,3 +200,54 @@ class PitchingLookaheadTests(unittest.TestCase):
         frame = build(games, PARKS, None, _pitching(games))
         self.assertGreater(frame["home_sp_k_rate"].nunique(), 1)
         self.assertGreater(frame["home_bp_workload"].max(), 0)
+
+
+def _umpires(games, alternating=True):
+    """Two umpires alternating, so a tendency can accumulate for each."""
+    return pd.DataFrame([
+        {"game_pk": g["game_pk"], "official_date": g["official_date"],
+         "hp_umpire_id": 700 + (index % 2 if alternating else 0),
+         "hp_umpire_name": "Test Ump"}
+        for index, g in enumerate(games.to_dict("records"))])
+
+
+class UmpireLookaheadTests(unittest.TestCase):
+    """An umpire's own game must not inform the row for that game."""
+
+    def test_changing_a_games_runs_cannot_move_its_own_umpire_feature(self):
+        games = _games()
+        umpires = _umpires(games)
+        base = build(games, PARKS, None, None, umpires)
+
+        target_index = 30
+        target = games["game_pk"].iloc[target_index]
+        tampered = games.copy()
+        tampered.loc[target_index, "home_score"] = 30
+        tampered["home_win"] = (tampered.home_score > tampered.away_score).astype(int)
+        tampered["total_runs"] = tampered.home_score + tampered.away_score
+        after = build(tampered, PARKS, None, None, umpires)
+
+        upto = base["game_pk"] <= target
+        pd.testing.assert_series_equal(base[upto].ump_run_rate,
+                                       after[upto].ump_run_rate)
+        self.assertFalse(base[~upto].ump_run_rate
+                         .equals(after[~upto].ump_run_rate))
+
+    def test_umpires_are_optional_and_default_to_league_average(self):
+        frame = build(_games(), PARKS, None, None, None)
+        for column in ("ump_run_rate", "ump_k_rate"):
+            self.assertIn(column, frame.columns)
+            # With no assignments every game shares one unknown official, so
+            # the deviation from the league is a constant.
+            self.assertLessEqual(frame[column].std(), 1e-9)
+
+    def test_two_umpires_separate_once_they_have_a_record(self):
+        games = _games(n=120)
+        frame = build(games, PARKS, None, None, _umpires(games))
+        self.assertGreater(frame.ump_run_rate.tail(40).std(), 0.0)
+
+    def test_the_feature_is_a_deviation_not_a_level(self):
+        """Centred on the league, so it cannot smuggle in the era instead."""
+        games = _games(n=120)
+        frame = build(games, PARKS, None, None, _umpires(games))
+        self.assertLess(abs(float(frame.ump_run_rate.mean())), 1.0)

@@ -93,6 +93,9 @@ odds.py       three-market odds capture with paired-book de-vig
 historical_odds.py  capped, resumable historical snapshots
 market.py     joins prices to predictions; asks whether the model beats them
 extremes.py   does a large disagreement pay? no, and here is why it looks like it does
+umpires.py    home-plate umpire assignments, one per game
+umpire_effect.py  permutation tests for an umpire main effect
+leverage.py   win expectancy, for leverage-weighting bullpen workload
 predict_upcoming.py  prices the live card; the only forward-looking path
 ledger.py     the paper forward test, and where the staking policy is applied
 model_card.py generates the public page at docs/index.html
@@ -375,6 +378,56 @@ exactly this kind of bias, and the test was built to measure that. It cannot:
 2026 shows no signal, but neither does 2025, so there is no established
 pre-challenge baseline to have lost. The honest statement is that the effect is
 too small to detect in either era, not that challenges removed it.
+
+### Built anyway, and the walk-forward said no
+
+A permutation test is an argument. The walk-forward is a verdict, and it is
+cheap, so the umpire features were built and put in front of it rather than
+argued about: `ump_run_rate` and `ump_k_rate`, each an umpire's own history
+shrunk toward the contemporaneous league with a 60-game prior and expressed as
+a *deviation* from it. Centring matters — strikeouts per game rose across these
+seasons, so the raw rate is mostly a clock and only incidentally an official.
+
+The prior is heavy on purpose. Before building the features, the one test that
+decides whether a trait is buildable at all is whether it persists:
+
+| Measure | Umpire-seasons paired | Year-over-year correlation | p |
+| --- | ---: | ---: | ---: |
+| Strikeouts per game | 268 | +0.091 | 0.14 |
+| Residual total runs | 268 | **−0.087** | 0.16 |
+| Residual home win | 268 | −0.031 | 0.61 |
+
+An umpire's run tendency *anti-predicts* his next season. Whatever the spread
+of per-umpire means contains, it is not a trait that carries forward, and a
+feature can only exploit what carries forward.
+
+The walk-forward agreed, and made it worse on all three markets with intervals
+excluding zero:
+
+| Market | Δ log loss | 90% interval |
+| --- | ---: | --- |
+| Moneyline | +0.00001 | [+0.00000, +0.00003] |
+| Run line | +0.00001 | [+0.00000, +0.00003] |
+| Total | +0.00011 | [+0.00001, +0.00022] |
+
+The GLM had already reached the same conclusion on its own: it assigned
+`ump_run_rate` +0.002 and `ump_k_rate` −0.005, against +0.018 for the park
+factor and +0.082 for away defence. The model recognises there is nothing
+there; the small, consistent degradation is the price of fitting two
+parameters to noise.
+
+So both columns are still built and still written to `data/features.csv`, and
+neither is in `FEATURE_COLUMNS`. Re-enabling them is adding two strings, and
+the reason not to is recorded next to them rather than left to be rediscovered.
+
+Two bugs surfaced on the way, both worth naming because they are the same bug:
+league strikeouts were double-counted (`× 2` for two teams, on a total that
+already summed both), and a game with no boxscore was folded in as *zero*
+strikeouts, which taught an umpire he called no strikes and got further from
+the truth the more games he worked. Absence is now a `None` sentinel with its
+own denominator, on the umpire and on the league both. A test caught the second
+one by asserting the feature's spread — an inert feature has an sd near zero,
+and 2.28 is not near zero.
 
 ### The one change that worked: the home ninth inning
 

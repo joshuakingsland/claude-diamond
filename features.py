@@ -204,6 +204,48 @@ class BullpenState:
             self.recent.popleft()
 
 
+# Umpires work about 140 games a season, so this shrinks a first-season
+# umpire most of the way to the league. The weight is deliberately heavy: the
+# year-over-year correlation of an umpire's own run tendency is -0.09, so his
+# record is close to uninformative about his next game and a light prior would
+# hand the model noise dressed as a trait.
+PRIOR_UMPIRE_GAMES = 60.0
+
+
+class UmpireState:
+    """Runs and strikeouts in games this umpire has worked.
+
+    Raw observables rather than model residuals. A residual-based feature would
+    be circular — the model would be handed its own past errors and would learn
+    to undo them in sample.
+    """
+
+    def __init__(self):
+        self.runs = 0.0
+        self.games = 0
+        self.strikeouts = 0.0
+        # Counted separately from games. A game with no boxscore has no
+        # strikeout total, and folding that in as a zero would teach the
+        # umpire he calls no strikes — which is what happened, and it drifted
+        # further from the truth the more games he worked.
+        self.strikeout_games = 0
+
+    def run_rate(self, league):
+        return ((self.runs + league * PRIOR_UMPIRE_GAMES)
+                / (self.games + PRIOR_UMPIRE_GAMES))
+
+    def strikeout_rate(self, league):
+        return ((self.strikeouts + league * PRIOR_UMPIRE_GAMES)
+                / (self.strikeout_games + PRIOR_UMPIRE_GAMES))
+
+    def fold(self, runs, strikeouts):
+        self.runs += runs
+        self.games += 1
+        if strikeouts is not None:
+            self.strikeouts += strikeouts
+            self.strikeout_games += 1
+
+
 class LeagueRates:
     """Running league averages, so a prior is measured rather than assumed."""
 
@@ -214,6 +256,11 @@ class LeagueRates:
         self.home_runs = 0.0
         self.relief_outs = 0.0
         self.relief_runs = 0.0
+        # Games the strikeout total above actually covers, which is not every
+        # game: a game with no boxscore contributes no lines. Dividing by the
+        # schedule instead would understate the league exactly in proportion
+        # to how much data is missing.
+        self.strikeout_games = 0
 
     def _rate(self, count, fallback):
         return count / self.batters if self.batters > 5000 else fallback
@@ -229,6 +276,11 @@ class LeagueRates:
     @property
     def home_run(self):
         return self._rate(self.home_runs, 0.033)
+
+    def strikeouts_per_game(self, fallback=16.0):
+        if self.strikeout_games < 200:
+            return fallback
+        return self.strikeouts / self.strikeout_games
 
     @property
     def relief(self):
@@ -285,6 +337,15 @@ FEATURE_COLUMNS = [
     "home_bp_rate", "away_bp_rate",
     "home_bp_workload", "away_bp_workload",
     "park_factor", "elevation_km",
+    # ump_run_rate and ump_k_rate are built and written, deliberately not
+    # listed here. Added to the model they made it worse on all three markets
+    # with intervals excluding zero, and the GLM had already shrunk them to
+    # +0.002 and -0.005 against 0.018 for the park factor. That is not a
+    # sample-size problem waiting on more seasons: an umpire's run tendency
+    # correlates -0.09 with his own next season, so the trait does not persist
+    # and more data cannot rescue it. The columns stay in the table because
+    # they are cheap and inspectable; re-enabling them is adding two strings,
+    # and the reason not to is written down rather than forgotten.
     "temp_c", "air_density_index", "wind_out_to_center_ms",
     "wind_left_to_right_ms", "precip_mm", "roof_retractable", "roof_dome",
     "expected_home_runs_prior", "expected_away_runs_prior",
@@ -298,7 +359,7 @@ def _rest_days(previous, current):
     return int(np.clip(delta, 0, 10))
 
 
-def build(games, parks, weather=None, pitching=None):
+def build(games, parks, weather=None, pitching=None, umpires=None):
     """Return a feature frame aligned to ``games``, in chronological order.
 
     ``games`` must contain final results; unfinished games are kept so the
@@ -309,12 +370,22 @@ def build(games, parks, weather=None, pitching=None):
     and bullpen columns fall back to league priors, so a card can still be
     priced on a day the boxscore ingestion has not caught up — the model then
     sees an average pitcher rather than a wrong one.
+
+    ``umpires`` is optional plate-umpire assignments, treated the same way. The
+    plate umpire is not known until the morning of a game, so a card priced
+    earlier sees a league-average official, which is the honest default rather
+    than a guess.
     """
     weather = weather if weather is not None else pd.DataFrame()
     weather_by_game = {}
     if len(weather):
         for row in weather.to_dict("records"):
             weather_by_game[id_key(row["game_pk"])] = row
+
+    umpire_by_game = {}
+    if umpires is not None and len(umpires):
+        for row in umpires.to_dict("records"):
+            umpire_by_game[id_key(row["game_pk"])] = id_key(row["hp_umpire_id"])
 
     pitching_by_game = {}
     if pitching is not None and len(pitching):
@@ -327,6 +398,7 @@ def build(games, parks, weather=None, pitching=None):
     components = defaultdict(PitcherComponents)
     bullpens = defaultdict(BullpenState)
     league = LeagueRates()
+    officials = defaultdict(UmpireState)
     park_states = defaultdict(ParkState)
     league_runs, league_games = 0.0, 0
 
@@ -348,6 +420,9 @@ def build(games, parks, weather=None, pitching=None):
         park = parks.get(venue, {})
         league_mean = (league_runs / league_games) if league_games else PRIOR_RUNS * 2
         park_factor = park_states[venue].factor(league_mean)
+
+        official = officials[umpire_by_game.get(id_key(game["game_pk"]), "")]
+        league_ks = league.strikeouts_per_game()
 
         conditions = weather_by_game.get(id_key(game["game_pk"]), {})
         temp_c = _float(conditions.get("temp_c"))
@@ -407,6 +482,13 @@ def build(games, parks, weather=None, pitching=None):
             "away_bp_workload": away_pen.workload(date),
             "park_factor": park_factor,
             "elevation_km": (park.get("elevation_m") or 0.0) / 1000.0,
+            # The plate umpire, as a run and strikeout environment, expressed
+            # as a deviation from the league at that moment. The raw rate is
+            # dominated by the league trend rather than by the umpire —
+            # strikeouts per game rose across these seasons — so an uncentred
+            # version would hand the model a clock instead of an official.
+            "ump_run_rate": official.run_rate(league_mean) - league_mean,
+            "ump_k_rate": official.strikeout_rate(league_ks) - league_ks,
             "temp_c": temp_c if temp_c is not None else 20.0,
             "air_density_index": density if density is not None else 1.0,
             "wind_out_to_center_ms": _float(conditions.get("wind_out_to_center_ms")) or 0.0,
@@ -465,6 +547,13 @@ def build(games, parks, weather=None, pitching=None):
                 bullpens[team].fold(date, _number(line.get("outs")),
                                     _number(line.get("runs")))
 
+        lines = pitching_by_game.get(id_key(game["game_pk"]))
+        if lines:
+            league.strikeout_games += 1
+        official.fold(home_score + away_score,
+                      sum(_number(line.get("strike_outs")) for line in lines)
+                      if lines else None)
+
         park_states[venue].runs += home_score + away_score
         park_states[venue].games += 1
         league_runs += home_score + away_score
@@ -485,7 +574,8 @@ def _float(value):
 
 def load_inputs(games_path="data/games.csv", weather_path="data/weather.csv",
                 parks_path="data/parks.json",
-                pitching_path="data/pitching.csv"):
+                pitching_path="data/pitching.csv",
+                umpires_path="data/umpires.csv"):
     import json
     from pathlib import Path
 
@@ -495,7 +585,9 @@ def load_inputs(games_path="data/games.csv", weather_path="data/weather.csv",
                else pd.DataFrame())
     pitching = (pd.read_csv(pitching_path) if Path(pitching_path).exists()
                 else pd.DataFrame())
-    return games, parks, weather, pitching
+    umpires = (pd.read_csv(umpires_path) if Path(umpires_path).exists()
+               else pd.DataFrame())
+    return games, parks, weather, pitching, umpires
 
 
 def main():
@@ -505,11 +597,13 @@ def main():
     parser.add_argument("--games", default="data/games.csv")
     parser.add_argument("--weather", default="data/weather.csv")
     parser.add_argument("--pitching", default="data/pitching.csv")
+    parser.add_argument("--umpires", default="data/umpires.csv")
     parser.add_argument("--out", default="data/features.csv")
     args = parser.parse_args()
-    games, parks, weather, pitching = load_inputs(
-        args.games, args.weather, pitching_path=args.pitching)
-    frame = build(games, parks, weather, pitching)
+    games, parks, weather, pitching, umpires = load_inputs(
+        args.games, args.weather, pitching_path=args.pitching,
+        umpires_path=args.umpires)
+    frame = build(games, parks, weather, pitching, umpires)
     frame.to_csv(args.out, index=False)
     print(f"wrote {len(frame)} feature rows and {len(FEATURE_COLUMNS)} "
           f"columns to {args.out}")
