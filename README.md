@@ -302,6 +302,43 @@ the model, from +0.0038 to +0.0059.
 The lesson rhymes with the dispersion bug below: the dangerous errors are the
 ones that leave the output looking reasonable.
 
+### Does leverage-weighting rescue the bullpen feature? No
+
+`features.py` carries raw bullpen outs over three days and earns +0.001 for
+it — the right sign and nearly nothing. The hypothesis worth testing was that
+the blunt measure is the problem rather than the idea: an out recorded in a
+tied ninth should cost a reliever more than an out in a six-run game, and the
+market adjusts for innings rather than for what those innings were worth.
+
+`leverage.py` walks 1,045,047 plate appearances across all 13,857 games and
+weights each by how far the game could still swing from that state. Four
+measures of yesterday's bullpen, declared before looking, each as the gap
+between the two sides and tested against the model's own residual:
+
+| Measure | Correlation | Median split |
+| --- | ---: | ---: |
+| Leverage-weighted work | +0.0066 | +0.19 SE |
+| High-leverage batters faced | +0.0131 | +1.35 SE |
+| Raw outs — the blunt one | +0.0018 | +0.21 SE |
+| Warm-up debt proxy | -0.0056 | +0.08 SE |
+
+Every sign points the way the hypothesis predicts: a taxed away bullpen means
+the home side beats the model. None of them clears noise, and the refined
+measure is no better than the blunt one it was meant to replace — 0.19 SE
+against 0.21.
+
+The strongest, high-leverage batters faced, holds up no better in the tail the
+hypothesis actually describes. Games where the away pen faced three or more
+extra high-leverage batters yesterday run +0.016, on a date-clustered interval
+of [-0.0001, 0.0328]; at six or more it is +0.011 on [-0.0094, 0.0324]. Both
+touch zero, and the second is *weaker* than the first, which is the wrong
+direction for a dose-response.
+
+The warm-up debt proxy — late high-leverage batters the starter absorbed, so
+the pen was up and throwing without entering — is the flattest of the four.
+The observable half of that idea is not there. The unobservable half needs
+bullpen camera footage, which is a different project.
+
 ### Do umpires move the moneyline? Not measurably
 
 The plate umpire is the one input assigned to every game rather than a
