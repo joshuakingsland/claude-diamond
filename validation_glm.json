@@ -12,7 +12,7 @@
     "log_loss": 0.68022,
     "log_loss_home_field_baseline": 0.69151,
     "brier": 0.24362,
-    "calibration_error": 0.01831,
+    "calibration_error": 0.01837,
     "calibration": [
       {
         "bin": "0.2-0.3",
@@ -44,17 +44,17 @@
       },
       {
         "bin": "0.6-0.7",
-        "n": 1698,
+        "n": 1697,
         "predicted": 0.6375,
-        "realised": 0.6302,
-        "error": -0.0073
+        "realised": 0.6299,
+        "error": -0.0075
       },
       {
         "bin": "0.7-0.8",
-        "n": 231,
-        "predicted": 0.7319,
-        "realised": 0.7532,
-        "error": 0.0213
+        "n": 232,
+        "predicted": 0.7318,
+        "realised": 0.7543,
+        "error": 0.0225
       }
     ],
     "log_loss_ci90_season_clustered": [
@@ -65,109 +65,102 @@
   "runline": {
     "point": -1.5,
     "cover_rate": 0.35728,
-    "log_loss": 0.64545,
-    "brier": 0.22681,
-    "calibration_error": 0.05653,
+    "log_loss": 0.63904,
+    "brier": 0.22376,
+    "calibration_error": 0.01667,
     "calibration": [
       {
         "bin": "0.1-0.2",
-        "n": 56,
-        "predicted": 0.1785,
-        "realised": 0.1964,
-        "error": 0.0179
+        "n": 142,
+        "predicted": 0.1768,
+        "realised": 0.2535,
+        "error": 0.0767
       },
       {
         "bin": "0.2-0.3",
-        "n": 982,
-        "predicted": 0.2667,
-        "realised": 0.2301,
-        "error": -0.0366
+        "n": 2031,
+        "predicted": 0.2657,
+        "realised": 0.2531,
+        "error": -0.0126
       },
       {
         "bin": "0.3-0.4",
-        "n": 4073,
-        "predicted": 0.3562,
-        "realised": 0.3059,
-        "error": -0.0503
+        "n": 5311,
+        "predicted": 0.3523,
+        "realised": 0.3352,
+        "error": -0.0171
       },
       {
         "bin": "0.4-0.5",
-        "n": 4526,
-        "predicted": 0.4454,
-        "realised": 0.3822,
-        "error": -0.0632
+        "n": 3235,
+        "predicted": 0.4402,
+        "realised": 0.4272,
+        "error": -0.013
       },
       {
         "bin": "0.5-0.6",
-        "n": 1560,
-        "predicted": 0.5375,
-        "realised": 0.4647,
-        "error": -0.0727
+        "n": 651,
+        "predicted": 0.5319,
+        "realised": 0.5069,
+        "error": -0.025
       },
       {
         "bin": "0.6-0.7",
-        "n": 221,
-        "predicted": 0.6343,
-        "realised": 0.6154,
-        "error": -0.0189
+        "n": 56,
+        "predicted": 0.6269,
+        "realised": 0.7143,
+        "error": 0.0873
       }
     ]
   },
   "total": {
     "point": 8.5,
     "over_rate": 0.48819,
-    "log_loss": 0.68855,
-    "brier": 0.24764,
-    "calibration_error": 0.02526,
+    "log_loss": 0.68819,
+    "brier": 0.24745,
+    "calibration_error": 0.02511,
     "calibration": [
       {
         "bin": "0.2-0.3",
-        "n": 103,
-        "predicted": 0.2767,
-        "realised": 0.4175,
-        "error": 0.1408
+        "n": 151,
+        "predicted": 0.2711,
+        "realised": 0.404,
+        "error": 0.1329
       },
       {
         "bin": "0.3-0.4",
-        "n": 1114,
-        "predicted": 0.3663,
-        "realised": 0.4031,
-        "error": 0.0367
+        "n": 1670,
+        "predicted": 0.3641,
+        "realised": 0.403,
+        "error": 0.0389
       },
       {
         "bin": "0.4-0.5",
-        "n": 4653,
-        "predicted": 0.4565,
-        "realised": 0.4608,
-        "error": 0.0043
+        "n": 5261,
+        "predicted": 0.4533,
+        "realised": 0.4741,
+        "error": 0.0208
       },
       {
         "bin": "0.5-0.6",
-        "n": 4335,
-        "predicted": 0.5423,
-        "realised": 0.5098,
-        "error": -0.0325
+        "n": 3508,
+        "predicted": 0.539,
+        "realised": 0.5217,
+        "error": -0.0173
       },
       {
         "bin": "0.6-0.7",
-        "n": 968,
-        "predicted": 0.6352,
-        "realised": 0.5785,
-        "error": -0.0567
+        "n": 638,
+        "predicted": 0.6369,
+        "realised": 0.594,
+        "error": -0.0429
       },
       {
         "bin": "0.7-0.8",
-        "n": 228,
-        "predicted": 0.7372,
-        "realised": 0.6754,
-        "error": -0.0618
-      },
-      {
-        "bin": "0.8-0.9",
-        "n": 26,
-        "predicted": 0.8217,
-        "realised": 0.6923,
-        "error": -0.1294
+        "n": 181,
+        "predicted": 0.7345,
+        "realised": 0.7127,
+        "error": -0.0218
       }
     ]
   },
@@ -200,28 +193,28 @@
     "close": {
       "h2h": {
         "games": 2230,
-        "delta": 0.00594,
+        "delta": 0.00641,
         "delta_ci90_date_clustered": [
-          0.00165,
-          0.0101
+          0.00282,
+          0.00997
         ],
         "verdict": "market better; interval excludes zero"
       },
       "spreads": {
         "games": 1245,
-        "delta": 0.00845,
+        "delta": 0.00955,
         "delta_ci90_date_clustered": [
-          0.00308,
-          0.01374
+          0.00379,
+          0.01507
         ],
         "verdict": "market better; interval excludes zero"
       },
       "totals": {
         "games": 680,
-        "delta": 0.00074,
+        "delta": 0.00409,
         "delta_ci90_date_clustered": [
-          -0.00585,
-          0.0072
+          -0.00276,
+          0.01079
         ],
         "verdict": "undecided; interval spans zero"
       }

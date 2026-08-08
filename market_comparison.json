@@ -26,28 +26,28 @@
     "spreads": {
       "games": 1245,
       "price": "close_prob",
-      "log_loss_model": 0.67484,
+      "log_loss_model": 0.66871,
       "log_loss_market": 0.66529,
-      "delta": 0.00955,
+      "delta": 0.00342,
       "delta_ci90_date_clustered": [
-        0.00379,
-        0.01507
+        -0.00103,
+        0.00774
       ],
-      "mean_abs_disagreement_pts": 4.768,
+      "mean_abs_disagreement_pts": 3.54,
       "model_beats_market": false,
-      "verdict": "market better; interval excludes zero"
+      "verdict": "undecided; interval spans zero"
     },
     "totals": {
       "games": 680,
       "price": "close_prob",
-      "log_loss_model": 0.69666,
+      "log_loss_model": 0.69553,
       "log_loss_market": 0.69257,
-      "delta": 0.00409,
+      "delta": 0.00296,
       "delta_ci90_date_clustered": [
-        -0.00276,
-        0.01079
+        -0.00448,
+        0.01015
       ],
-      "mean_abs_disagreement_pts": 3.636,
+      "mean_abs_disagreement_pts": 3.955,
       "model_beats_market": false,
       "verdict": "undecided; interval spans zero"
     }
@@ -70,28 +70,28 @@
     "spreads": {
       "games": 501,
       "price": "entry_prob",
-      "log_loss_model": 0.68132,
+      "log_loss_model": 0.67716,
       "log_loss_market": 0.66949,
-      "delta": 0.01183,
+      "delta": 0.00767,
       "delta_ci90_date_clustered": [
-        0.00309,
-        0.02079
+        0.00148,
+        0.0139
       ],
-      "mean_abs_disagreement_pts": 4.915,
+      "mean_abs_disagreement_pts": 3.438,
       "model_beats_market": false,
       "verdict": "market better; interval excludes zero"
     },
     "totals": {
       "games": 455,
       "price": "entry_prob",
-      "log_loss_model": 0.69456,
+      "log_loss_model": 0.6944,
       "log_loss_market": 0.6946,
-      "delta": -4e-05,
+      "delta": -0.0002,
       "delta_ci90_date_clustered": [
-        -0.00739,
-        0.00787
+        -0.00752,
+        0.00703
       ],
-      "mean_abs_disagreement_pts": 3.472,
+      "mean_abs_disagreement_pts": 3.561,
       "model_beats_market": true,
       "verdict": "undecided; interval spans zero"
     }

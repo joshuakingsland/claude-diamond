@@ -1,8 +1,10 @@
 import unittest
 
 import numpy as np
+import pandas as pd
 
-from runs import (GRID, joint_distribution, moneyline_probability,
+from runs import (DEFAULT_WALK_OFF_MARGINS, GRID, calibrate_walk_off,
+                  joint_distribution, moneyline_probability,
                   negative_binomial_pmf, push_probability,
                   runline_probability, total_over_probability)
 
@@ -58,7 +60,10 @@ class RunDistributionTests(unittest.TestCase):
         totals = GRID[:, None] + GRID[None, :]
         raw_total = float((raw * totals).sum())
         resolved = float((self.joint * totals).sum())
-        balanced = joint_distribution(4.5, 4.5, 4.0)
+        # Censoring is held off here: it legitimately lowers the total,
+        # because the home ninth is often not played, and this test is about
+        # tie resolution rather than about that.
+        balanced = joint_distribution(4.5, 4.5, 4.0, censor_home_ninth=False)
         self.assertGreater(float((balanced * totals).sum()), raw_total)
         self.assertGreater(resolved, 0.0)
 
@@ -81,3 +86,77 @@ class RunDistributionTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class HomeNinthCensoringTests(unittest.TestCase):
+    """The home side bats the ninth only when it needs to.
+
+    Giving both sides a full nine innings put 14.2% on the home team losing by
+    one against 11.1% observed, and 15.2% on winning by one against 17.1%. The
+    run line is decided at exactly that boundary, which is why it was the worst
+    calibrated of the three markets before this and the best after.
+    """
+
+    def test_mass_is_conserved(self):
+        for home, away, dispersion in ((4.6, 4.2, (3.8, 3.2)),
+                                       (3.0, 6.0, 4.0),
+                                       (5.5, 5.5, (3.5, 3.5))):
+            joint = joint_distribution(home, away, dispersion)
+            self.assertAlmostEqual(float(joint.sum()), 1.0, places=9)
+
+    def test_it_moves_mass_onto_a_one_run_home_win(self):
+        margin = GRID[:, None] - GRID[None, :]
+        loose = joint_distribution(4.6, 4.2, (3.8, 3.2), censor_home_ninth=False)
+        tight = joint_distribution(4.6, 4.2, (3.8, 3.2))
+        by_one = lambda j: float((j * (margin == 1)).sum())
+        self.assertGreater(by_one(tight), by_one(loose))
+
+    def test_the_moneyline_is_untouched(self):
+        """Censoring redistributes home wins across margins, it does not
+        create or destroy them."""
+        loose = joint_distribution(4.6, 4.2, (3.8, 3.2), censor_home_ninth=False)
+        tight = joint_distribution(4.6, 4.2, (3.8, 3.2))
+        self.assertAlmostEqual(float(moneyline_probability(loose)),
+                               float(moneyline_probability(tight)), places=3)
+
+    def test_walk_off_margins_are_spread_not_collapsed(self):
+        """Collapsing every walk-off onto one run overshoots that margin and
+        strips the run line of mass it should keep."""
+        margin = GRID[:, None] - GRID[None, :]
+        spread = joint_distribution(4.6, 4.2, (3.8, 3.2),
+                                    walk_off_margins=(0.87, 0.08, 0.04, 0.01))
+        collapsed = joint_distribution(4.6, 4.2, (3.8, 3.2),
+                                       walk_off_margins=(1.0, 0.0, 0.0, 0.0))
+        cover = lambda j: float((j * (margin > 1.5)).sum())
+        self.assertGreater(cover(spread), cover(collapsed))
+
+    def test_it_is_vectorised_over_games(self):
+        home = np.array([4.6, 3.0, 5.5])
+        away = np.array([4.2, 6.0, 5.5])
+        joint = joint_distribution(home, away, (3.8, 3.2))
+        self.assertEqual(joint.shape[0], 3)
+        np.testing.assert_allclose(joint.sum(axis=(1, 2)), 1.0, atol=1e-9)
+
+
+class WalkOffCalibrationTests(unittest.TestCase):
+    def test_it_measures_the_margin_from_the_games(self):
+        games = pd.DataFrame({
+            "home_batted_ninth": [1] * 300,
+            "home_score": [5] * 240 + [6] * 60,
+            "away_score": [4] * 300,
+        })
+        margins = calibrate_walk_off(games)
+        self.assertAlmostEqual(margins[0], 0.8, places=6)
+        self.assertAlmostEqual(margins[1], 0.2, places=6)
+
+    def test_a_thin_sample_keeps_the_measured_default(self):
+        games = pd.DataFrame({"home_batted_ninth": [1] * 10,
+                              "home_score": [5] * 10, "away_score": [4] * 10})
+        self.assertEqual(calibrate_walk_off(games), DEFAULT_WALK_OFF_MARGINS)
+
+    def test_games_the_home_side_lost_are_not_walk_offs(self):
+        games = pd.DataFrame({
+            "home_batted_ninth": [1] * 300,
+            "home_score": [2] * 300, "away_score": [5] * 300,
+        })
+        self.assertEqual(calibrate_walk_off(games), DEFAULT_WALK_OFF_MARGINS)

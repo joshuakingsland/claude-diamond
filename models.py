@@ -17,7 +17,9 @@ from sklearn.linear_model import PoissonRegressor
 from sklearn.preprocessing import StandardScaler
 
 from features import FEATURE_COLUMNS
-from runs import (calibrate_extra_innings, fit_dispersion, joint_distribution,
+from runs import (DEFAULT_WALK_OFF_MARGINS, calibrate_extra_innings,
+                  calibrate_walk_off,
+                  fit_dispersion, joint_distribution,
                   moneyline_probability, push_probability,
                   runline_probability, total_over_probability)
 
@@ -74,12 +76,14 @@ class RunsModel:
         self.dispersion = (4.0, 4.0)
         self.extra_home_edge = 0.52
         self.extra_total_runs = 1.0
+        self.walk_off_margins = DEFAULT_WALK_OFF_MARGINS
 
     def fit(self, features, games):
         """Train on every game twice: once per dugout."""
         merged = features.merge(
             games[["game_pk", "home_score", "away_score", "home_win",
-                   "innings_played", "scheduled_innings"]],
+                   "innings_played", "scheduled_innings",
+                   "home_batted_ninth"]],
             on="game_pk", how="inner",
         )
         merged = merged[merged["home_score"].notna()]
@@ -111,6 +115,10 @@ class RunsModel:
         # constant. The estimator was fine; the width was measured wrong.
         self.dispersion = self._holdout_dispersion(merged)
         self.extra_home_edge, self.extra_total_runs = calibrate_extra_innings(merged)
+        # Measured from the games rather than assumed, like the extra-innings
+        # parameters: a walk-off ends on the go-ahead run most of the time but
+        # not always, and the run line is decided at exactly that boundary.
+        self.walk_off_margins = calibrate_walk_off(merged)
         return self
 
     def _holdout_dispersion(self, merged, folds=4):
@@ -168,6 +176,7 @@ class RunsModel:
         home_mean, away_mean = self.expected_runs(features)
         joint = joint_distribution(
             home_mean, away_mean, self.dispersion,
+            walk_off_margins=self.walk_off_margins,
             extra_inning_home_edge=self.extra_home_edge,
             extra_inning_total_runs=self.extra_total_runs,
         )

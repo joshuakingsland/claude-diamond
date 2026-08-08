@@ -302,6 +302,41 @@ the model, from +0.0038 to +0.0059.
 The lesson rhymes with the dispersion bug below: the dangerous errors are the
 ones that leave the output looking reasonable.
 
+### The one change that worked: the home ninth inning
+
+The home team bats the bottom of the ninth only when it is not already ahead,
+and stops the moment it goes ahead. The model gave both sides a full nine
+innings, and the error showed up exactly where it should: across 11,428 games
+it put 14.2% on the home side losing by one against 11.1% observed, and 15.2%
+on winning by one against 17.1%. **The run line is decided at that boundary**,
+which is why it was the worst calibrated of the three markets.
+
+The correction costs nothing. A negative binomial with mean `mu` and size `d`
+shares its `p` with the pieces `NB(8mu/9, 8d/9)` and `NB(mu/9, d/9)`, so the
+eight innings and the ninth sum back to exactly the distribution already
+fitted — no new parameter, only a rearrangement of when the ninth counts. A
+walk-off then ends on the go-ahead run, and the winning margin is measured
+from the games rather than assumed: 87% by one run, the rest by more.
+
+| | Before | After |
+| --- | ---: | ---: |
+| Run line log loss | 0.64545 | **0.63904** |
+| Run line calibration error | 0.05653 | **0.01667** |
+| Paired change, 90% interval | | **[-0.00676, -0.00616]** |
+| Gap to the closing price | +0.00955 | **+0.00342** |
+| Verdict | market better | **undecided** |
+
+The interval excludes zero, and it is narrow because this is a structural
+correction rather than a noisy estimate: given the same expected runs it moves
+the same mass every time. The moneyline is untouched to four decimal places,
+which is the right result — censoring redistributes home wins across margins
+without creating or destroying any.
+
+That is the whole of it. The run line was one of two markets where the closing
+price demonstrably beat the model; it is now undecided. This did not come from
+new information but from removing a wrong assumption, which on the evidence of
+this repository is the better-paying kind of work.
+
 ### Does new information help? Not detectably
 
 `boxscores.py` had been ingesting per-start pitcher lines since 2021 and
