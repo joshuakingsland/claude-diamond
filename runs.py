@@ -6,7 +6,7 @@ how a book ends up quoting a total that contradicts its own moneyline, and it
 is how a model ends up with an "edge" that is really an internal
 inconsistency.
 
-Two baseball-specific facts drive the implementation:
+Three baseball-specific facts drive the implementation:
 
 1. Run scoring is over-dispersed relative to Poisson. Team runs per game have
    a variance roughly twice their mean, so a Poisson model is badly
@@ -18,6 +18,19 @@ Two baseball-specific facts drive the implementation:
    in ways that matter: the diagonal has to be resolved into extra innings
    (which add runs, so the total moves too), and home scoring is censored in
    roughly 43% of games.
+
+3. The negative binomial gets the width right and the *shape* wrong. Matching
+   the mean and the variance uses up both its parameters, and what is left
+   over is measurably off: across 11,428 games it puts 22% too little mass on
+   an away shutout and 28% too little on a home one, in the same direction at
+   every level of the predicted mean. So the family is wrong rather than the
+   means being badly spread. The unit where that is fixable is the inning,
+   because an inning is mostly a zero — see `inning_pmf`.
+
+The two families meet at `run_pieces`, which answers the same three questions
+for either. Everything downstream of it — censoring, walk-offs, ties, extra
+innings — is a fact about baseball rather than about a distribution, and does
+not know which family it was handed.
 
 Everything here is deterministic given the inputs; there is no sampling, so a
 backtest reproduces exactly.
@@ -49,6 +62,104 @@ def _pair(dispersion):
         return float(dispersion), float(dispersion)
     home, away = dispersion
     return float(home), float(away)
+
+
+def _convolve(left, right):
+    """Distribution of the sum of two independent counts, on the grid.
+
+    Truncated at MAX_RUNS rather than widened. A team scoring more than thirty
+    is not a case this repository needs to price, and the mass out there is
+    below 1e-9.
+    """
+    out = np.zeros_like(left)
+    for runs in range(MAX_RUNS + 1):
+        out[..., runs:] += (left[..., runs][..., None]
+                            * right[..., :MAX_RUNS + 1 - runs])
+    return out
+
+
+def _self_convolve(pmf, times):
+    """``times``-fold convolution of ``pmf`` with itself, by repeated squaring."""
+    result = np.zeros_like(pmf)
+    result[..., 0] = 1.0
+    base = pmf.copy()
+    while times:
+        if times & 1:
+            result = _convolve(result, base)
+        times >>= 1
+        if times:
+            base = _convolve(base, base)
+    return result
+
+
+def inning_pmf(mean, scoreless, tail):
+    """Runs in one half-inning: scoreless, or a zero-truncated negative binomial.
+
+    The reason this exists. A game-level negative binomial matches the mean and
+    the variance *by construction* and has no freedom left over for the shape,
+    and the shape is measurably wrong: across 11,428 games it puts 22% too
+    little mass on an away shutout and 28% too little on a home one, and it is
+    wrong in the same direction at every level of the predicted mean, so it is
+    the family that is wrong rather than the spread of the means.
+
+    An inning is the unit where that is fixable, because an inning is mostly a
+    zero — about 74.7% of them score nothing. P(shutout) is then roughly
+    ``scoreless ** 9``, which is enormously sensitive to a quantity the game
+    level cannot see. ``scoreless`` is pinned by the observed shutout rate and
+    ``tail`` by the observed variance, so both parameters answer a question the
+    data asks rather than being tuned.
+
+    The conditional mean is not free: given the inning mean, the mean given
+    that the inning scored is fixed at ``mean / (1 - scoreless)``. That is what
+    keeps this a reshaping of the distribution rather than a way to smuggle in
+    a different expected-runs estimate.
+    """
+    mean = np.asarray(mean, dtype=float)
+    # ``scoreless`` broadcasts against ``mean`` so a whole grid of candidate
+    # shapes can be evaluated in one pass; the fit is otherwise dominated by
+    # per-call overhead on arrays of 31 numbers.
+    scoreless = np.clip(np.asarray(scoreless, dtype=float), 0.0, 0.999)
+    conditional = np.maximum(mean, 1e-9) / (1.0 - scoreless)
+    # The zero-truncated NB's mean exceeds its parent's, so solve back for the
+    # parent that lands on the conditional mean. Contraction; converges flat.
+    parent = conditional.copy()
+    for _ in range(80):
+        parent = conditional * (1.0 - (tail / (tail + parent)) ** tail)
+    pmf = stats.nbinom.pmf(GRID, tail, (tail / (tail + parent))[..., None])
+    pmf[..., 0] = 0.0
+    total = pmf.sum(axis=-1, keepdims=True)
+    pmf = pmf / np.where(total > 0, total, 1.0) * (1.0 - scoreless)[..., None]
+    pmf[..., 0] = np.broadcast_to(scoreless, conditional.shape)
+    return pmf
+
+
+def run_pieces(mean, dispersion, shape=None, innings=9):
+    """``(full game, all but the last inning, the last inning)`` for one side.
+
+    Both families answer the same three questions, which is what lets the
+    censoring and extra-innings machinery below stay ignorant of which one it
+    was handed.
+
+    With ``shape``, the split is exact by construction: the early piece really
+    is eight innings convolved. Without it, the negative binomial's own
+    splitting property is used — ``NB(mu, d)`` shares its ``p`` with
+    ``NB(8mu/9, 8d/9)`` and ``NB(mu/9, d/9)`` — which is exact for that family
+    but has to assume the ninth carries exactly a ninth of the mean.
+    """
+    mean = np.asarray(mean, dtype=float)
+    if shape is None:
+        fraction = (innings - 1) / innings
+        return (negative_binomial_pmf(mean, dispersion),
+                negative_binomial_pmf(mean * fraction, dispersion * fraction),
+                negative_binomial_pmf(mean * (1 - fraction),
+                                      dispersion * (1 - fraction)))
+    scoreless, tail = shape
+    last = inning_pmf(mean / innings, scoreless, tail)
+    early = _self_convolve(last, innings - 1)
+    early = early / early.sum(axis=-1, keepdims=True)
+    full = _convolve(early, last)
+    full = full / full.sum(axis=-1, keepdims=True)
+    return full, early, last
 
 
 # A walk-off usually ends on the go-ahead run, but not always: a home run with
@@ -96,7 +207,7 @@ def calibrate_walk_off(games):
     return shares or DEFAULT_WALK_OFF_MARGINS
 
 
-def _censored_home(home_pmf, away_pmf, mean_home, dispersion_home, innings=9,
+def _censored_home(home_pieces, away_pmf,
                    walk_off_margins=DEFAULT_WALK_OFF_MARGINS):
     """Joint pmf where the home ninth inning happens only if it is needed.
 
@@ -108,11 +219,10 @@ def _censored_home(home_pmf, away_pmf, mean_home, dispersion_home, innings=9,
     run line sits on that boundary, which is why it was the worst calibrated
     of the three markets.
 
-    Splitting the nine innings costs nothing. A negative binomial with mean
-    ``mu`` and size ``d`` shares its ``p`` with the pieces ``NB(8mu/9, 8d/9)``
-    and ``NB(mu/9, d/9)``, so the two sum back to exactly the distribution
-    already fitted. There is no new parameter here, only a rearrangement of
-    when the ninth is allowed to count.
+    ``home_pieces`` is ``(full, all but the last inning, the last inning)``
+    from `run_pieces`. Which family produced them does not matter here, and
+    that is deliberate: the censoring rule is a fact about baseball, not about
+    the distribution, so it should not have to be reimplemented per family.
 
     Given the away side finished on ``a``:
 
@@ -122,11 +232,7 @@ def _censored_home(home_pmf, away_pmf, mean_home, dispersion_home, innings=9,
       path lands within a run or so of ``a``, spread by the measured walk-off
       margins rather than collapsed onto ``a + 1``
     """
-    fraction = (innings - 1) / innings
-    eight = negative_binomial_pmf(mean_home * fraction,
-                                  dispersion_home * fraction)
-    ninth = negative_binomial_pmf(mean_home * (1 - fraction),
-                                  dispersion_home * (1 - fraction))
+    home_pmf, eight, ninth = home_pieces
     # survival[k] = P(ninth-inning runs >= k), with a trailing zero so an
     # index one past the grid is defined.
     survival = np.concatenate(
@@ -162,7 +268,7 @@ def uncensor_home_mean(target, mean_away, dispersion, innings=9,
                        walk_off_margins=DEFAULT_WALK_OFF_MARGINS,
                        extra_inning_home_edge=0.52,
                        extra_inning_margins=DEFAULT_EXTRA_INNING_MARGINS,
-                       rounds=6):
+                       shape=None, rounds=6):
     """The full-nine mean whose priced distribution has expectation ``target``.
 
     The estimator is trained on observed home scores, and those are already
@@ -185,7 +291,7 @@ def uncensor_home_mean(target, mean_away, dispersion, innings=9,
     mean_home = target.copy()
     for _ in range(rounds):
         joint = joint_distribution(
-            mean_home, mean_away, dispersion,
+            mean_home, mean_away, dispersion, shape=shape,
             extra_inning_home_edge=extra_inning_home_edge,
             extra_inning_margins=extra_inning_margins,
             innings=innings, walk_off_margins=walk_off_margins)
@@ -198,8 +304,16 @@ def joint_distribution(mean_home, mean_away, dispersion,
                        extra_inning_home_edge=0.52,
                        extra_inning_margins=DEFAULT_EXTRA_INNING_MARGINS,
                        censor_home_ninth=True, innings=9,
-                       walk_off_margins=DEFAULT_WALK_OFF_MARGINS):
+                       walk_off_margins=DEFAULT_WALK_OFF_MARGINS,
+                       shape=None):
     """Return the joint pmf over (home, away) runs with ties resolved.
+
+    ``shape`` selects the family. Given ``(scoreless, tail)`` each side is
+    built from innings and ``dispersion`` is unused; given ``None`` each side
+    is a game-level negative binomial with the dispersion below. The NB path
+    is kept because it is the simpler thing to reason about and because a
+    change of family should be reversible by one argument rather than by a
+    revert.
 
     ``dispersion`` may be a single value or a ``(home, away)`` pair. Two is
     the honest choice and one was measurably wrong: home scoring is censored,
@@ -224,13 +338,12 @@ def joint_distribution(mean_home, mean_away, dispersion,
     `calibrate_extra_innings` rather than assumed.
     """
     dispersion_home, dispersion_away = _pair(dispersion)
-    home_pmf = negative_binomial_pmf(mean_home, dispersion_home)
-    away_pmf = negative_binomial_pmf(mean_away, dispersion_away)
+    home_pieces = run_pieces(mean_home, dispersion_home, shape, innings)
+    away_pmf = run_pieces(mean_away, dispersion_away, shape, innings)[0]
     if censor_home_ninth:
-        joint = _censored_home(home_pmf, away_pmf, mean_home, dispersion_home,
-                               innings, walk_off_margins)
+        joint = _censored_home(home_pieces, away_pmf, walk_off_margins)
     else:
-        joint = home_pmf[..., :, None] * away_pmf[..., None, :]
+        joint = home_pieces[0][..., :, None] * away_pmf[..., None, :]
 
     diagonal = np.einsum("...ii->...i", joint).copy()
     np.einsum("...ii->...i", joint)[...] = 0.0
@@ -320,6 +433,82 @@ def push_probability(joint, point, market):
     else:
         mask = (GRID[:, None] - GRID[None, :]) == -point
     return (joint * mask).sum(axis=(-2, -1))
+
+
+# Bounds on the fitted inning shape. `scoreless` is tight because it is well
+# identified -- it lands between 0.745 and 0.750 on every season tried, at
+# every value of `tail`. `tail` is wide because it is not: the two parameters
+# trade off along a ridge where both moments stay matched, so its fitted value
+# wanders (2.0 to 9.5 across four seasons) without the prices moving much.
+# Clipping stops an excursion rather than pinning down a real quantity.
+SCORELESS_BOUNDS = (0.60, 0.85)
+TAIL_BOUNDS = (0.5, 12.0)
+DEFAULT_INNING_SHAPE = (0.747, 2.25)
+
+
+def fit_inning_shape(observed_runs, expected_runs, innings=9):
+    """Solve the inning shape from two moments of the observed run scoring.
+
+    Method of moments, like `fit_dispersion`, and out of sample for the same
+    reason. Two questions the data can answer, one parameter each:
+
+    - how often does an inning score nothing? -> the observed shutout rate
+    - how wide is a game? -> the observed variance around predicted runs
+
+    Fitting by likelihood instead was tried and rejected. The surface in
+    ``tail`` is nearly flat, and a search over it returned 2.50, 8.00, 7.75 and
+    4.25 on four consecutive seasons with one pinned at the edge of the grid --
+    a parameter being fitted to noise, which is the failure this repository has
+    already paid for once. Two moments have no surface to get lost on.
+
+    Pass the UNCENSORED side. The away team bats nine innings whatever the
+    score, so its observed distribution is run scoring with nothing else mixed
+    into it; fitting on the home side would absorb the censoring into the
+    shape and then correct for it twice.
+
+    The caller's held-out block is thin in the earliest walk-forward season —
+    about 600 games, where P(0) carries a 15% relative standard error, which
+    propagates to roughly +-0.013 on ``scoreless`` because P(0) goes as the
+    ninth power of it. That season does fit lower than the rest (0.715 against
+    0.740-0.755) and it still priced better than the negative binomial did, so
+    the noise is tolerated rather than smoothed away. Shrinking it toward a
+    prior would mean choosing that prior, and there is nothing to choose it
+    from that is not this same data.
+    """
+    observed = np.asarray(observed_runs, dtype=float)
+    expected = np.asarray(expected_runs, dtype=float)
+    keep = np.isfinite(observed) & np.isfinite(expected) & (expected > 0)
+    observed, expected = observed[keep], expected[keep]
+    if len(observed) < 500:
+        return DEFAULT_INNING_SHAPE
+    target_zero = float((observed == 0).mean())
+    target_variance = float(np.mean((observed - expected) ** 2))
+    if target_zero <= 0 or target_variance <= 0:
+        return DEFAULT_INNING_SHAPE
+
+    # Bucket the means. The pmf is smooth in the mean, so a tenth of a run is
+    # far finer than the fit can resolve, and it turns tens of thousands of
+    # evaluations into a few dozen.
+    buckets, counts = np.unique(np.round(expected, 1), return_counts=True)
+    weights = counts / counts.sum()
+
+    candidates = np.arange(SCORELESS_BOUNDS[0], SCORELESS_BOUNDS[1], 0.0025)
+    best, best_error = DEFAULT_INNING_SHAPE, np.inf
+    for tail in np.arange(TAIL_BOUNDS[0], TAIL_BOUNDS[1] + 1e-9, 0.125):
+        # (candidate shapes, mean buckets, runs) in one pass.
+        full = run_pieces(buckets, None, (candidates[:, None], tail), innings)[0]
+        mean = (full * GRID).sum(axis=-1)
+        variance = (full * GRID ** 2).sum(axis=-1) - mean ** 2
+        zero = (full[..., 0] * weights).sum(axis=-1)
+        spread = (variance * weights).sum(axis=-1)
+        # Relative error on both, so neither moment dominates by scale.
+        error = ((zero / target_zero - 1.0) ** 2
+                 + (spread / target_variance - 1.0) ** 2)
+        pick = int(np.argmin(error))
+        if error[pick] < best_error:
+            best = (float(candidates[pick]), float(tail))
+            best_error = float(error[pick])
+    return best
 
 
 def fit_dispersion(observed_runs, expected_runs):

@@ -17,10 +17,11 @@ from sklearn.linear_model import PoissonRegressor
 from sklearn.preprocessing import StandardScaler
 
 from features import FEATURE_COLUMNS
-from runs import (DEFAULT_EXTRA_INNING_MARGINS, DEFAULT_WALK_OFF_MARGINS,
+from runs import (DEFAULT_EXTRA_INNING_MARGINS, DEFAULT_INNING_SHAPE,
+                  DEFAULT_WALK_OFF_MARGINS,
                   calibrate_extra_innings,
                   calibrate_walk_off,
-                  fit_dispersion, joint_distribution,
+                  fit_dispersion, fit_inning_shape, joint_distribution,
                   uncensor_home_mean,
                   moneyline_probability, push_probability,
                   runline_probability, total_over_probability)
@@ -76,6 +77,7 @@ class RunsModel:
         self.scaler = None
         self.estimator = None
         self.dispersion = (4.0, 4.0)
+        self.shape = DEFAULT_INNING_SHAPE
         self.extra_home_edge = 0.52
         self.extra_margins = DEFAULT_EXTRA_INNING_MARGINS
         self.walk_off_margins = DEFAULT_WALK_OFF_MARGINS
@@ -115,7 +117,7 @@ class RunsModel:
         # distribution far too tight. Win probabilities then ran from 0.05 to
         # 0.97 on baseball games and the moneyline scored worse than a
         # constant. The estimator was fine; the width was measured wrong.
-        self.dispersion = self._holdout_dispersion(merged)
+        self.dispersion, self.shape = self._holdout_width(merged)
         self.extra_home_edge, self.extra_margins = calibrate_extra_innings(merged)
         # Measured from the games rather than assumed, like the extra-innings
         # parameters: a walk-off ends on the go-ahead run most of the time but
@@ -123,12 +125,17 @@ class RunsModel:
         self.walk_off_margins = calibrate_walk_off(merged)
         return self
 
-    def _holdout_dispersion(self, merged, folds=4):
-        """Method-of-moments dispersion from out-of-fold residuals only."""
+    def _holdout_width(self, merged, folds=4):
+        """Dispersion and inning shape, from out-of-fold residuals only.
+
+        Both describe how wide the distribution is and both are measured on
+        the same held-out block, for the same reason: an in-sample residual is
+        artificially small and every width fitted to one comes out too tight.
+        """
         merged = merged.sort_values("official_date").reset_index(drop=True)
         cut = int(len(merged) * (folds - 1) / folds)
         if cut < 200 or len(merged) - cut < 200:
-            return (4.0, 4.0)
+            return (4.0, 4.0), DEFAULT_INNING_SHAPE
         train, held = merged.iloc[:cut], merged.iloc[cut:]
         probe = RunsModel(kind=self.kind, seed=self.seed + 1)
         probe.scaler, probe.estimator = None, None
@@ -157,10 +164,17 @@ class RunsModel:
         # away variance by 15.5% across 11,428 games, which shows up as an
         # over-confident total and a badly calibrated run line.
         cut = len(held)
-        return (fit_dispersion(held["home_score"].to_numpy(dtype=float),
-                               predicted[:cut]),
-                fit_dispersion(held["away_score"].to_numpy(dtype=float),
-                               predicted[cut:]))
+        dispersion = (fit_dispersion(held["home_score"].to_numpy(dtype=float),
+                                     predicted[:cut]),
+                      fit_dispersion(held["away_score"].to_numpy(dtype=float),
+                                     predicted[cut:]))
+        # Away side only. It bats nine innings whatever the score, so its
+        # observed spread is run scoring and nothing else; the home side's is
+        # run scoring plus the censoring the shape is about to model, and
+        # fitting on it would count those innings twice.
+        shape = fit_inning_shape(held["away_score"].to_numpy(dtype=float),
+                                 predicted[cut:])
+        return dispersion, shape
 
     def _joint(self, home_mean, away_mean, scheduled):
         """Price each scheduled length separately, then reassemble in order.
@@ -184,12 +198,14 @@ class RunsModel:
                 home, away, self.dispersion, innings=int(length),
                 walk_off_margins=self.walk_off_margins,
                 extra_inning_home_edge=self.extra_home_edge,
-                extra_inning_margins=self.extra_margins)
+                extra_inning_margins=self.extra_margins,
+                shape=self.shape)
             block = joint_distribution(
                 home, away, self.dispersion, innings=int(length),
                 walk_off_margins=self.walk_off_margins,
                 extra_inning_home_edge=self.extra_home_edge,
                 extra_inning_margins=self.extra_margins,
+                shape=self.shape,
             )
             if joint is None:
                 joint = np.empty((len(scheduled),) + block.shape[1:])
@@ -276,11 +292,14 @@ def walk_forward(features, games, seasons, kind="gbm", min_train_games=1500,
         priced["season"] = season
         priced["dispersion_home"] = model.dispersion[0]
         priced["dispersion_away"] = model.dispersion[1]
+        priced["inning_scoreless"] = model.shape[0]
+        priced["inning_tail"] = model.shape[1]
         predictions.append(priced)
         if verbose:
             print(f"  {season}: trained on {len(train_features)} games, "
                   f"predicted {len(test_features)}, dispersion "
-                  f"{model.dispersion[0]:.2f}/{model.dispersion[1]:.2f}")
+                  f"{model.dispersion[0]:.2f}/{model.dispersion[1]:.2f}, "
+                  f"scoreless innings {model.shape[0]:.3f}")
     if not predictions:
         return pd.DataFrame()
     return pd.concat(predictions, ignore_index=True)

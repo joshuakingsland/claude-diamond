@@ -50,8 +50,12 @@ way this kind of project fools its author.
 off a single joint distribution over (home runs, away runs) in `runs.py`.
 Pricing them with three separate models is how you end up quoting a total
 that contradicts your own moneyline and calling the contradiction an edge.
-Runs are modelled as negative binomial rather than Poisson because team runs
-per game have roughly twice the variance a Poisson allows.
+Runs are built from innings rather than from games: an inning is scoreless
+about 74.7% of the time, and a game is nine of them convolved. The older
+game-level negative binomial is still in `runs.py` behind one argument, and
+the reason it was replaced is that matching the mean and the variance uses up
+both its parameters and leaves the shape wrong — it puts a fifth too little
+mass on a shutout.
 
 **Ties are resolved, not deleted.** Baseball has no draws. Zeroing the
 diagonal of the joint distribution would be the easy fix and would bias every
@@ -266,9 +270,9 @@ slates rather than games.
 
 | Market | Games | Δ log loss vs close | 90% interval | Verdict |
 | --- | ---: | ---: | :---: | --- |
-| Moneyline | 2,230 | +0.00542 | [0.0020, 0.0088] | Market better |
-| Run line -1.5 | 1,245 | +0.00391 | [-0.0012, 0.0088] | Undecided |
-| Total 8.5 | 680 | +0.00386 | [-0.0031, 0.0107] | Undecided |
+| Moneyline | 2,230 | +0.00562 | [0.0022, 0.0090] | Market better |
+| Run line -1.5 | 1,245 | +0.00361 | [-0.0014, 0.0086] | Undecided |
+| Total 8.5 | 680 | +0.00363 | [-0.0027, 0.0098] | Undecided |
 
 This is the answer the repository was built to be able to receive. A model
 that beats a home-field constant by 0.010 of log loss loses to the closing
@@ -429,7 +433,7 @@ own denominator, on the umpire and on the league both. A test caught the second
 one by asserting the feature's spread — an inert feature has an sd near zero,
 and 2.28 is not near zero.
 
-### The one change that worked: the home ninth inning
+### The first change that worked: the home ninth inning
 
 The home team bats the bottom of the ninth only when it is not already ahead,
 and stops the moment it goes ahead. The model gave both sides a full nine
@@ -444,6 +448,11 @@ eight innings and the ninth sum back to exactly the distribution already
 fitted — no new parameter, only a rearrangement of when the ninth counts. A
 walk-off then ends on the go-ahead run, and the winning margin is measured
 from the games rather than assumed: 87% by one run, the rest by more.
+
+(The splitting property is how this worked at the time. The inning model
+below made the split literal rather than algebraic — the eight-inning piece is
+now eight innings convolved — which removed the one approximation left in it,
+that the ninth carries exactly a ninth of the mean.)
 
 | | Before | After |
 | --- | ---: | ---: |
@@ -463,6 +472,102 @@ That is the whole of it. The run line was one of two markets where the closing
 price demonstrably beat the model; it is now undecided. This did not come from
 new information but from removing a wrong assumption, which on the evidence of
 this repository is the better-paying kind of work.
+
+### The second change that worked: an inning is mostly a zero
+
+Prompted by asking which assumptions the model actually rests on. The answer
+that turned out to be checkable in an afternoon was *runs are negative
+binomial*, and it is wrong.
+
+A negative binomial has two parameters. Matching the mean and the variance
+uses up both of them, and there is nothing left to control the shape — so the
+shape is whatever falls out, and it can be checked:
+
+| | Observed | NB predicted | Miss |
+| --- | ---: | ---: | ---: |
+| P(away shutout) | 0.0719 | 0.0588 | **+22% relative** |
+| P(home shutout) | 0.0609 | 0.0478 | **+28% relative** |
+| Away variance | 10.601 | 10.491 | +1.0% |
+| Home variance | 9.621 | 9.596 | +0.3% |
+
+The variance is right, which says the out-of-sample dispersion fit is doing
+its job. The shutouts are not. The first question is whether that is the
+*family* being wrong or the model's means being too tightly bunched — both
+produce excess zeros. They are distinguishable, because heterogeneity in the
+mean would pile the excess at the low end:
+
+| Predicted mean | Games | Observed P(0) | NB P(0) | Excess |
+| --- | ---: | ---: | ---: | ---: |
+| 2.31–3.78 | 2286 | 0.0958 | 0.0870 | +0.0088 |
+| 3.78–4.17 | 2285 | 0.0845 | 0.0674 | +0.0171 |
+| 4.17–4.52 | 2286 | 0.0735 | 0.0575 | +0.0160 |
+| 4.52–4.97 | 2285 | 0.0586 | 0.0482 | +0.0105 |
+| 4.97–9.77 | 2286 | 0.0472 | 0.0341 | +0.0132 |
+
+Present at every level, and *growing* in relative terms — +39% in the top
+bucket. That is the family.
+
+**The fix is to change the unit.** A game is not a natural place to model run
+scoring; an inning is, because an inning is mostly a zero. About 74.7% of them
+score nothing, so P(shutout) is roughly `0.747⁹`, which is enormously
+sensitive to a quantity the game level cannot see at all. `inning_pmf` is
+scoreless with probability `scoreless`, otherwise a zero-truncated negative
+binomial whose mean is *pinned* by the inning mean — so the shape cannot
+smuggle in a different expected-runs estimate. A game is nine of them
+convolved.
+
+This also makes the ninth-inning censoring exact rather than nearly so. The
+old code leaned on the NB's splitting property and had to assume the ninth
+carried exactly a ninth of the mean; the eight-inning piece is now literally
+eight innings convolved.
+
+Two parameters, two moments, fitted out of sample on the away side only — the
+away team bats nine innings whatever the score, so its distribution is run
+scoring with nothing else mixed in, where the home side's has the censoring in
+it and would be corrected twice. Fitting by likelihood was tried first and
+rejected: the surface in `tail` is nearly flat and a search returned 2.50,
+8.00, 7.75 and 4.25 on four consecutive seasons with one pinned at the edge of
+the grid. That is a parameter fitted to noise, which this repository has paid
+for once already. Two moments have no surface to get lost on.
+
+`scoreless` lands between 0.745 and 0.750 on every season and at every value
+of `tail`; `tail` itself is weakly identified and wanders along a ridge where
+both moments stay matched. A sensitivity sweep pinning `tail` from 1.5 to 12
+moved the moneyline gain only between −0.00076 and −0.00054, so the conclusion
+does not rest on it. `SCORELESS_BOUNDS` is tight and `TAIL_BOUNDS` is wide for
+exactly that reason.
+
+Walk-forward, all three markets improved on log loss *and* calibration:
+
+| Market | Log loss before | after | Δ | Calibration before | after |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Moneyline | 0.68012 | 0.67955 | −0.00057 | 0.01625 | **0.00938** |
+| Run line | 0.63894 | 0.63870 | −0.00024 | 0.00931 | **0.00569** |
+| Total | 0.68848 | 0.68798 | −0.00050 | 0.02353 | **0.02008** |
+
+The calibration movement is the larger story — moneyline calibration error
+nearly halved. A held-out check with the estimator frozen and only the pricing
+family swapped put the moneyline delta at −0.00064 with a date-clustered 90%
+interval of [−0.00122, −0.00006] and the total at −0.00057, [−0.00091,
+−0.00025], both excluding zero.
+
+Per season the moneyline improved in four of five, and the one that did not
+was 2025 — which is most of the market-comparison sample. So the gap to the
+close moved the *wrong* way there, from +0.00542 to +0.00562, while the model
+got better overall. Both facts are reported because reporting only the first
+would be picking the sample that flatters the change. The run line and total
+gaps narrowed slightly, to +0.00361 and +0.00363; all three verdicts are
+unchanged.
+
+An order of magnitude smaller than the censoring fix above, and the same kind
+of thing: an assumption removed, not information added. The tally is now five
+information sources that did nothing and two wrong assumptions that paid.
+
+**What this does not fix.** The remaining shape error is in the same place,
+just smaller — and the model's predicted means are themselves too widely
+spread, under-predicting the quietest fifth of games by 0.25 runs and
+over-predicting the loudest by 0.27. That is a miscalibrated *mean*, not a
+miscalibrated shape, and it is the next thing to look at.
 
 ### Three more wrong assumptions
 

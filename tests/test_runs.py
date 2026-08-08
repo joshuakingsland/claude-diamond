@@ -3,11 +3,12 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from runs import (DEFAULT_EXTRA_INNING_MARGINS, DEFAULT_WALK_OFF_MARGINS,
-                  GRID, calibrate_extra_innings, calibrate_walk_off,
-                  uncensor_home_mean,
+from runs import (DEFAULT_EXTRA_INNING_MARGINS, DEFAULT_INNING_SHAPE,
+                  DEFAULT_WALK_OFF_MARGINS,
+                  GRID, _convolve, calibrate_extra_innings, calibrate_walk_off,
+                  fit_inning_shape, inning_pmf, uncensor_home_mean,
                   joint_distribution, moneyline_probability,
-                  negative_binomial_pmf, push_probability,
+                  negative_binomial_pmf, push_probability, run_pieces,
                   runline_probability, total_over_probability)
 
 
@@ -239,3 +240,88 @@ class ShortGameTests(unittest.TestCase):
         seven = joint_distribution(4.8 * 7 / 9, 4.2 * 7 / 9, 4.0, innings=7)
         self.assertLess(abs(float(moneyline_probability(nine))
                             - float(moneyline_probability(seven))), 0.05)
+
+
+class InningShapeTests(unittest.TestCase):
+    """The inning distribution, and the split it makes exact."""
+
+    SHAPE = (0.747, 2.25)
+
+    def test_inning_pmf_is_normalised_and_hits_its_mean(self):
+        for mean in (0.3, 0.5, 0.8):
+            pmf = inning_pmf(mean, *self.SHAPE)
+            self.assertAlmostEqual(float(pmf.sum()), 1.0, places=9)
+            # The conditional mean is pinned by the inning mean, so the shape
+            # cannot quietly move the expected runs. This is what keeps it a
+            # reshaping rather than a second estimator. The tolerance is 1e-5
+            # rather than exact because the zero-truncated tail is clipped at
+            # MAX_RUNS and the parent mean is reached by iteration; the worst
+            # case measured is 1e-6 runs per inning, which is 1e-5 on a game.
+            self.assertAlmostEqual(float((pmf * GRID).sum()), mean, places=5)
+
+    def test_scoreless_share_is_exactly_the_parameter(self):
+        pmf = inning_pmf(0.5, *self.SHAPE)
+        self.assertAlmostEqual(float(pmf[0]), self.SHAPE[0], places=9)
+
+    def test_the_pieces_convolve_back_to_the_whole_game(self):
+        # Exact, not approximate: the early piece really is eight innings.
+        full, early, last = run_pieces(4.5, None, self.SHAPE)
+        rebuilt = _convolve(early, last)
+        # Renormalised on both sides: the convolution loses the mass that
+        # lands past MAX_RUNS, which is ~5e-8 here. That is truncation, not
+        # disagreement -- the shapes match to eight figures.
+        np.testing.assert_allclose(rebuilt / rebuilt.sum(), full, atol=1e-9)
+
+    def test_negative_binomial_pieces_still_split_the_old_way(self):
+        # Backwards compatibility: with no shape the pieces are the NB split,
+        # and the two really do sum back to the fitted distribution.
+        full, early, last = run_pieces(4.5, 4.0, None)
+        rebuilt = _convolve(early, last)
+        np.testing.assert_allclose(rebuilt / rebuilt.sum(), full, atol=1e-6)
+        np.testing.assert_allclose(full, negative_binomial_pmf(4.5, 4.0),
+                                   atol=1e-12)
+
+    def test_shape_puts_more_mass_on_a_shutout_than_the_negative_binomial(self):
+        # The entire reason this exists. Measured over 11,428 games the NB is
+        # 22% light on away shutouts; if the inning model does not move this
+        # cell it has no purpose.
+        nb = run_pieces(4.4, 4.0, None)[0]
+        inning = run_pieces(4.4, None, self.SHAPE)[0]
+        self.assertGreater(float(inning[0]), float(nb[0]) * 1.15)
+        # ... without becoming a different distribution elsewhere.
+        self.assertAlmostEqual(float((inning * GRID).sum()),
+                               float((nb * GRID).sum()), places=2)
+
+    def test_fit_recovers_a_shape_it_was_given(self):
+        rng = np.random.default_rng(11)
+        truth = (0.755, 3.0)
+        expected = rng.uniform(3.5, 5.5, 8000)
+        pmf = run_pieces(expected, None, truth)[0]
+        observed = np.array([rng.choice(GRID, p=row) for row in pmf],
+                            dtype=float)
+        scoreless, _ = fit_inning_shape(observed, expected)
+        # `scoreless` is the identified parameter and must come back; `tail`
+        # is not, and asserting on it would be asserting on noise.
+        self.assertAlmostEqual(scoreless, truth[0], delta=0.01)
+
+    def test_fit_falls_back_rather_than_inventing_a_shape(self):
+        self.assertEqual(fit_inning_shape(np.zeros(10), np.ones(10)),
+                         DEFAULT_INNING_SHAPE)
+
+    def test_joint_with_a_shape_still_prices_a_coherent_game(self):
+        joint = joint_distribution(4.6, 4.2, dispersion=4.0, shape=self.SHAPE)
+        self.assertAlmostEqual(float(joint.sum()), 1.0, places=9)
+        self.assertLess(float(np.einsum("ii->", joint)), 1e-9)
+        # The market ordering that has to hold whatever the family.
+        self.assertGreater(runline_probability(joint, 1.5),
+                           moneyline_probability(joint))
+        self.assertLess(runline_probability(joint, -1.5),
+                        moneyline_probability(joint))
+
+    def test_uncensoring_still_lands_on_the_target_under_a_shape(self):
+        target = np.array([4.5, 5.1])
+        away = np.array([4.3, 4.0])
+        mean = uncensor_home_mean(target, away, (4.0, 4.0), shape=self.SHAPE)
+        joint = joint_distribution(mean, away, (4.0, 4.0), shape=self.SHAPE)
+        implied = (joint * GRID[:, None]).sum(axis=(-2, -1))
+        np.testing.assert_allclose(implied, target, atol=1e-3)
