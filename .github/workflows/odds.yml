@@ -50,6 +50,11 @@ permissions:
 jobs:
   capture:
     runs-on: ubuntu-latest
+    # The job had no bound at all, so the default six hours applied. It now
+    # does three ingests as well as the capture, and a wedged HTTP call would
+    # sit there burning Actions minutes while the next hour's run started
+    # anyway. Twenty minutes is several times the observed runtime.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -99,7 +104,35 @@ jobs:
         # ledger.py, and a wager is written once and never revised, so running
         # this hourly is idempotent: quotes outside the window are rejected
         # and games already locked are skipped.
+        #
+        # Results are refreshed first, and only for the current season, which
+        # is free and keyless. Before this the schedule and last night's
+        # scores arrived once a week, so a card could be priced on team form
+        # up to seven days stale -- and a game that had not been ingested had
+        # no feature row and simply fell off the board.
+        #
+        # Boxscores and umpires ran in no workflow at all and were only ever
+        # filled by hand. That degrades quietly rather than loudly: a starter
+        # whose recent outings were never ingested keeps his old rating and
+        # then falls back to a league prior, so the model goes on pricing with
+        # no error anywhere. All three ingesters are resumable and skip what
+        # they already hold, so the steady state is roughly fifteen games a
+        # day. The limit bounds a cold start instead of the job timeout doing
+        # it, and weather is allowed to fail because it is the one that
+        # depends on a third party being up.
         run: |
+          # The four refreshes are best-effort: steps run under `bash -e`, and
+          # a StatsAPI hiccup must not stop tonight's card being priced from
+          # the table already on disk. They are all resumable, so a skipped
+          # run costs nothing but freshness, and merge_table means a failed
+          # fetch can no longer damage what is there.
+          python results.py --seasons "$(date -u +%Y)" || echo "results refresh failed; using the table on disk"
+          python boxscores.py --limit 120 || echo "boxscores incomplete; resumes next run"
+          python umpires.py --limit 120 || echo "umpires incomplete; resumes next run"
+          python weather.py || echo "weather incomplete; resumes next run"
+          # Not best-effort. A board that prices nothing is the failure this
+          # step exists to surface, and letting it through would write an
+          # empty page over a good one.
           python predict_upcoming.py
           python ledger.py
           python model_card.py

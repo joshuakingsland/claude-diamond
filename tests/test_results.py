@@ -7,7 +7,14 @@ date the game was not played on. The committed dataset carried 274 such games
 and every season came out above the 2,430 a regular season contains.
 """
 
+import collections
+import csv
+import os
+import shutil
+import tempfile
 import unittest
+
+import results
 
 from results import deduplicate, parse_game
 
@@ -104,3 +111,76 @@ class UnplayedScoreTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MergeTableTests(unittest.TestCase):
+    """A narrow --seasons must never delete a season it did not fetch."""
+
+    def setUp(self):
+        self.directory = tempfile.mkdtemp()
+        self.path = os.path.join(self.directory, "games.csv")
+
+    def tearDown(self):
+        shutil.rmtree(self.directory, ignore_errors=True)
+
+    def _rows(self, season, count, score="4"):
+        return [{"game_pk": f"{season}{index:04d}", "season": str(season),
+                 "official_date": f"{season}-05-{index % 28 + 1:02d}",
+                 "game_date_utc": f"{season}-05-{index % 28 + 1:02d}T23:05:00Z",
+                 "status": "Final", "home_score": score, "away_score": "3"}
+                for index in range(count)]
+
+    def _seasons_on_disk(self):
+        with open(self.path, newline="", encoding="utf-8") as handle:
+            rows = list(csv.DictReader(handle))
+        return rows, collections.Counter(row["season"] for row in rows)
+
+    def test_a_narrow_fetch_keeps_the_seasons_it_did_not_fetch(self):
+        # The exact failure: the whole 2026 season disappeared because the
+        # weekly workflow asked for 2021-2025 and the writer replaced the file.
+        results.merge_table(self._rows(2025, 5) + self._rows(2026, 3),
+                            self.path)
+        results.merge_table(self._rows(2025, 5), self.path)
+        _, counts = self._seasons_on_disk()
+        self.assertEqual(counts["2026"], 3)
+        self.assertEqual(counts["2025"], 5)
+
+    def test_a_fetched_season_is_replaced_not_appended(self):
+        # A game cancelled upstream has to be able to disappear, so the
+        # seasons that were fetched are rewritten rather than unioned.
+        results.merge_table(self._rows(2026, 6), self.path)
+        results.merge_table(self._rows(2026, 4), self.path)
+        _, counts = self._seasons_on_disk()
+        self.assertEqual(counts["2026"], 4)
+
+    def test_a_refetch_updates_scores_in_place(self):
+        results.merge_table(self._rows(2026, 3, score="4"), self.path)
+        results.merge_table(self._rows(2026, 3, score="9"), self.path)
+        rows, _ = self._seasons_on_disk()
+        self.assertTrue(all(row["home_score"] == "9" for row in rows))
+
+    def test_an_empty_fetch_erases_nothing(self):
+        # The dangerous case: StatsAPI having a bad morning must not be able
+        # to empty the table. The seasons to replace come from the rows in
+        # hand, so no rows means no replacement.
+        results.merge_table(self._rows(2026, 4), self.path)
+        results.merge_table([], self.path)
+        _, counts = self._seasons_on_disk()
+        self.assertEqual(counts["2026"], 4)
+
+
+class DefaultSeasonTests(unittest.TestCase):
+    def test_the_range_reaches_the_current_season(self):
+        import datetime as _datetime
+        stamp = _datetime.datetime(2031, 3, 4, tzinfo=_datetime.timezone.utc)
+        self.assertEqual(results.default_seasons(stamp), "2021-2031")
+
+    def test_the_range_never_runs_backwards(self):
+        import datetime as _datetime
+        stamp = _datetime.datetime(2019, 3, 4, tzinfo=_datetime.timezone.utc)
+        self.assertEqual(results.default_seasons(stamp), "2021-2021")
+
+    def test_ranges_and_single_seasons_both_parse(self):
+        self.assertEqual(results.parse_seasons("2021-2024"),
+                         [2021, 2022, 2023, 2024])
+        self.assertEqual(results.parse_seasons("2026"), [2026])

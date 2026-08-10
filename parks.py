@@ -190,13 +190,20 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--seasons", default="2021-2026",
-                        help="season or inclusive range, e.g. 2021-2026")
+    # Same reasoning as results.py: an end year written into a default is a
+    # bug with a delayed fuse. This one is run by hand rather than by a
+    # workflow, so it was never going to delete a season, but it would have
+    # quietly stopped fetching new venues.
+    parser.add_argument("--seasons", default=None,
+                        help="season or inclusive range; defaults to every "
+                             "season through the current one")
     parser.add_argument("--refresh", action="store_true")
     parser.add_argument("--cache", default=str(CACHE))
     args = parser.parse_args()
-    if "-" in args.seasons:
-        first, last = (int(part) for part in args.seasons.split("-", 1))
+    from results import default_seasons
+    if "-" in (args.seasons or default_seasons()):
+        first, last = (int(part) for part in
+                       (args.seasons or default_seasons()).split("-", 1))
         seasons = range(first, last + 1)
     else:
         seasons = [int(args.seasons)]

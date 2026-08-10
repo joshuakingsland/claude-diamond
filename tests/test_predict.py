@@ -5,11 +5,15 @@ places where the model and the board can quietly end up on different bases are
 tested directly.
 """
 
+import os
+import shutil
+import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
 
 import pandas as pd
 
-from predict_upcoming import model_probability, offered_points
+from predict_upcoming import main, model_probability, offered_points
 
 
 def _priced(**columns):
@@ -69,3 +73,54 @@ class OfferedPointTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class EmptyCardTests(unittest.TestCase):
+    """An empty card must not look the same as an unpriceable one.
+
+    The distinction is the whole point: the season went missing from
+    games.csv, every event failed to match, and the workflow stayed green for
+    two days because writing a header-only file is not an error.
+    """
+
+    def setUp(self):
+        self.directory = tempfile.mkdtemp()
+        self.lines = os.path.join(self.directory, "lines.csv")
+        self.out = os.path.join(self.directory, "card.csv")
+        # A slice of the real table rather than a synthetic one, so the
+        # columns and dtypes are the ones the builder actually meets -- and
+        # small, because a full build is half a minute.
+        self.games = os.path.join(self.directory, "games.csv")
+        pd.read_csv("data/games.csv").head(400).to_csv(self.games, index=False)
+
+    def tearDown(self):
+        shutil.rmtree(self.directory, ignore_errors=True)
+
+    def _run(self, lines):
+        pd.DataFrame(lines).to_csv(self.lines, index=False)
+        return main(["--lines", self.lines, "--out", self.out,
+                     "--games", self.games, "--skip-forecast"])
+
+    def test_an_empty_board_is_not_an_error(self):
+        # Nothing quoted is an ordinary off day, not a failure.
+        pd.DataFrame(columns=["event_id"]).to_csv(self.lines, index=False)
+        main(["--lines", self.lines, "--out", self.out,
+              "--games", self.games, "--skip-forecast"])
+        self.assertTrue(os.path.exists(self.out))
+
+    def test_a_board_that_prices_nothing_fails_loudly(self):
+        future = (datetime.now(timezone.utc) + timedelta(hours=6)
+                  ).strftime("%Y-%m-%dT%H:%M:%SZ")
+        rows = [{
+            "event_id": "e1", "home_team": "Nowhere Nobodies",
+            "away_team": "Elsewhere Nothings", "commence_time": future,
+            "market": "h2h", "point": "", "consensus_prob_home": 0.5,
+            "market_books": 5, "market_spread": 0.01,
+            "consensus_price_home": -110, "consensus_price_away": -110,
+            "best_price_home": -105, "best_book_home": "a",
+            "best_price_away": -105, "best_book_away": "b",
+            "fetched_at": future,
+        }]
+        with self.assertRaises(SystemExit) as caught:
+            self._run(rows)
+        self.assertIn("none could be priced", str(caught.exception))

@@ -208,7 +208,7 @@ documentation, not controls.
 | Workflow | Trigger | What it does |
 | --- | --- | --- |
 | `tests.yml` | push, PR | Unit tests, plus a check that odds capture exits clean with no key |
-| `odds.yml` | hourly 15:00-03:00 UTC in season | Captures the board, prices the card, screens the ledger |
+| `odds.yml` | hourly 15:00-03:00 UTC in season | Refreshes results, boxscores, umpires and weather; captures the board, prices the card, screens the ledger |
 | `backfill-odds.yml` | manual | Capped historical capture; dry run by default |
 | `revalidate.yml` | weekly, manual | Rebuilds features, re-runs the comparison and validation, settles the ledger |
 
@@ -230,6 +230,44 @@ Scheduled workflows only run on the default branch, and GitHub disables them
 after 60 days without repository activity. A gap in `data/market_quotes/` is a
 data problem, not only an ops one, so check the files rather than trusting the
 cron.
+
+### The two days the page was empty
+
+Worth writing down, because every workflow was green throughout.
+
+`revalidate.yml` passed `results.py --seasons 2021-2025`. That default was
+correct when it was typed and became wrong on 1 January 2026, and `results.py`
+*replaced* the game table with whatever it was told to fetch — so the weekly
+run deleted the entire 2026 season, 2,430 rows. Nothing errored. The capture
+kept buying odds every hour and committing them. But no game on the board
+existed in the table any more, so every event failed to match, the card was
+written with a header and no rows, and the public page showed nothing at all.
+
+Three separate things had to be true for it to be silent, and all three are
+now fixed:
+
+- **A stale year in a default.** `results.py` and `parks.py` now derive the
+  range from the current date. An end year written into a default is a bug
+  with a delayed fuse.
+- **A write that could delete.** `results.py` now replaces only the seasons a
+  fetch actually returned games for, and keeps every other season. Correcting
+  the year would have fixed the instance; this makes the class impossible. An
+  empty or failed fetch now erases nothing.
+- **An empty card that looked like an ordinary night.** `predict_upcoming.py`
+  now separates the two cases. No future events on the board is fine — an off
+  day, or every game already started. Future events of which *none* can be
+  priced is a failure and exits non-zero. The odds are already on disk and the
+  commit step runs on `always()`, so failing costs no data; it just turns a
+  silent nothing into a red run.
+
+Two adjacent gaps surfaced while fixing it. `boxscores.py` and `umpires.py`
+were in **no** workflow and had only ever been run by hand, which decays
+quietly rather than loudly — a starter whose recent outings were never
+ingested keeps his old rating and then falls back to a league prior, and the
+model goes on pricing with no error anywhere. And results were refreshed
+weekly, so a card could be priced on team form up to seven days stale. All
+four ingesters now run on every capture; each is resumable and keyless, so the
+steady state is about fifteen games a day.
 
 ## Running it
 

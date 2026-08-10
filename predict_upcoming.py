@@ -124,7 +124,8 @@ def build_card(lines, games, features, kind="glm", now=None, verbose=True):
     now = now or datetime.now(timezone.utc)
     lines = lines[[_is_future(value, now) for value in lines["commence_time"]]]
     if not len(lines):
-        return pd.DataFrame(), {"reason": "no future games on the board"}
+        return pd.DataFrame(), {"reason": "no future games on the board",
+                                "events": 0, "unmatched_events": 0}
 
     events = lines.drop_duplicates("event_id")[
         ["event_id", "home_team", "away_team", "commence_time"]].copy()
@@ -152,7 +153,11 @@ def build_card(lines, games, features, kind="glm", now=None, verbose=True):
     card_pks = {game_pk for game_pk, _ in matched.values()}
     card = features[features["game_pk"].isin(card_pks)]
     if not len(card):
+        # `events` has to travel with this, or the caller cannot tell an
+        # unpriceable board from an empty one -- which is the distinction the
+        # guard in main() is built on.
         return pd.DataFrame(), {"reason": "no card games have feature rows",
+                                "events": int(len(events)),
                                 "unmatched_events": len(unmatched)}
     runlines, totals = offered_points(lines)
     lengths = (card[["game_pk"]]
@@ -266,6 +271,29 @@ def main(argv=None):
     else:
         Path(args.out).write_text(",".join(CARD_FIELDS) + "\n", encoding="utf-8")
     print({key: value for key, value in summary.items()})
+    unmatched = summary.get("unmatched_events", 0)
+    events = summary.get("events", 0)
+    # An empty card has two very different causes and they must not look the
+    # same from outside. There being nothing to price is ordinary: an off day,
+    # the All-Star break, or a board where every game has already started. But
+    # a board carrying future games of which *none* can be priced is a defect,
+    # and it is the one that hid here for two days -- the season had been
+    # deleted from games.csv, every event failed to match a game, the workflow
+    # stayed green because writing an empty file is not an error, and the
+    # public page quietly showed no games at all.
+    #
+    # So the distinction is drawn on events rather than on rows: no events is
+    # a quiet night, events with nothing priced is a failure. The odds are
+    # already on disk and the commit step runs on always(), so failing here
+    # costs no data -- it only turns a silent nothing into a red run.
+    if events and not len(card):
+        raise SystemExit(
+            f"board has {events} future event(s) and none could be priced "
+            f"({unmatched} unmatched): {summary.get('reason', 'unknown')}. "
+            f"Most likely data/games.csv is missing the current season.")
+    if events and unmatched > events * 0.25:
+        print(f"WARNING: {unmatched} of {events} events matched no scheduled "
+              f"game; the schedule may be stale")
     if len(card):
         top = card.reindex(
             card["disagreement"].abs().sort_values(ascending=False).index)

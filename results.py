@@ -17,7 +17,14 @@ import json
 import os
 import urllib.parse
 import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
+
+# The first season this project models. The last one is never written down,
+# because a hardcoded end year is a bug with a delayed fuse: `2021-2025` was
+# correct when it was typed and silently stopped including the current season
+# the moment 2026 started.
+FIRST_SEASON = 2021
 
 SCHEDULE_API = "https://statsapi.mlb.com/api/v1/schedule"
 HYDRATE = "probablePitcher,venue,linescore,weather"
@@ -156,6 +163,52 @@ def build_table(games):
     return [row for row in rows if row["game_pk"] is not None]
 
 
+def default_seasons(today=None):
+    """Every season this project models, through the current one."""
+    year = (today or datetime.now(timezone.utc)).year
+    return f"{FIRST_SEASON}-{max(year, FIRST_SEASON)}"
+
+
+def parse_seasons(text):
+    if "-" in text:
+        first, last = (int(part) for part in text.split("-", 1))
+        return list(range(first, last + 1))
+    return [int(text)]
+
+
+def merge_table(rows, path):
+    """Write the fetched seasons; leave every season not fetched alone.
+
+    `write_table` replaces the file, which makes a narrow ``--seasons`` a
+    delete rather than a no-op. That is how the entire 2026 season vanished:
+    the weekly workflow passed a stale ``2021-2025``, the ingester did exactly
+    as told, and the live card went empty because no game on the board existed
+    in the table any more.
+
+    Correcting the year would have fixed that instance. This makes the class
+    of mistake impossible instead — a season can only be rewritten by a fetch
+    that actually returned games for it.
+
+    Fetched seasons are replaced wholesale rather than merged row by row, so a
+    game cancelled upstream really does disappear. And the set comes from the
+    rows in hand, not from what was requested, so a failed or empty fetch
+    preserves what is already there instead of erasing it.
+    """
+    path = Path(path)
+    fetched = {str(row.get("season")) for row in rows
+               if row.get("season") not in (None, "")}
+    kept = []
+    if path.exists():
+        with path.open(newline="", encoding="utf-8") as handle:
+            kept = [row for row in csv.DictReader(handle)
+                    if str(row.get("season")) not in fetched]
+    combined = kept + list(rows)
+    combined.sort(key=lambda row: (str(row.get("season")),
+                                   str(row.get("official_date")),
+                                   str(row.get("game_pk"))))
+    return write_table(combined, path), len(kept)
+
+
 def write_table(rows, path):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -217,20 +270,20 @@ def fetch_seasons(seasons, game_type="R"):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--seasons", default="2021-2025",
-                        help="inclusive range, e.g. 2021-2025")
+    parser.add_argument("--seasons", default=None,
+                        help="inclusive range, e.g. 2021-2026; defaults to "
+                             "every season through the current one")
     parser.add_argument("--game-type", default="R")
     parser.add_argument("--out", default="data/games.csv")
     args = parser.parse_args()
-    if "-" in args.seasons:
-        first, last = (int(part) for part in args.seasons.split("-", 1))
-        seasons = range(first, last + 1)
-    else:
-        seasons = [int(args.seasons)]
-    print(f"fetching seasons {list(seasons)}")
+    seasons = parse_seasons(args.seasons or default_seasons())
+    print(f"fetching seasons {seasons}")
     rows = fetch_seasons(seasons, game_type=args.game_type)
-    count = write_table(rows, args.out)
-    print(f"wrote {count} games to {args.out}")
+    if not rows:
+        raise SystemExit("StatsAPI returned no games; leaving the table alone")
+    count, kept = merge_table(rows, args.out)
+    print(f"wrote {count} games to {args.out} "
+          f"({len(rows)} fetched, {kept} kept from seasons not fetched)")
 
 
 if __name__ == "__main__":

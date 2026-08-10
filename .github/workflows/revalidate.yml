@@ -17,9 +17,9 @@ on:
   workflow_dispatch:
     inputs:
       seasons:
-        description: "Seasons to ingest, e.g. 2021-2025"
-        required: true
-        default: "2021-2025"
+        description: "Seasons to ingest; blank means through the current one"
+        required: false
+        default: ""
       refresh_results:
         description: "Re-pull schedules and results from StatsAPI"
         type: boolean
@@ -53,7 +53,13 @@ jobs:
         # to false in GitHub expressions, so the trigger has to be checked
         # explicitly or the weekly run would silently skip ingestion.
         if: ${{ github.event_name == 'schedule' || inputs.refresh_results }}
-        run: python results.py --seasons "${{ inputs.seasons || '2021-2025' }}"
+        # No season range unless one is typed. The default used to be
+        # '2021-2025', which was right when it was written and became a
+        # destructive lie on 1 January 2026: results.py replaced the table
+        # with the seasons named, so the weekly run deleted the season the
+        # live card is priced from. results.py now keeps seasons it did not
+        # fetch, and picks the range itself.
+        run: python results.py ${{ inputs.seasons && format('--seasons {0}', inputs.seasons) || '' }}
 
       - name: Fill weather
         # Resumable by design: a venue that fails a TLS handshake is skipped
