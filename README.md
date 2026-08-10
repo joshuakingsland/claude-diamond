@@ -606,6 +606,60 @@ information sources that did nothing and two wrong assumptions that paid.
 widely spread. That was the next thing looked at, and the answer was
 surprising enough to get its own section.
 
+### Do the Rockies score less on the road than the model thinks? Yes, and no
+
+Prompted by exactly that question, which is the right instinct: the model
+carries **one** offence number per team and leans on `park_factor` for the
+rest, and Coors is extreme enough to strain that.
+
+The residual says the concern is well founded. Out of sample, by team and
+side, Colorado is the worst road cell in the league by a distance:
+
+| | Home residual | Road residual |
+| --- | ---: | ---: |
+| Colorado Rockies | −0.090 | **−0.614** |
+| next worst road | | −0.326 |
+
+**A real double-count, found.** `expected_home_runs_prior` multiplies the
+offence rating by the park factor, and the model carries `park_factor` as a
+feature besides — so a rating built from raw runs applies the park once inside
+itself and again outside. The two do not cancel, because a team plays only
+half its games at home. Coors sits at 1.135 on the point-in-time factor, so
+Colorado's rating carries about (1.135−1)/2 of that inflation into every road
+game: **+0.30 runs** of predicted over-scoring, same sign and order as the
+0.61 observed.
+
+Nobody else shows it, and that is the part worth understanding rather than
+explaining away. The same arithmetic gives the next most extreme park a bias
+of 0.18 runs against a per-team noise floor of 3.1/√324 = 0.17. The effect is
+league-wide and only clears the noise at the one park extreme enough — which
+is why `TeamState` now stores run rates **park-adjusted** for every team, not
+a Rockies special case.
+
+**What the fix bought, and what it did not.** On a walk-forward over the same
+11,495 games:
+
+| Market | Raw ratings | Park-adjusted | Δ | 90% interval |
+| --- | ---: | ---: | ---: | --- |
+| Moneyline | 0.67956 | 0.67967 | +0.00011 | [−0.00002, +0.00024] |
+| Run line | 0.63883 | 0.63890 | +0.00007 | [−0.00007, +0.00021] |
+| **Total** | 0.68797 | **0.68767** | **−0.00030** | **[−0.00047, −0.00014]** |
+
+Kept for the total, and for being right. But it does **not** fix the case that
+prompted it: Colorado's road residual goes from −0.445 to −0.440. Nothing. The
+double-count is real in the feature, and the estimator was already absorbing
+most of it through its own coefficients, so removing it at source mostly
+redistributes weight. A defect being real in the construction does not mean
+the model was suffering from it — which is the second time in this file that
+a correctly identified flaw turned out not to be what was hurting.
+
+**And the remainder is not worth chasing.** The per-team home/road residual
+split has a year-over-year correlation of **+0.008** across 119 team-seasons.
+Colorado's own runs +1.47, +0.17, −0.05, +0.48, **−0.39** — and in 2026 they
+are scoring *more* on the road than predicted, not less. The pooled −0.44 is
+carried by 2022 and 2025. There is no persistent trait to model, so a per-team
+home/road split would be fitting five seasons of noise.
+
 ### A real defect that must not be fixed
 
 The means are over-spread, and unambiguously so. Regress observed runs on

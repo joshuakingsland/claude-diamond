@@ -37,8 +37,51 @@ ELO_CARRYOVER = 0.70
 FORM_WINDOW = 25
 
 
+# Bounds on the divisor used to park-adjust a team's run rates. The point-in-
+# time park factor is already regressed toward neutral, so it does not reach
+# these in practice; they exist so a thin or strange venue cannot turn one
+# game into an outlier that a season of games has to absorb.
+MIN_PARK_ADJUSTMENT = 0.75
+MAX_PARK_ADJUSTMENT = 1.35
+
+
 class TeamState:
-    """Everything known about one team as of the moment before a game."""
+    """Everything known about one team as of the moment before a game.
+
+    Run rates are stored **park-adjusted**: each game's runs are divided by the
+    point-in-time park factor of the venue it was played in, so `offense()` is
+    a neutral-park rate rather than a record of where the team happened to
+    play.
+
+    Raw rates were the obvious thing and were wrong in a way that compounds.
+    `expected_home_runs_prior` multiplies the offence rating by the park
+    factor, and the model carries `park_factor` as a feature besides — so a
+    rating built from raw runs applies the park once inside itself and again
+    outside, and the two do not cancel because a team plays only half its games
+    at home.
+
+    What this does and does not buy, measured rather than assumed. On a
+    walk-forward over the same 11,495 games it improves the total by 0.00030 of
+    log loss with a date-clustered interval of [-0.00047, -0.00014], and leaves
+    the moneyline and run line inside noise at +0.00011 and +0.00007, both
+    spanning zero. So it is kept for the total and for being right, not for
+    being large.
+
+    It does **not** fix the case that prompted it. The model over-predicts
+    Colorado road scoring by 0.445 runs a game, and park-adjusting the ratings
+    moves that to 0.440 — nothing. The double-count is real in the feature, but
+    the estimator was already absorbing most of it through its own coefficients
+    on `home_off` and `park_factor`, so removing it at source mostly
+    redistributes weight rather than changing the fit. Worth writing down: a
+    defect being real in the construction does not mean the model was suffering
+    from it.
+
+    Nor is the remainder something to chase. The per-team home/road residual
+    split has a year-over-year correlation of +0.008 across 119 team-seasons,
+    and Colorado's own runs +1.47, +0.17, -0.05, +0.48, -0.39 — in 2026 they
+    are scoring *more* on the road than predicted. There is no persistent trait
+    there to model, only a large pooled number carried by 2022 and 2025.
+    """
 
     def __init__(self):
         self.elo = ELO_START
@@ -51,7 +94,7 @@ class TeamState:
         self.season = None
 
     def offense(self):
-        """Shrunk runs-scored rate; a short record leans on the league prior."""
+        """Shrunk park-adjusted runs-scored rate, on a neutral-park basis."""
         return ((self.runs_for + PRIOR_RUNS * PRIOR_WEIGHT)
                 / (self.games + PRIOR_WEIGHT))
 
@@ -520,13 +563,19 @@ def build(games, parks, weather=None, pitching=None, umpires=None):
         home.elo += shift
         away.elo -= shift
 
+        # Divide by the park before folding in, so what accumulates is what
+        # the team would have scored at a neutral venue. `park_factor` here is
+        # the point-in-time factor emitted with this game's row and computed
+        # from earlier games only, so adjusting with it introduces no lookahead.
+        adjustment = float(np.clip(park_factor, MIN_PARK_ADJUSTMENT,
+                                   MAX_PARK_ADJUSTMENT))
         for team, scored, allowed in ((home, home_score, away_score),
                                       (away, away_score, home_score)):
-            team.runs_for += scored
-            team.runs_against += allowed
+            team.runs_for += scored / adjustment
+            team.runs_against += allowed / adjustment
             team.games += 1
-            team.recent_for.append(scored)
-            team.recent_against.append(allowed)
+            team.recent_for.append(scored / adjustment)
+            team.recent_against.append(allowed / adjustment)
             team.last_date = date
 
         for pitcher, allowed in ((home_sp, away_score), (away_sp, home_score)):
