@@ -17,7 +17,7 @@ import argparse
 import csv
 import os
 import urllib.parse
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from config import FIRST_INNING_TOTALS_MARKET, SPORT_KEY
@@ -89,10 +89,19 @@ def response_events(payload):
 
 
 def events_on_day(payload, day):
+    """Events belonging to the MLB calendar day, not merely its UTC date.
+
+    A 10:10 p.m. Pacific first pitch has the following UTC date.  The
+    historical event lookup is taken at noon UTC, so use the noon-to-noon
+    window that contains the whole North American baseball slate instead of
+    silently dropping those late games.
+    """
+    start = day_lookup_time(day)
+    end = start + timedelta(days=1)
     events = []
     for event in response_events(payload):
         try:
-            if _iso(event.get("commence_time", "")).date().isoformat() == day:
+            if start <= _iso(event.get("commence_time", "")) < end:
                 events.append(event)
         except (TypeError, ValueError):
             continue
@@ -132,6 +141,55 @@ def _audit_id(event_id, snapshot, region, market):
                      region, market))
 
 
+def stratified_days(start, end, per_season=10):
+    """Precommit evenly spaced regular-season audit dates by calendar year.
+
+    Period-market history begins 3 May 2023.  This deterministic calendar
+    samples early, middle, and late season in every available year instead of
+    buying a convenient contiguous block that could look unusually good by
+    chance.  Dates are only candidates; the event-odds calls remain capped.
+    """
+    if not 1 <= int(per_season) <= 31:
+        raise ValueError("days_per_season must be between 1 and 31")
+    first, last = date.fromisoformat(start), date.fromisoformat(end)
+    if first > last:
+        raise ValueError("start must not be after end")
+    selected = []
+    for year in range(first.year, last.year + 1):
+        low = max(first, date(year, 5, 3))
+        high = min(last, date(year, 9, 30))
+        if low > high:
+            continue
+        slots = int(per_season)
+        for position in range(slots):
+            fraction = 0.5 if slots == 1 else position / (slots - 1)
+            offset = round((high - low).days * fraction)
+            selected.append((low + timedelta(days=offset)).isoformat())
+    return sorted(set(selected))
+
+
+def _round_robin(groups, limit):
+    """Take candidate events evenly across sampled dates until the hard cap."""
+    positions = [0] * len(groups)
+    selected = []
+    while len(selected) < limit:
+        progressed = False
+        for index, group in enumerate(groups):
+            candidates = group["candidates"]
+            if positions[index] >= len(candidates):
+                continue
+            event, snapshot, audit_id = candidates[positions[index]]
+            positions[index] += 1
+            discovery = group["credits"] if positions[index] == 1 else 0
+            selected.append((event, snapshot, audit_id, discovery))
+            progressed = True
+            if len(selected) >= limit:
+                break
+        if not progressed:
+            break
+    return selected
+
+
 def _audit_row(event, audit_id, snapshot, region, market, discovery_credits,
                payload=None, headers=None, quotes=None, status="offered", error=""):
     headers = headers or {}
@@ -161,6 +219,33 @@ def _audit_row(event, audit_id, snapshot, region, market, discovery_credits,
         "fetched_at": f"{datetime.now(timezone.utc):%Y-%m-%dT%H:%M:%SZ}",
         "error": error,
     }
+
+
+def _capture_one(key, event, snapshot, audit_id, region, market,
+                 discovery_credits, quotes_path, request):
+    """Buy and immediately record one event-level historical snapshot."""
+    try:
+        payload, headers = request(event_odds_url(
+            key, event.get("id", ""), snapshot, region, market))
+        returned = response_events(payload)
+        # Historical event odds normally returns one event.  Start from the
+        # discovery response so identifiers survive an incomplete event-odds
+        # payload, then replace it with the priced response.
+        priced_event = dict(event)
+        if returned:
+            priced_event.update(returned[0])
+        quotes = paired_book_quotes(
+            priced_event, region=region, accepted_markets=(market,))
+        quote_stamp = payload.get("timestamp") or snapshot.strftime(
+            "%Y-%m-%dT%H:%M:%SZ")
+        append_quote_log(quotes_path, _quote_rows(priced_event, quotes,
+                                                   quote_stamp))
+        status = "offered" if quotes else "no_offer"
+        return _audit_row(event, audit_id, snapshot, region, market,
+                          discovery_credits, payload, headers, quotes, status)
+    except Exception as error:  # record a paid/failed attempt for resume
+        return _audit_row(event, audit_id, snapshot, region, market,
+                          discovery_credits, status="failed", error=repr(error))
 
 
 def run(key, day, max_events=1, lead_minutes=10, region="us",
@@ -203,34 +288,13 @@ def run(key, day, max_events=1, lead_minutes=10, region="us",
     if not selected:
         return []
 
-    results, failures = [], []
+    results = []
     for index, (event, snapshot, audit_id) in enumerate(selected):
         # The one discovery call is allocated to the first manifest row so
         # the resulting ledger reconciles exactly to the response headers.
         discovery_share = discovery_credits if index == 0 else 0
-        try:
-            payload, headers = request(event_odds_url(
-                key, event.get("id", ""), snapshot, region, market))
-            returned = response_events(payload)
-            # Historical event odds normally returns one event.  Start from
-            # the discovery response so identifiers survive an incomplete
-            # event-odds payload, then replace it with the priced response.
-            priced_event = dict(event)
-            if returned:
-                priced_event.update(returned[0])
-            quotes = paired_book_quotes(
-                priced_event, region=region, accepted_markets=(market,))
-            quote_stamp = payload.get("timestamp") or snapshot.strftime(
-                "%Y-%m-%dT%H:%M:%SZ")
-            append_quote_log(quotes_path, _quote_rows(priced_event, quotes,
-                                                       quote_stamp))
-            status = "offered" if quotes else "no_offer"
-            row = _audit_row(event, audit_id, snapshot, region, market,
-                             discovery_share, payload, headers, quotes, status)
-        except Exception as error:  # record a paid/failed attempt for resume
-            row = _audit_row(event, audit_id, snapshot, region, market,
-                             discovery_share, status="failed", error=repr(error))
-            failures.append(row)
+        row = _capture_one(key, event, snapshot, audit_id, region, market,
+                           discovery_share, quotes_path, request)
         _append(manifest_path, AUDIT_FIELDS, [row])
         results.append(row)
         print(f"  {event.get('away_team')} @ {event.get('home_team')}: "
@@ -243,17 +307,100 @@ def run(key, day, max_events=1, lead_minutes=10, region="us",
     remaining = results[-1].get("credits_remaining", "unknown")
     print(f"recorded {len(results)} audit row(s); {total} measured credits; "
           f"{remaining} remaining")
+    failures = [row for row in results if row["status"] == "failed"]
     if failures:
         raise RuntimeError(f"{len(failures)} first-inning audit request(s) failed")
     return results
 
 
+def run_study(key, start, end, max_events=500, days_per_season=10,
+              lead_minutes=10, region="us", market=FIRST_INNING_TOTALS_MARKET,
+              manifest_path=DEFAULT_MANIFEST, quotes_path=DEFAULT_QUOTES,
+              dry_run=False, request=None):
+    """Run a capped, evenly date-stratified historical period-market sample.
+
+    The hard cap applies to expensive event-odds calls.  Historical event
+    discovery is comparatively cheap but is still measured from the response
+    headers and allocated to its first selected event in the audit manifest.
+    """
+    days = stratified_days(start, end, days_per_season)
+    if not 1 <= int(max_events):
+        raise ValueError("max_events must be at least 1")
+    if "," in region:
+        raise ValueError("study one region at a time so its cost is explicit")
+    if dry_run:
+        print(
+            f"dry run: {len(days)} stratified date(s) in {start}..{end}; "
+            f"at most {max_events} event-odds calls (~10 credits each) plus "
+            f"up to {len(days)} discovery calls."
+        )
+        return []
+    if not key:
+        raise ValueError("ODDS_API_KEY is required")
+    request = _request if request is None else request
+    done = {row.get("audit_id") for row in _load_rows(manifest_path)}
+    groups, discovery_total = [], 0
+    for day in days:
+        discovery, headers = request(events_url(key, day))
+        credits = _credit(headers.get("used"))
+        discovery_total += credits
+        candidates = []
+        for event in events_on_day(discovery, day):
+            snapshot = audit_snapshot(event["commence_time"], lead_minutes)
+            audit_id = _audit_id(event.get("id", ""), snapshot, region, market)
+            if audit_id not in done:
+                candidates.append((event, snapshot, audit_id))
+        groups.append({"day": day, "credits": credits, "candidates": candidates})
+    selected = _round_robin(groups, int(max_events))
+    discovered = sum(len(group["candidates"]) for group in groups)
+    print(f"{len(days)} stratified date(s), {discovered} uncaptured event(s); "
+          f"{len(selected)} selected under the {max_events}-event cap")
+    if not selected:
+        return []
+
+    results = []
+    for index, (event, snapshot, audit_id, discovery_credits) in enumerate(selected, 1):
+        row = _capture_one(key, event, snapshot, audit_id, region, market,
+                           discovery_credits, quotes_path, request)
+        _append(manifest_path, AUDIT_FIELDS, [row])
+        results.append(row)
+        if index == 1 or index % 25 == 0 or index == len(selected):
+            offered = sum(item["status"] == "offered" for item in results)
+            paid = sum(_credit(item["odds_credits_used"])
+                       + _credit(item["discovery_credits_used"])
+                       for item in results)
+            print(f"  {index}/{len(selected)}: {offered} offered; "
+                  f"{paid} recorded credits")
+
+    # Normally every sampled day gets at least one selected event, so its
+    # discovery credit lives in the manifest.  Keep the total explicit even
+    # for a holiday/no-game day that had no row to carry its cost.
+    event_credits = sum(_credit(row["odds_credits_used"]) for row in results)
+    recorded_discovery = sum(_credit(row["discovery_credits_used"])
+                             for row in results)
+    total = event_credits + discovery_total
+    offered = sum(row["status"] == "offered" for row in results)
+    failed = sum(row["status"] == "failed" for row in results)
+    remaining = results[-1].get("credits_remaining", "unknown")
+    print(f"recorded {len(results)} event(s): {offered} offered, {failed} failed; "
+          f"{total} measured credits ({event_credits} event + "
+          f"{discovery_total} discovery; {recorded_discovery} allocated); "
+          f"{remaining} remaining")
+    if failed:
+        raise RuntimeError(f"{failed} first-inning study request(s) failed")
+    return results
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--date", required=True,
-                        help="MLB game date to audit (YYYY-MM-DD)")
+    target = parser.add_mutually_exclusive_group(required=True)
+    target.add_argument("--date", help="one MLB game date to audit (YYYY-MM-DD)")
+    target.add_argument("--start", help="first date of a stratified study")
+    parser.add_argument("--end", help="last date of a stratified study; required with --start")
     parser.add_argument("--max-events", type=int, default=1,
                         help="hard event-odds call ceiling (default: 1)")
+    parser.add_argument("--days-per-season", type=int, default=10,
+                        help="evenly spaced dates per year for --start/--end")
     parser.add_argument("--lead-minutes", type=int, default=10,
                         help="snapshot this many minutes before first pitch")
     parser.add_argument("--region", default="us")
@@ -261,9 +408,17 @@ def main(argv=None):
     parser.add_argument("--quotes", default=str(DEFAULT_QUOTES))
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
-    run(os.environ.get("ODDS_API_KEY"), args.date, args.max_events,
-        args.lead_minutes, args.region, manifest_path=args.manifest,
-        quotes_path=args.quotes, dry_run=args.dry_run)
+    if args.date:
+        run(os.environ.get("ODDS_API_KEY"), args.date, args.max_events,
+            args.lead_minutes, args.region, manifest_path=args.manifest,
+            quotes_path=args.quotes, dry_run=args.dry_run)
+        return
+    if not args.end:
+        parser.error("--end is required with --start")
+    run_study(os.environ.get("ODDS_API_KEY"), args.start, args.end,
+              args.max_events, args.days_per_season, args.lead_minutes,
+              args.region, manifest_path=args.manifest, quotes_path=args.quotes,
+              dry_run=args.dry_run)
 
 
 if __name__ == "__main__":

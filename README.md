@@ -108,6 +108,8 @@ validate.py   walk-forward validation and the honest report
 odds.py       three-market odds capture with paired-book de-vig
 historical_odds.py  capped, resumable historical snapshots
 first_inning_odds.py  capped historical YRFI/NRFI market-coverage audit
+first_inning_results.py  exact first-inning result labels from MLB linescores
+first_inning_report.py  market-only data-integrity report; not a prediction model
 market.py     joins prices to predictions; asks whether the model beats them
 market_offset.py  constrained market-logit residual and price-movement fit
 forward_evidence.py  accepted fills, independent games, sharp-close CLV gate
@@ -255,6 +257,7 @@ manufacture a sample.
 | `odds.yml` | hourly 15:00-03:00 UTC in season | Refreshes inputs and starter snapshots; captures the main board, prices, screens, and refreshes forward evidence |
 | `backfill-odds.yml` | manual | Capped historical capture; dry run by default |
 | `first-inning-audit.yml` | manual | One-market, one-region historical YRFI/NRFI coverage audit; dry run by default |
+| `first-inning-study.yml` | manual | Stratified, capped historical first-inning sample plus official outcome labels; dry run by default |
 | `revalidate.yml` | weekly, manual | Builds predictions once, then market comparison, offset fit, forward evidence and final reports in provenance-safe order |
 
 `odds.yml` needs an `ODDS_API_KEY` repository secret and runs
@@ -298,6 +301,15 @@ book/region/date cannot support the study.  Every audit id is keyed by event,
 market, region, and requested timestamp, so it will not rebuy an already
 checked snapshot.  The GitHub Actions equivalent is the manual
 `first-inning-audit.yml` workflow, whose default is also dry-run.
+
+After coverage is confirmed, `first-inning-study.yml` takes a deterministic,
+evenly date-stratified sample across the available seasons. Its initial
+configuration makes at most 500 event-odds calls at one pregame timestamp:
+about 5,000 credits plus the small event-discovery overhead. The script then
+joins each offered event to the exact first-inning MLB linescore and writes a
+market-only Brier/log-loss baseline. It does **not** build a first-inning
+model, treat a historical starting lineup as a pregame snapshot, or display a
+YRFI/NRFI pick. Those would be later, separately validated stages.
 
 ### The two days the page was empty
 
