@@ -11,11 +11,13 @@ model card. The verdict sits above the card for that reason.
 Everything on the page comes from files already in the repository:
 
     data/predictions_upcoming.csv   tonight's board, priced
-    data/paper_ledger.csv           wagers the policy took, and their results
+    data/clv_signals.csv            frozen, non-wager price-movement probes
+    data/paper_ledger.csv           legacy paper entries and their results
     data/paper_rejections.csv       what it declined, and which gate fired
     market_comparison.json          does the model beat the price
     validation_glm.json             does the model predict baseball
     data/credit_log.csv             what the capture has spent
+    forward_evidence.json           whether the CLV probe can be promoted
 
 Nothing is recomputed here. If a number on the page disagrees with the repo,
 the page is stale, not right — which is why the header carries the timestamp
@@ -27,6 +29,8 @@ import csv
 import json
 from datetime import datetime, timezone
 from pathlib import Path
+
+from config import MAX_LOCK_LEAD_MINUTES, MIN_LOCK_LEAD_MINUTES
 
 # Sides are named for the bettor, not for the frame the model prices in. The
 # model always reports a home-oriented probability, and on a total "home" is
@@ -117,8 +121,25 @@ def market_label(market, point):
     return f"total {point:g}" if point is not None else "total"
 
 
-def build_board(card, ledger, rejections):
-    """One row per quoted game-market, with the side the model leans."""
+def _timing(lead):
+    """Explain the lock window independently of whichever policy gate fired."""
+    if lead > MAX_LOCK_LEAD_MINUTES:
+        return f"eligible window in {lead - MAX_LOCK_LEAD_MINUTES} min"
+    if lead < MIN_LOCK_LEAD_MINUTES:
+        return "timing window closed"
+    return "timing window open"
+
+
+def build_board(card, ledger, rejections, signals=None):
+    """One row per market, separating model, market and projected close.
+
+    The deployable fair price currently equals the market because the outcome
+    residual failed its forward interval.  Collapsing those two values into a
+    tick labelled ``model`` made the public page look broken and, at an exact
+    zero, arbitrarily labelled the away/under side as a pick.  The standalone
+    model remains a diagnostic; the only supported live signal is movement
+    toward a projected later price.
+    """
     locked = {}
     for wager in ledger:
         key = (str(wager["game_pk"]), wager["market"],
@@ -131,26 +152,67 @@ def build_board(card, ledger, rejections):
         # Keep the last gate seen: screening runs hourly and the reason a row
         # is not a wager changes as the lock window closes.
         declined[key] = rejection["gate"]
+    frozen_signals = {}
+    for signal in signals or []:
+        key = (str(signal["game_pk"]), signal["market"],
+               point_key(signal.get("point")))
+        frozen_signals[key] = signal
 
     board = []
     for row in card:
         point = _float(row["point"])
-        model_home = _float(row.get("fair_prob_home",
-                                    row.get("model_prob_home")))
+        standalone_home = _float(row.get("model_prob_home"))
         market_home = _float(row["market_prob_home"])
-        if model_home is None or market_home is None:
+        fair_home = _float(row.get("fair_prob_home"), standalone_home)
+        close_home = _float(row.get("predicted_close_prob_home"), market_home)
+        if standalone_home is None or market_home is None or fair_home is None:
             continue
-        gap = model_home - market_home
-        side = "home" if gap > 0 else "away"
-        model = model_home if side == "home" else 1 - model_home
-        market = market_home if side == "home" else 1 - market_home
-        price = row[f"best_price_{side}"]
-        book = row[f"best_book_{side}"]
+        standalone_gap_home = standalone_home - market_home
+        fair_gap_home = fair_home - market_home
+        predicted_clv_home = _float(row.get("predicted_clv"),
+                                    close_home - market_home)
+        movement_weight = _float(row.get("movement_weight"), 0)
+        movement_supported = movement_weight > 0 and abs(predicted_clv_home) > 0
+        if movement_supported:
+            side = "home" if predicted_clv_home > 0 else "away"
+            signal_kind = "projected close move"
+        elif abs(standalone_gap_home) > 1e-12:
+            side = "home" if standalone_gap_home > 0 else "away"
+            signal_kind = "standalone diagnostic"
+        else:
+            side = None
+            signal_kind = "no directional signal"
+
+        def orient(value):
+            if side is None:
+                return value
+            return value if side == "home" else 1 - value
+
+        standalone = orient(standalone_home)
+        market = orient(market_home)
+        fair = orient(fair_home)
+        projected_close = orient(close_home)
+        price = row.get(f"best_price_{side}") if side else None
+        book = row.get(f"best_book_{side}") if side else None
         books = int(_float(row["market_books"], 0))
         spread = _float(row["market_spread"], 0)
         lead = int(_float(row["lead_minutes"], 0))
         key = (str(row["game_pk"]), row["market"], point_key(row["point"]))
         wager = locked.get(key)
+        probe = frozen_signals.get(key)
+        frozen_move = None
+        if probe is not None and wager is None:
+            probe_side = probe.get("side")
+            if probe_side in ("home", "away") and probe_side != side:
+                side = probe_side
+                standalone = orient(standalone_home)
+                market = orient(market_home)
+                fair = orient(fair_home)
+                projected_close = orient(close_home)
+            price = _float(probe.get("price"), price)
+            book = probe.get("book") or book
+            frozen_move = _float(probe.get("predicted_clv"), 0)
+            signal_kind = "frozen projected close move"
         if wager is not None:
             # A locked wager is shown as it was struck, not as the board reads
             # now. The market moves after a lock — one taken at five books was
@@ -161,38 +223,62 @@ def build_board(card, ledger, rejections):
             # rows written before a column existed. A page regenerated every
             # hour must not fail on its own history.
             side = wager.get("side") or side
-            model = _float(wager.get("model_prob"), model)
+            standalone = _float(wager.get("model_prob"), standalone)
             market = _float(wager.get("market_prob"), market)
-            gap = _float(wager.get("disagreement"), abs(gap))
+            fair = standalone
+            projected_close = market
             price = _float(wager.get("price"), price)
             book = wager.get("book") or book
             books = int(_float(wager.get("market_books"), books))
             spread = _float(wager.get("market_spread"), spread)
             lead = int(_float(wager.get("lead_minutes"), lead))
+            signal_kind = "legacy paper entry"
+            movement_supported = False
+        raw_gap = abs(standalone - market)
+        fair_gap = abs(fair - market)
+        projected_move = (frozen_move if frozen_move is not None
+                          else projected_close - market)
+        if side is None:
+            display_name = "No directional signal"
+        else:
+            display_name = side_label(row["market"], side, row["home_team"],
+                                      row["away_team"], point)
         board.append({
             "game": f"{row['away_team']} @ {row['home_team']}",
             "home": row["home_team"], "away": row["away_team"],
             "market": row["market"],
             "market_label": market_label(row["market"], point),
-            "pick": side_label(row["market"], side, row["home_team"],
-                               row["away_team"], point),
-            "model": round(model * 100, 1),
+            "pick": display_name,
+            "signal_kind": signal_kind,
+            "standalone": round(standalone * 100, 1),
+            # Keep the old key for downstream consumers of the generated JSON.
+            "model": round(standalone * 100, 1),
             "consensus": round(market * 100, 1),
-            "gap": round(abs(gap) * 100, 1),
+            "fair": round(fair * 100, 1),
+            "projected_close": round(projected_close * 100, 1),
+            "raw_gap": round(raw_gap * 100, 1),
+            "gap": round(fair_gap * 100, 1),
+            "projected_move": round(max(0, projected_move) * 100, 2),
+            "movement_supported": movement_supported,
+            "probe": probe is not None,
             "price": _float(price),
             "book": book,
             "books": books,
             "spread": round(spread * 100, 1),
             "lead": lead,
+            "timing": _timing(lead),
             "commence": row["commence_time"],
             "date": row["official_date"],
             "runs": f"{_float(row['expected_away_runs'], 0):.2f}-"
                     f"{_float(row['expected_home_runs'], 0):.2f}",
             "bet": wager is not None,
             "stake": _float(wager["stake"], 0) if wager else 0,
-            "reason": GATE_LABELS.get(declined.get(key), "" if wager else "not taken"),
+            "reason": ("paper quote captured" if probe is not None else
+                       GATE_LABELS.get(declined.get(key),
+                                       "" if wager else "outcome disabled")),
         })
-    board.sort(key=lambda item: (-item["bet"], -item["gap"]))
+    board.sort(key=lambda item: (-item["probe"], -item["movement_supported"],
+                                 -item["projected_move"], -item["raw_gap"]))
     return board
 
 
@@ -234,7 +320,8 @@ def build_verdict(comparison):
     return rows
 
 
-def build_chips(validation, comparison, ledger, credits, board):
+def build_chips(validation, comparison, ledger, credits, board, signals=None,
+                evidence=None):
     moneyline = validation.get("moneyline") or {}
     settled = [w for w in ledger
                if (w.get("outcome") or "").strip() not in ("", "nan")]
@@ -253,12 +340,17 @@ def build_chips(validation, comparison, ledger, credits, board):
         {"label": "markets beating close", "value": f"{beaten} of 3",
          "gold": False},
         {"label": "board", "value": f"{len(board)} quoted", "gold": False},
-        {"label": "paper wagers",
-         "value": f"{len(ledger)} ({len(settled)} settled)", "gold": True},
+        {"label": "forward probes", "value": f"{len(signals or [])}",
+         "gold": bool(signals)},
+        {"label": "promotion",
+         "value": (evidence or {}).get("promotion_status", "research_only"),
+         "gold": False},
+        {"label": "legacy paper",
+         "value": f"{len(ledger)} ({len(settled)} settled)", "gold": False},
     ]
     if settled:
-        chips.append({"label": "paper P/L",
-                      "value": f"{profit:+.2f}u on {staked:.0f}u", "gold": True})
+        chips.append({"label": "legacy P/L (descriptive)",
+                      "value": f"{profit:+.2f}u on {staked:.0f}u", "gold": False})
     if remaining:
         chips.append({"label": "credits", "value": f"{int(remaining):,}",
                       "gold": False})
@@ -287,7 +379,7 @@ TEMPLATE = """<!DOCTYPE html>
   @font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;
     src:url(fonts/inter-var.woff2) format('woff2')}
   :root{--ink:#0b0e14;--surface:#141926;--line:#232b40;--text:#e8eaf0;--muted:#7a8299;
-    --faint:#4a5268;--market:#8b93a7;--gold:#e8b54d;--gold-dim:#8a6f35;--warn:#c9705b}
+    --faint:#4a5268;--market:#8b93a7;--gold:#e8b54d;--gold-dim:#8a6f35;--close:#63c3b4;--warn:#c9705b}
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--ink);color:var(--text);font-family:'Inter',system-ui,sans-serif;
     font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
@@ -305,7 +397,8 @@ TEMPLATE = """<!DOCTYPE html>
   .legend{display:flex;flex-wrap:wrap;gap:22px;align-items:center;margin:30px 0 10px;
     font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted)}
   .key{display:flex;gap:8px;align-items:center}.tick{width:2px;height:14px;background:var(--market)}
-  .tick.model{background:var(--gold)}.band{width:22px;height:8px;background:var(--gold-dim);opacity:.7;border-radius:2px}
+  .tick.model{background:var(--gold)}.tick.close{background:var(--close)}
+  .band{width:22px;height:8px;background:var(--gold-dim);opacity:.7;border-radius:2px}
   .freshness{margin-top:18px;padding:10px 12px;border-left:3px solid var(--faint);
     color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:11px}
   .freshness.current{border-color:var(--gold)}
@@ -335,13 +428,16 @@ TEMPLATE = """<!DOCTYPE html>
   .who .vs{color:var(--faint);font-size:12px;margin:1px 0}
   .who .meta{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-top:6px}
   .who .quote{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--faint);margin-top:4px;line-height:1.5}
-  .gauge{position:relative;height:46px}.rail{position:absolute;top:22px;left:0;right:0;height:2px;background:var(--line)}
+  .gauge{position:relative;height:62px}.rail{position:absolute;top:22px;left:0;right:0;height:2px;background:var(--line)}
   .mid{position:absolute;top:16px;left:50%;width:1px;height:14px;background:var(--faint);opacity:.6}
   .edgeband{position:absolute;top:19px;height:8px;border-radius:2px;background:var(--gold-dim);opacity:.65}
-  .mark{position:absolute;top:12px;width:2px;height:22px;background:var(--market)}.mark.model{background:var(--gold)}
+  .mark{position:absolute;top:12px;width:2px;height:22px;background:var(--market)}
+  .mark.model{background:var(--gold)}.mark.close{background:var(--close);top:16px;height:14px}
   .glabel{position:absolute;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);
     transform:translateX(-50%);white-space:nowrap}.glabel.top{top:-4px}.glabel.bot{top:36px}
   .glabel .v{color:var(--text)}.glabel.gold .v{color:var(--gold)}
+  .triplet{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-top:40px;text-align:center}
+  .triplet b{color:var(--text);font-weight:500}.triplet .closev{color:var(--close)}
   .verdict{text-align:right;min-width:135px}.verdict .edge{font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:600}
   .bet .verdict .edge{color:var(--gold)}.tag{display:inline-block;margin-top:5px;font-family:'IBM Plex Mono',monospace;
     font-size:10.5px;letter-spacing:.1em;padding:3px 8px;border-radius:3px}
@@ -367,13 +463,13 @@ TEMPLATE = """<!DOCTYPE html>
   <h1>Model<br>Card Read</h1>
   <p class="sub">Every quoted line on tonight's card, priced by a model trained on
   <b>__GAMES__ completed MLB games</b> and benchmarked against captured closing prices.
-  Fair probabilities begin at the consensus market and retain only historically supported
-  residual signal; the best captured sportsbook price is what a
-  wager would execute at. A gap is a <b>disagreement</b>, not an edge — see below.</p>
+  The standalone model is shown as a diagnostic, but it does not beat the closing market.
+  Outcome fair value is therefore market-only. The supported research target is the much smaller
+  projected move toward a later price; a frozen probe is <b>not a wager</b>.</p>
   <div class="record" id="chips"></div>
-  <div class="legend"><div class="key"><span class="tick"></span> consensus (de-vig)</div>
-    <div class="key"><span class="tick model"></span> market-offset fair</div>
-    <div class="key"><span class="band"></span> probability gap</div></div>
+  <div class="legend"><div class="key"><span class="tick model"></span> standalone diagnostic</div>
+    <div class="key"><span class="tick"></span> current market (de-vig)</div>
+    <div class="key"><span class="tick close"></span> projected later price</div></div>
   <div class="freshness current">Board captured <b>__CAPTURED__</b> | results through <b>__RESULTS__</b></div>
 </header>
 
@@ -388,9 +484,9 @@ TEMPLATE = """<!DOCTYPE html>
     <tbody id="verdict"></tbody></table></div>
 </div>
 
-<section class="sect"><div class="sect-head"><h2>Allocated paper signals</h2><span id="nbets"></span></div><div id="bets"></div></section>
-<section class="sect"><div class="sect-head"><h2>Other lines</h2><span id="nrest"></span></div><div id="rest"></div></section>
-<section class="sect"><div class="sect-head"><h2>Settled</h2><span id="nsettled"></span></div><div id="settled"></div></section>
+<section class="sect"><div class="sect-head"><h2>Frozen forward CLV probes</h2><span id="nprobes"></span></div><div id="probes"></div></section>
+<section class="sect"><div class="sect-head"><h2>Research board</h2><span id="nrest"></span></div><div id="rest"></div></section>
+<section class="sect"><div class="sect-head"><h2>Legacy paper history</h2><span id="nsettled"></span></div><div id="settled"></div></section>
 
 <div class="method">
   <p><b>How a line gets here.</b> Prices are captured hourly across the card from every book in
@@ -399,17 +495,16 @@ TEMPLATE = """<!DOCTYPE html>
   single joint distribution over (home runs, away runs), so the three cannot contradict one
   another. Whole-number lines can push, and the model probability is renormalised onto the
   market's push-excluded basis before the two are compared.</p>
-  <p><b>What the policy does.</b> A line is taken only if the gap clears the edge rule, at least
-  three books are paired, the quote is fresh, the lock is inside the window before first pitch,
-  the best price has not run implausibly far from consensus, and the day's stake cap is not
-  already spent — counted against the whole ledger, not the run. Everything declined is recorded
-  with the gate that stopped it.</p>
+  <p><b>What the policy does.</b> Outcome deployment is currently market-only: the standalone
+  disagreement cannot authorise an entry. A separate forward probe freezes at most one supported
+  moneyline or run-line movement signal per game risk bucket, only with confirmed lineups, at
+  least three paired books, a fresh quote and 20–240 minutes before first pitch.</p>
   <p><b>What this page is not.</b> It is not a tip sheet. The verdict above is the finding; the
   board below is what a stated policy would have done given that finding, recorded so that it can
   be checked later against results rather than argued about now.</p>
-  <div class="disclaimer"><b>Paper only.</b> No wager on this page was placed and this repository
-  has no path to placing one. The measured result is that the closing price beats this model on
-  the moneyline and the run line. Nothing here is betting advice. If you gamble, gamble only what
+  <div class="disclaimer"><b>Research only.</b> A CLV probe is a timestamped quote, not an accepted
+  fill or wager. The legacy P/L above predates the current promotion policy and is descriptive,
+  not evidence of an edge. Nothing here is betting advice. If you gamble, gamble only what
   you can afford to lose.</div>
 </div>
 </div>
@@ -434,31 +529,30 @@ document.getElementById('verdict').innerHTML=VERDICT.map(v=>{
 }).join('');
 
 function row(g){
-  const a=at(g.consensus),b=at(g.model);
-  const l=Math.min(a,b),w=Math.abs(a-b);
-  return `<div class="fight${g.bet?' bet':''}">
-    <div class="who"><div class="name${g.bet?' pick':''}">${g.pick}</div>
+  const a=at(g.consensus),b=at(g.standalone),c=at(g.projected_close);
+  return `<div class="fight${g.probe?' bet':''}">
+    <div class="who"><div class="name${g.probe?' pick':''}">${g.pick}</div>
       <div class="vs">${g.game}</div>
-      <div class="meta">${g.market_label} | ${g.books} books | exp ${g.runs}</div>
-      <div class="quote">${g.book||'--'} ${money(g.price)} | lock in ${g.lead} min | spread ${g.spread}pts</div></div>
+      <div class="meta">${g.signal_kind} | ${g.market_label} | ${g.books} books | exp ${g.runs}</div>
+      <div class="quote">${g.book||'--'} ${money(g.price)} | first pitch in ${g.lead} min | book range ${g.spread}pp</div>
+      <div class="quote">${g.timing} | ${g.reason}</div></div>
     <div class="gauge"><div class="rail"></div><div class="mid"></div>
-      <div class="edgeband" style="left:${l}%;width:${w}%"></div>
       <div class="mark" style="left:${a}%"></div>
       <div class="mark model" style="left:${b}%"></div>
-      <div class="glabel top" style="left:${b}%">model <span class="v">${pct(g.model)}</span></div>
-      <div class="glabel bot" style="left:${a}%">market <span class="v">${pct(g.consensus)}</span></div></div>
-    <div class="verdict"><div class="edge">${g.gap.toFixed(1)} pts</div>
-      <span class="tag ${g.bet?'yes':'no'}">${g.bet?g.stake+'U PAPER':(g.reason||'not taken')}</span>
-      <div class="thresholds">${g.date}</div></div></div>`;
+      <div class="mark close" style="left:${c}%"></div>
+      <div class="triplet">standalone <b>${pct(g.standalone)}</b> · market <b>${pct(g.consensus)}</b> · projected close <b class="closev">${pct(g.projected_close)}</b></div></div>
+    <div class="verdict"><div class="edge">${g.movement_supported?g.projected_move.toFixed(2)+' pp move':g.raw_gap.toFixed(1)+' pp raw gap'}</div>
+      <span class="tag ${g.probe?'yes':'no'}">${g.probe?'FROZEN CLV PROBE':g.movement_supported?'CLV RESEARCH':'DIAGNOSTIC ONLY'}</span>
+      <div class="thresholds">outcome fair ${pct(g.fair)} · ${g.date}</div></div></div>`;
 }
 
-const bets=BOARD.filter(g=>g.bet), rest=BOARD.filter(g=>!g.bet);
-document.getElementById('bets').innerHTML=bets.length?bets.map(row).join(''):
-  '<div class="empty">No line on the current board clears every gate.</div>';
-document.getElementById('nbets').textContent=bets.length+' of '+BOARD.length+' quoted lines';
+const probes=BOARD.filter(g=>g.probe), rest=BOARD.filter(g=>!g.probe);
+document.getElementById('probes').innerHTML=probes.length?probes.map(row).join(''):
+  '<div class="empty">No forward CLV observation has frozen on this board yet.</div>';
+document.getElementById('nprobes').textContent=probes.length+' frozen, non-wager quote'+(probes.length===1?'':'s');
 document.getElementById('rest').innerHTML=rest.length?rest.map(row).join(''):
   '<div class="empty">Nothing else quoted.</div>';
-document.getElementById('nrest').textContent='below rule, capped, or outside the window';
+document.getElementById('nrest').textContent=rest.length+' quoted lines · outcome deployment disabled';
 
 document.getElementById('settled').innerHTML=SETTLED.length?
   `<div class="scroll"><table class="ledger"><thead><tr><th>DATE</th><th>PICK</th><th>MARKET</th><th>MODEL %</th>
@@ -468,19 +562,21 @@ document.getElementById('settled').innerHTML=SETTLED.length?
     <td class="${s.outcome==='win'?'w':s.outcome==='loss'?'l':''}">${s.outcome}</td>
     <td class="${s.profit>0?'w':s.profit<0?'l':''}">${s.profit>0?'+':''}${s.profit.toFixed(2)}u</td></tr>`).join('')+
   '</tbody></table></div>':
-  '<div class="empty">No paper wager has settled yet. The ledger records what the policy took; results land once those games are final.</div>';
-document.getElementById('nsettled').textContent=SETTLED.length+' settled';
+  '<div class="empty">No legacy paper entry has settled.</div>';
+document.getElementById('nsettled').textContent=SETTLED.length+' historical entries · descriptive only';
 </script>
 </body>
 </html>
 """
 
 
-def render(card, ledger, rejections, comparison, validation, credits):
-    board = build_board(card, ledger, rejections)
+def render(card, ledger, rejections, comparison, validation, credits,
+           signals=None, evidence=None):
+    board = build_board(card, ledger, rejections, signals)
     settled = build_settled(ledger)
     verdict = build_verdict(comparison)
-    chips = build_chips(validation, comparison, ledger, credits, board)
+    chips = build_chips(validation, comparison, ledger, credits, board,
+                        signals, evidence)
     coverage = comparison.get("coverage") or {}
 
     captured = card[0]["odds_fetched_at"] if card else "no board captured"
@@ -518,12 +614,15 @@ def main(argv=None):
     parser.add_argument("--comparison", default="market_comparison.json")
     parser.add_argument("--validation", default="validation_glm.json")
     parser.add_argument("--credits", default="data/credit_log.csv")
+    parser.add_argument("--signals", default="data/clv_signals.csv")
+    parser.add_argument("--evidence", default="forward_evidence.json")
     parser.add_argument("--out", default="docs/index.html")
     args = parser.parse_args(argv)
 
     html = render(
         _rows(args.card), _rows(args.ledger), _rows(args.rejections),
         _json(args.comparison), _json(args.validation), _rows(args.credits),
+        _rows(args.signals), _json(args.evidence),
     )
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)

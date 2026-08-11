@@ -152,4 +152,4 @@ jobs:
         # failure; this only stops the data going with it.
         if: ${{ always() && steps.season.outputs.active == 'true' }}
         run: |
-          bash commit_data.sh "data: odds snapshot $(date -u +%Y-%m-%dT%H:%MZ)" data docs
+          bash commit_data.sh "data: odds snapshot $(date -u +%Y-%m-%dT%H:%MZ)" data docs forward_evidence.json

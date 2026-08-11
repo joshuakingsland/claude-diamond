@@ -120,6 +120,51 @@ class BoardTests(unittest.TestCase):
         self.assertFalse(board[0]["bet"])
         self.assertEqual(board[0]["reason"], "below rule")
 
+    def test_market_only_fair_does_not_hide_the_standalone_diagnostic(self):
+        row = build_board([_card_row(
+            model_prob_home="0.60", fair_prob_home="0.50",
+            predicted_close_prob_home="0.505", predicted_clv="0.005",
+            movement_weight="0.03")], [], [])[0]
+        self.assertEqual(row["standalone"], 60.0)
+        self.assertEqual(row["consensus"], 50.0)
+        self.assertEqual(row["fair"], 50.0)
+        self.assertEqual(row["gap"], 0.0)
+        self.assertEqual(row["raw_gap"], 10.0)
+        self.assertEqual(row["projected_move"], 0.5)
+        self.assertTrue(row["movement_supported"])
+
+    def test_exact_zero_does_not_invent_an_away_or_under_pick(self):
+        row = build_board([_card_row(
+            model_prob_home="0.50", fair_prob_home="0.50",
+            predicted_close_prob_home="0.50", predicted_clv="0",
+            movement_weight="0")], [], [])[0]
+        self.assertEqual(row["pick"], "No directional signal")
+        self.assertEqual(row["signal_kind"], "no directional signal")
+        self.assertIsNone(row["price"])
+
+    def test_timing_is_shown_even_when_an_earlier_gate_rejected_the_row(self):
+        rejection = {"game_pk": "1", "market": "h2h", "point": "",
+                     "gate": "below_edge_rule"}
+        row = build_board([_card_row(lead_minutes="340")], [],
+                          [rejection])[0]
+        self.assertEqual(row["reason"], "below rule")
+        self.assertEqual(row["timing"], "eligible window in 100 min")
+
+    def test_a_frozen_clv_probe_is_labelled_as_a_non_wager_quote(self):
+        card = _card_row(
+            model_prob_home="0.60", fair_prob_home="0.50",
+            predicted_close_prob_home="0.505", predicted_clv="0.005",
+            movement_weight="0.03")
+        signal = {"game_pk": "1", "market": "h2h", "point": "",
+                  "side": "home", "predicted_clv": "0.004",
+                  "price": "115", "book": "Frozen Book"}
+        row = build_board([card], [], [], [signal])[0]
+        self.assertTrue(row["probe"])
+        self.assertFalse(row["bet"])
+        self.assertEqual(row["projected_move"], 0.4)
+        self.assertEqual(row["book"], "Frozen Book")
+        self.assertEqual(row["reason"], "paper quote captured")
+
 
 class VerdictTests(unittest.TestCase):
     def test_a_market_the_model_loses_is_not_marked_beaten(self):
