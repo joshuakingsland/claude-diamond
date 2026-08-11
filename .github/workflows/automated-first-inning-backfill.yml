@@ -1,0 +1,29 @@
+name: automated first-inning MLB research backfill
+on:
+  schedule: [{cron: '43 16 * * *'}]
+  workflow_dispatch: {}
+permissions: {contents: write}
+concurrency: {group: first-inning-study, cancel-in-progress: false}
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install -r requirements.txt
+      - name: Capture toward 5,000-event cap
+        env: {ODDS_API_KEY: '${{ secrets.ODDS_API_KEY }}'}
+        run: |
+          count=$(awk 'END {print NR-1}' data/first_inning_audit.csv 2>/dev/null || echo 0)
+          [ "$count" -ge 5000 ] && { echo 'first-inning cap complete'; exit 0; }
+          remaining=$((5000-count)); [ "$remaining" -gt 1000 ] && remaining=1000
+          left="$remaining"; n=1
+          while [ "$left" -gt 0 ]; do
+            chunk=$([ "$left" -gt 100 ] && echo 100 || echo "$left")
+            python first_inning_odds.py --start 2023-05-03 --end 2026-08-10 --max-events "$chunk" --days-per-season 180 --lead-minutes 10
+            python first_inning_results.py; python first_inning_report.py
+            bash commit_data.sh "data: automated first-inning checkpoint $n" data first_inning_evidence.json
+            left=$((left-chunk)); n=$((n+1))
+          done

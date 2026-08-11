@@ -1,0 +1,28 @@
+name: automated full-game MLB close backfill
+on:
+  schedule: [{cron: '17 9 * * *'}]
+  workflow_dispatch: {}
+permissions: {contents: write}
+concurrency: {group: full-game-event-backfill, cancel-in-progress: false}
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install -r requirements.txt
+      - name: Capture next 1,000 closes
+        env: {ODDS_API_KEY: '${{ secrets.ODDS_API_KEY }}'}
+        run: |
+          count=$(awk 'END {print NR-1}' data/full_game_event_audit.csv 2>/dev/null || echo 0)
+          [ "$count" -ge 10618 ] && { echo 'full-game target complete'; exit 0; }
+          left=1000; n=1
+          while [ "$left" -gt 0 ]; do
+            python full_game_event_odds.py --start 2020-07-23 --end 2024-09-29 --max-events $([ "$left" -gt 100 ] && echo 100 || echo "$left") --lead-minutes 20 --snapshot-role close
+            git config user.name github-actions[bot]; git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+            git add data/full_game_event_audit.csv data/full_game_event_quotes.csv
+            git diff --cached --quiet || (git commit -m "data: automated full-game close checkpoint $n" && git push)
+            left=$((left-100)); n=$((n+1))
+          done

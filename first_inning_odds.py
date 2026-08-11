@@ -149,8 +149,8 @@ def stratified_days(start, end, per_season=10):
     buying a convenient contiguous block that could look unusually good by
     chance.  Dates are only candidates; the event-odds calls remain capped.
     """
-    if not 1 <= int(per_season) <= 31:
-        raise ValueError("days_per_season must be between 1 and 31")
+    if not 1 <= int(per_season) <= 366:
+        raise ValueError("days_per_season must be between 1 and 366")
     first, last = date.fromisoformat(start), date.fromisoformat(end)
     if first > last:
         raise ValueError("start must not be after end")
