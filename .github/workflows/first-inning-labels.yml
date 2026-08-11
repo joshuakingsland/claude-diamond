@@ -1,0 +1,39 @@
+name: refresh first-inning study labels
+
+# Free recovery/refresh path for the already captured first-inning market
+# data. It does not call The Odds API.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: first-inning-labels
+  cancel-in-progress: false
+
+jobs:
+  labels:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+
+      - name: Refresh labels and baseline report
+        run: |
+          python first_inning_results.py
+          python first_inning_report.py
+
+      - name: Commit refreshed labels
+        run: |
+          bash commit_data.sh "data: refresh first-inning labels" \
+            data/first_inning_results.csv first_inning_evidence.json

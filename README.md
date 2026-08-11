@@ -258,6 +258,7 @@ manufacture a sample.
 | `backfill-odds.yml` | manual | Capped historical capture; dry run by default |
 | `first-inning-audit.yml` | manual | One-market, one-region historical YRFI/NRFI coverage audit; dry run by default |
 | `first-inning-study.yml` | manual | Stratified, capped historical first-inning sample plus official outcome labels; dry run by default |
+| `first-inning-labels.yml` | manual | Free refresh of StatsAPI labels and the market-only baseline; no odds request |
 | `revalidate.yml` | weekly, manual | Builds predictions once, then market comparison, offset fit, forward evidence and final reports in provenance-safe order |
 
 `odds.yml` needs an `ODDS_API_KEY` repository secret and runs

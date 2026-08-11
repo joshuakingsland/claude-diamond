@@ -50,6 +50,12 @@ class FirstInningResultTests(unittest.TestCase):
         other["gameDate"] = "2026-08-11T23:08:00Z"
         self.assertEqual(match_game(event, [other, _game()])["gamePk"], 1)
 
+    def test_athletics_rename_is_an_exact_identity_match(self):
+        event = {**EVENT, "home_team": "Oakland Athletics"}
+        game = _game()
+        game["teams"]["home"]["team"]["name"] = "Athletics"
+        self.assertEqual(match_game(event, [game])["gamePk"], 1)
+
     def test_run_writes_a_settled_label(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -64,6 +70,40 @@ class FirstInningResultTests(unittest.TestCase):
             rows = run(audit, output, fetch=fetch)
             self.assertEqual(rows[0]["yrfi"], 1)
             self.assertEqual(rows[0]["game_pk"], 1)
+
+    def test_postseason_game_is_marked_excluded_not_unmatched(self):
+        playoff = _game()
+        playoff["gameType"] = "F"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            audit, output = root / "audit.csv", root / "results.csv"
+            with audit.open("w", newline="", encoding="utf-8") as handle:
+                writer = csv.DictWriter(handle, fieldnames=EVENT)
+                writer.writeheader()
+                writer.writerow(EVENT)
+            def regular(start, end):
+                return []
+            def postseason(start, end, game_type):
+                return [playoff] if game_type == "F" else []
+            rows = run(audit, output, fetch=regular, fetch_postseason=postseason)
+            self.assertEqual(rows[0]["result_status"], "excluded_nonregular")
+
+    def test_direct_linescore_repairs_a_thin_schedule_response(self):
+        game = _game()
+        game["linescore"] = {"innings": []}
+        direct = {"innings": [{"num": 1, "home": {"runs": 0},
+                                "away": {"runs": 0}}]}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            audit, output = root / "audit.csv", root / "results.csv"
+            with audit.open("w", newline="", encoding="utf-8") as handle:
+                writer = csv.DictWriter(handle, fieldnames=EVENT)
+                writer.writeheader()
+                writer.writerow(EVENT)
+            rows = run(audit, output, fetch=lambda *_: [game],
+                       fetch_linescore_fn=lambda _: direct)
+            self.assertEqual(rows[0]["result_status"], "final")
+            self.assertEqual(rows[0]["nrfi"], 1)
 
 
 class FirstInningMarketReportTests(unittest.TestCase):
@@ -80,3 +120,11 @@ class FirstInningMarketReportTests(unittest.TestCase):
         self.assertEqual(report["status"], "market_baseline_only")
         self.assertEqual(report["events"], 1)
         self.assertEqual(report["market_mean_yrfi_probability"], 0.5)
+
+    def test_postseason_rows_are_excluded_when_game_type_is_available(self):
+        quotes = pd.DataFrame([{"event_id": "a", "market": "totals_1st_1_innings",
+                                "point": 0.5, "book_key": "a",
+                                "devig_prob_home": 0.5}])
+        results = pd.DataFrame([{"event_id": "a", "yrfi": 1,
+                                 "result_status": "final", "game_type": "F"}])
+        self.assertEqual(build_report(quotes, results)["events"], 0)

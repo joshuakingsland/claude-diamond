@@ -32,6 +32,8 @@ def build_report(quotes, results):
         market_books=("book_key", "nunique"),
     )
     settled = results[results["result_status"] == "final"].copy()
+    if "game_type" in settled.columns:
+        settled = settled[settled["game_type"].fillna("R") == "R"]
     settled["yrfi"] = pd.to_numeric(settled["yrfi"], errors="coerce")
     joined = consensus.merge(settled[["event_id", "yrfi"]], on="event_id",
                              how="inner").dropna()
