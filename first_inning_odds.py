@@ -316,7 +316,7 @@ def run(key, day, max_events=1, lead_minutes=10, region="us",
 def run_study(key, start, end, max_events=500, days_per_season=10,
               lead_minutes=10, region="us", market=FIRST_INNING_TOTALS_MARKET,
               manifest_path=DEFAULT_MANIFEST, quotes_path=DEFAULT_QUOTES,
-              dry_run=False, request=None):
+              dry_run=False, request=None, fail_on_request_error=False):
     """Run a capped, evenly date-stratified historical period-market sample.
 
     The hard cap applies to expensive event-odds calls.  Historical event
@@ -387,7 +387,16 @@ def run_study(key, start, end, max_events=500, days_per_season=10,
           f"{discovery_total} discovery; {recorded_discovery} allocated); "
           f"{remaining} remaining")
     if failed:
-        raise RuntimeError(f"{failed} first-inning study request(s) failed")
+        failed_ids = ", ".join(row["event_id"] for row in results
+                                 if row["status"] == "failed")
+        message = (f"{failed} first-inning study request(s) failed "
+                   f"({failed_ids}); successful and no-offer rows were recorded")
+        if fail_on_request_error:
+            raise RuntimeError(message)
+        # A provider can have a missing historical event while every other
+        # event is usable. Turning that into a process failure used to skip
+        # the checkpoint step and discard hundreds of paid rows.
+        print(f"WARNING: {message}")
     return results
 
 
@@ -407,6 +416,8 @@ def main(argv=None):
     parser.add_argument("--manifest", default=str(DEFAULT_MANIFEST))
     parser.add_argument("--quotes", default=str(DEFAULT_QUOTES))
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--fail-on-request-error", action="store_true",
+                        help="nonzero exit after preserving failed rows")
     args = parser.parse_args(argv)
     if args.date:
         run(os.environ.get("ODDS_API_KEY"), args.date, args.max_events,
@@ -418,7 +429,8 @@ def main(argv=None):
     run_study(os.environ.get("ODDS_API_KEY"), args.start, args.end,
               args.max_events, args.days_per_season, args.lead_minutes,
               args.region, manifest_path=args.manifest, quotes_path=args.quotes,
-              dry_run=args.dry_run)
+              dry_run=args.dry_run,
+              fail_on_request_error=args.fail_on_request_error)
 
 
 if __name__ == "__main__":

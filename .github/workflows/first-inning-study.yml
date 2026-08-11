@@ -3,8 +3,8 @@ name: backfill first-inning totals study
 # This is the bounded historical study after the one-event coverage audit.
 # It makes at most max_events event-odds calls (10 credits each) and samples
 # deterministic dates across every available season rather than a cherry-picked
-# contiguous month. The initial 500-event configuration is about 5,040
-# credits including 40 historical event-discovery calls.
+# contiguous month. It checkpoints every chunk before moving to the next one,
+# so a missing historical event cannot discard already-paid raw data.
 on:
   workflow_dispatch:
     inputs:
@@ -17,9 +17,13 @@ on:
         required: true
         default: "2026-08-10"
       max_events:
-        description: "Hard ceiling on event-odds calls (~10 credits each)"
+        description: "Total hard ceiling on event-odds calls (~10 credits each)"
         required: true
         default: "500"
+      events_per_checkpoint:
+        description: "Maximum paid event calls before committing a checkpoint"
+        required: true
+        default: "100"
       days_per_season:
         description: "Evenly spaced calendar dates sampled per season"
         required: true
@@ -56,30 +60,50 @@ jobs:
       - name: Install dependencies
         run: python -m pip install --upgrade pip && pip install -r requirements.txt
 
-      - name: Capture stratified first-inning totals
+      - name: Capture and checkpoint stratified first-inning totals
         env:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
         run: |
-          python first_inning_odds.py \
-            --start "${{ inputs.start }}" \
-            --end "${{ inputs.end }}" \
-            --max-events "${{ inputs.max_events }}" \
-            --days-per-season "${{ inputs.days_per_season }}" \
-            --lead-minutes "${{ inputs.lead_minutes }}" \
-            ${{ inputs.dry_run && '--dry-run' || '' }}
+          total="${{ inputs.max_events }}"
+          checkpoint="${{ inputs.events_per_checkpoint }}"
+          if [ "$total" -lt 1 ] || [ "$checkpoint" -lt 1 ]; then
+            echo "max_events and events_per_checkpoint must be positive" >&2
+            exit 2
+          fi
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            python first_inning_odds.py \
+              --start "${{ inputs.start }}" \
+              --end "${{ inputs.end }}" \
+              --max-events "$total" \
+              --days-per-season "${{ inputs.days_per_season }}" \
+              --lead-minutes "${{ inputs.lead_minutes }}" \
+              --dry-run
+            exit 0
+          fi
+          remaining="$total"
+          batch=1
+          while [ "$remaining" -gt 0 ]; do
+            this_batch="$checkpoint"
+            if [ "$this_batch" -gt "$remaining" ]; then this_batch="$remaining"; fi
+            python first_inning_odds.py \
+              --start "${{ inputs.start }}" \
+              --end "${{ inputs.end }}" \
+              --max-events "$this_batch" \
+              --days-per-season "${{ inputs.days_per_season }}" \
+              --lead-minutes "${{ inputs.lead_minutes }}"
+            python first_inning_results.py
+            python first_inning_report.py
+            bash commit_data.sh \
+              "data: first-inning totals checkpoint ${batch}" \
+              data first_inning_evidence.json
+            remaining=$((remaining - this_batch))
+            batch=$((batch + 1))
+          done
 
-      - name: Label completed first innings and measure the market baseline
-        if: ${{ !inputs.dry_run }}
+      - name: Seal any collected rows after an unexpected failure
+        if: ${{ always() && !inputs.dry_run }}
         run: |
-          python first_inning_results.py
+          python first_inning_results.py || true
           python first_inning_report.py
-
-      - name: Commit study data
-        if: ${{ !inputs.dry_run }}
-        run: |
-          bash commit_data.sh \
-            "data: first-inning totals study ${{ inputs.start }}..${{ inputs.end }}" \
-            data/first_inning_audit.csv \
-            data/first_inning_quotes.csv \
-            data/first_inning_results.csv \
-            first_inning_evidence.json
+          bash commit_data.sh "data: preserve first-inning study checkpoint" \
+            data first_inning_evidence.json

@@ -107,6 +107,21 @@ class FirstInningOddsTests(unittest.TestCase):
         self.assertEqual([row["event_id"] for row in rows],
                          ["first", "other", "second"])
 
+    def test_provider_failure_is_recorded_without_discarding_the_study(self):
+        def fake_request(url):
+            if urlparse(url).path.endswith("/events"):
+                return {"data": [EVENT]}, {"used": "1", "remaining": "999"}
+            raise OSError("historical event unavailable")
+
+        with tempfile.TemporaryDirectory() as directory:
+            manifest = Path(directory) / "audit.csv"
+            rows = run_study("key", "2026-08-10", "2026-08-10", max_events=1,
+                             manifest_path=manifest, quotes_path=Path(directory) / "q.csv",
+                             request=fake_request)
+            self.assertEqual(rows[0]["status"], "failed")
+            with manifest.open(newline="", encoding="utf-8") as handle:
+                self.assertEqual(list(csv.DictReader(handle))[0]["status"], "failed")
+
 
 if __name__ == "__main__":
     unittest.main()
