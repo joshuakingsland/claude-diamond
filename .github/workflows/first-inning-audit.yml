@@ -1,0 +1,67 @@
+name: audit historical first-inning totals
+
+# This is intentionally manual and dry by default.  Unlike the full-game
+# historical endpoint, first-inning period markets must be fetched one event
+# at a time.  The script records every result -- including no offer -- so a
+# rerun does not spend again on a game already checked.
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "MLB game date to inspect (YYYY-MM-DD)"
+        required: true
+        default: "2026-08-10"
+      max_events:
+        description: "Hard cap on paid event-odds calls (~10 credits each)"
+        required: true
+        default: "1"
+      lead_minutes:
+        description: "Historical snapshot this many minutes before first pitch"
+        required: true
+        default: "10"
+      dry_run:
+        description: "Show the maximum spend without requesting data"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  # The manifest is the deduplication ledger.  Serialising manual runs keeps
+  # two people from both reading it before either has committed its row.
+  group: first-inning-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+
+      - name: Audit first-inning totals
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+        run: |
+          python first_inning_odds.py \
+            --date "${{ inputs.date }}" \
+            --max-events "${{ inputs.max_events }}" \
+            --lead-minutes "${{ inputs.lead_minutes }}" \
+            ${{ inputs.dry_run && '--dry-run' || '' }}
+
+      - name: Commit audit data
+        if: ${{ !inputs.dry_run }}
+        run: |
+          bash commit_data.sh \
+            "data: first-inning audit ${{ inputs.date }}" \
+            data/first_inning_audit.csv data/first_inning_quotes.csv

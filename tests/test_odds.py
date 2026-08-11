@@ -51,6 +51,19 @@ class MarketPairingTests(unittest.TestCase):
         quotes = paired_book_quotes(_event([("dk", "DraftKings", markets)]))
         self.assertEqual({q["point"] for q in quotes}, {8.5, 9.5})
 
+    def test_first_inning_total_is_opt_in_and_pairs_like_a_total(self):
+        market = [{"key": "totals_1st_1_innings", "outcomes": [
+            {"name": "Over", "price": -105, "point": 0.5},
+            {"name": "Under", "price": -115, "point": 0.5},
+        ]}]
+        event = _event([("dk", "DraftKings", market)])
+        # A period total cannot accidentally enter the full-game path.
+        self.assertEqual(paired_book_quotes(event), [])
+        quote = paired_book_quotes(
+            event, accepted_markets=("totals_1st_1_innings",))[0]
+        self.assertEqual(quote["market"], "totals_1st_1_innings")
+        self.assertEqual(quote["point"], 0.5)
+
     def test_run_line_groups_both_sides_onto_the_home_point(self):
         markets = [{"key": "spreads", "outcomes": [
             {"name": "Home Nine", "price": 130, "point": -1.5},

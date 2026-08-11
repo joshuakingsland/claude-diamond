@@ -19,7 +19,15 @@ from odds import american_to_prob
 from provenance import repository_revision
 
 
-def sharp_closes(ledger, quotes):
+def sharp_closes(ledger, quotes, as_of=None):
+    """Match a paper signal only after its game has actually started.
+
+    A pregame quote is not a closing quote merely because it is currently the
+    latest quote in the log.  The hourly workflow runs before many first
+    pitches, so evaluating those rows immediately was leaking an unfinished
+    market into the CLV report.  ``as_of`` exists for deterministic tests and
+    historical replays; production uses the current UTC time.
+    """
     required = {"event_id", "market", "point", "side", "wager_id",
                 "game_pk", "official_date", "price"}
     quote_required = {"fetched_at", "commence_time", "book_key", "event_id",
@@ -33,7 +41,12 @@ def sharp_closes(ledger, quotes):
                                       errors="coerce")
     quotes["commence"] = pd.to_datetime(quotes["commence_time"], utc=True,
                                          errors="coerce")
+    as_of = (pd.Timestamp.now(tz="UTC") if as_of is None
+             else pd.to_datetime(as_of, utc=True, errors="coerce"))
+    if pd.isna(as_of):
+        raise ValueError("as_of must be a valid timestamp")
     quotes = quotes[(quotes["taken"] < quotes["commence"])
+                    & (quotes["commence"] <= as_of)
                     & quotes["book_key"].isin(LEADER_BOOK_KEYS)]
     for wager in ledger.to_dict("records"):
         event_id = wager.get("event_id")

@@ -43,7 +43,7 @@ way this kind of project fools its author.
 | --- | --- | --- |
 | MLB StatsAPI | schedules, results, linescores, probable pitchers, venues | one request per season; no key |
 | Open-Meteo | first-pitch historical forecast and live forecast | training uses the forecast available pregame, not realised reanalysis |
-| The Odds API | prices for all three markets | needs `ODDS_API_KEY`; the only paid input |
+| The Odds API | full-game prices plus an isolated first-inning totals audit | needs `ODDS_API_KEY`; the only paid input |
 
 ## Three decisions worth knowing about
 
@@ -107,6 +107,7 @@ models.py     expected-runs estimators and the pricing layer
 validate.py   walk-forward validation and the honest report
 odds.py       three-market odds capture with paired-book de-vig
 historical_odds.py  capped, resumable historical snapshots
+first_inning_odds.py  capped historical YRFI/NRFI market-coverage audit
 market.py     joins prices to predictions; asks whether the model beats them
 market_offset.py  constrained market-logit residual and price-movement fit
 forward_evidence.py  accepted fills, independent games, sharp-close CLV gate
@@ -253,6 +254,7 @@ manufacture a sample.
 | `tests.yml` | push, PR | Unit tests, plus a check that odds capture exits clean with no key |
 | `odds.yml` | hourly 15:00-03:00 UTC in season | Refreshes inputs and starter snapshots; captures the main board, prices, screens, and refreshes forward evidence |
 | `backfill-odds.yml` | manual | Capped historical capture; dry run by default |
+| `first-inning-audit.yml` | manual | One-market, one-region historical YRFI/NRFI coverage audit; dry run by default |
 | `revalidate.yml` | weekly, manual | Builds predictions once, then market comparison, offset fit, forward evidence and final reports in provenance-safe order |
 
 `odds.yml` needs an `ODDS_API_KEY` repository secret and runs
@@ -273,6 +275,29 @@ Scheduled workflows only run on the default branch, and GitHub disables them
 after 60 days without repository activity. A gap in `data/market_quotes/` is a
 data problem, not only an ops one, so check the files rather than trusting the
 cron.
+
+### First-inning totals: research track, not a pick feed
+
+`totals_1st_1_innings` is the correct two-way market for an NRFI/YRFI-style
+first-inning over/under. It is kept out of `MARKETS`, the full-game model, and
+the paper ledger: first-inning pricing needs separately frozen pitcher,
+lineup, and outcome data before it can be evaluated honestly.
+
+Start with exactly one historical event, ten minutes before first pitch:
+
+```bash
+python first_inning_odds.py --date 2026-08-10 --max-events 1 --dry-run
+# Remove --dry-run only after checking the stated ceiling.
+python first_inning_odds.py --date 2026-08-10 --max-events 1 --lead-minutes 10
+```
+
+The paid run writes `data/first_inning_audit.csv` and
+`data/first_inning_quotes.csv`.  `offered` means the feed returned at least
+one paired Over/Under price; `no_offer` is equally useful evidence that the
+book/region/date cannot support the study.  Every audit id is keyed by event,
+market, region, and requested timestamp, so it will not rebuy an already
+checked snapshot.  The GitHub Actions equivalent is the manual
+`first-inning-audit.yml` workflow, whose default is also dry-run.
 
 ### The two days the page was empty
 

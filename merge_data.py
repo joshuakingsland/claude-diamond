@@ -41,6 +41,8 @@ UNION_KEYS = {
                                   "side", "gate"),
     "data/historical_quotes.csv": ("snapshot_id",),
     "data/historical_manifest.csv": ("requested_date",),
+    "data/first_inning_quotes.csv": ("snapshot_id",),
+    "data/first_inning_audit.csv": ("audit_id",),
     "data/schedule_snapshots.csv": ("snapshot_id",),
     "data/lineup_snapshots.csv": ("snapshot_id",),
     "data/clv_signals.csv": ("wager_id",),

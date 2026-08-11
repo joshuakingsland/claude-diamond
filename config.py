@@ -10,6 +10,13 @@ experimental settings.
 # one of them moves all three consistently.
 MARKETS = ("h2h", "spreads", "totals")
 
+# First-inning totals are intentionally *not* part of ``MARKETS``.  The
+# full-game model reads its three prices from one joint nine-inning run
+# distribution, while a YRFI/NRFI price has a distinct target, settlement
+# rule, and feature set.  It starts as a separately captured research feed;
+# nothing in the full-game consensus, card, or ledger can consume it.
+FIRST_INNING_TOTALS_MARKET = "totals_1st_1_innings"
+
 # Human-readable model family.  The complete version written to cards and the
 # ledger also carries the git revision and feature-schema hash; see
 # ``provenance.py``.  A static label by itself made materially different

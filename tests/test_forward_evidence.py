@@ -47,6 +47,21 @@ class SharpCloseTests(unittest.TestCase):
         self.assertEqual(evaluate(paper, closes)["promotion_status"],
                          "research_only")
 
+    def test_unstarted_game_has_no_close_even_with_a_pregame_quote(self):
+        ledger = pd.DataFrame([{
+            "wager_id": "w", "event_id": "e", "game_pk": 1,
+            "official_date": "2026-08-12", "market": "h2h", "point": "",
+            "side": "home", "price": -110,
+        }])
+        quotes = pd.DataFrame([{
+            "event_id": "e", "market": "h2h", "point": "",
+            "book_key": "pinnacle", "fetched_at": "2026-08-12T17:00:00Z",
+            "commence_time": "2026-08-12T20:00:00Z",
+            "devig_prob_home": 0.55,
+        }])
+        closes = sharp_closes(ledger, quotes, as_of="2026-08-12T18:00:00Z")
+        self.assertTrue(closes.empty)
+
 
 if __name__ == "__main__":
     unittest.main()

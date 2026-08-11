@@ -82,20 +82,22 @@ def _upper_median(values):
     return values[len(values) // 2]
 
 
-def paired_book_quotes(event, region="us"):
+def paired_book_quotes(event, region="us", accepted_markets=None):
     """Return paired two-sided quotes per book, per market, per line point.
 
     A quote only counts when both sides are present at the same point. A book
     showing one side of a total is not a market, and de-vigging it against a
     different book's other side would invent a price neither offered.
     """
+    accepted_markets = set(MARKETS if accepted_markets is None
+                           else accepted_markets)
     home = event.get("home_team", "")
     away = event.get("away_team", "")
     paired = []
     for book in event.get("bookmakers", []):
         for market in book.get("markets", []):
             key = market.get("key")
-            if key not in MARKETS:
+            if key not in accepted_markets:
                 continue
             sides = {}
             for outcome in market.get("outcomes", []):
@@ -107,7 +109,12 @@ def paired_book_quotes(event, region="us"):
                     point = None
                 elif key == "spreads":
                     side = "home" if name == home else "away" if name == away else None
-                elif key == "totals":
+                # The Odds API represents both full-game totals and period
+                # totals as paired Over/Under outcomes.  The exact market key
+                # is retained, so callers can keep a first-inning total out
+                # of the full-game model while sharing the safe two-sided
+                # parsing logic.
+                elif key == "totals" or key.startswith("totals_"):
                     side = {"Over": "home", "Under": "away"}.get(name)
                 else:
                     side = None
