@@ -5,6 +5,7 @@ on:
       start: {description: 'First date (YYYY-MM-DD)', required: true, default: '2020-07-23'}
       end: {description: 'Last date (YYYY-MM-DD)', required: true, default: '2024-09-29'}
       max_events: {description: 'Hard event cap (~30 credits each)', required: true, default: '100'}
+      events_per_checkpoint: {description: 'Commit after this many paid events', required: true, default: '100'}
       lead_minutes: {description: 'Minutes before each game start', required: true, default: '20'}
       snapshot_role: {description: 'early or close', required: true, default: 'close'}
       dry_run: {description: 'Estimate only; no API calls', type: boolean, default: true}
@@ -19,13 +20,19 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - run: pip install -r requirements.txt
-      - name: Capture
+      - name: Capture and checkpoint
         env: {ODDS_API_KEY: '${{ secrets.ODDS_API_KEY }}'}
-        run: python full_game_event_odds.py --start '${{ inputs.start }}' --end '${{ inputs.end }}' --max-events '${{ inputs.max_events }}' --lead-minutes '${{ inputs.lead_minutes }}' --snapshot-role '${{ inputs.snapshot_role }}' ${{ inputs.dry_run && '--dry-run' || '' }}
-      - name: Commit data
-        if: ${{ !inputs.dry_run }}
         run: |
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add data/full_game_event_audit.csv data/full_game_event_quotes.csv
-          git diff --cached --quiet || (git commit -m 'data: per-game full-game odds' && git push)
+          if [ '${{ inputs.dry_run }}' = true ]; then
+            python full_game_event_odds.py --start '${{ inputs.start }}' --end '${{ inputs.end }}' --max-events '${{ inputs.max_events }}' --lead-minutes '${{ inputs.lead_minutes }}' --snapshot-role '${{ inputs.snapshot_role }}' --dry-run
+            exit 0
+          fi
+          left='${{ inputs.max_events }}'; n=1
+          while [ "$left" -gt 0 ]; do
+            chunk='${{ inputs.events_per_checkpoint }}'; [ "$chunk" -gt "$left" ] && chunk="$left"
+            python full_game_event_odds.py --start '${{ inputs.start }}' --end '${{ inputs.end }}' --max-events "$chunk" --lead-minutes '${{ inputs.lead_minutes }}' --snapshot-role '${{ inputs.snapshot_role }}'
+            git config user.name github-actions[bot]; git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+            git add data/full_game_event_audit.csv data/full_game_event_quotes.csv
+            git diff --cached --quiet || (git commit -m "data: full-game event checkpoint $n" && git push)
+            left=$((left-chunk)); n=$((n+1))
+          done
