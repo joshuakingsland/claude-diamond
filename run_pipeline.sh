@@ -14,7 +14,8 @@ echo "=== WEATHER ==="
 # Resumable: a venue that fails a TLS handshake is reported and skipped, so
 # rerunning fills only what is missing.
 for attempt in 1 2 3 4; do
-  "$PYTHON" weather.py --games data/games.csv --out data/weather.csv && break
+    "$PYTHON" weather.py --games data/games.csv --out data/weather.csv \
+      --refresh-source && break
   echo "weather attempt $attempt incomplete; resuming"
   sleep $((attempt * 5))
 done
@@ -31,20 +32,30 @@ PY
 echo "=== FEATURES ==="
 "$PYTHON" features.py
 
-# Before validation, not after: validate.py imports this verdict rather than
-# recomputing it, so running it later would leave the reports a run behind.
+echo "=== WALK-FORWARD PREDICTIONS (glm) ==="
+"$PYTHON" validate.py --kind glm --report /tmp/validation_glm_pre_market.json \
+  --predictions data/predictions_glm.csv
+
+echo "=== WALK-FORWARD PREDICTIONS (gbm) ==="
+"$PYTHON" validate.py --kind gbm --report /tmp/validation_gbm_pre_market.json \
+  --predictions data/predictions_gbm.csv
+
 echo "=== MARKET COMPARISON ==="
 "$PYTHON" market.py
 
-echo "=== VALIDATE (glm) ==="
-"$PYTHON" validate.py --kind glm --report validation_glm.json \
-  --predictions data/predictions_glm.csv
-
-echo "=== VALIDATE (gbm) ==="
-"$PYTHON" validate.py --kind gbm --report validation_gbm.json \
-  --predictions data/predictions_gbm.csv
+echo "=== MARKET OFFSET ==="
+"$PYTHON" market_offset.py
 
 echo "=== SETTLE PAPER LEDGER ==="
 "$PYTHON" ledger.py --settle-only
+
+echo "=== FORWARD EVIDENCE ==="
+"$PYTHON" forward_evidence.py
+
+echo "=== FINAL REPORTS ==="
+"$PYTHON" validate.py --kind glm --reuse-predictions \
+  --report validation_glm.json --predictions data/predictions_glm.csv
+"$PYTHON" validate.py --kind gbm --reuse-predictions \
+  --report validation_gbm.json --predictions data/predictions_gbm.csv
 
 echo "=== PIPELINE COMPLETE ==="

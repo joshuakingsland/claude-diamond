@@ -29,6 +29,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from features import FEATURE_COLUMNS
+from provenance import feature_schema, model_version, repository_revision
+
 
 def log_loss(probability, outcome):
     probability = np.clip(np.asarray(probability, dtype=float), 1e-9, 1 - 1e-9)
@@ -94,7 +97,8 @@ def season_bootstrap(frame, statistic, draws=4000, seed=11):
 
 
 def evaluate(predictions, games, runline_point=-1.5, total_point=8.5,
-             comparison_path="market_comparison.json"):
+             comparison_path="market_comparison.json",
+             forward_path="forward_evidence.json"):
     """Accuracy of every market the model prices, against realised outcomes."""
     merged = predictions.merge(
         games[["game_pk", "home_score", "away_score", "home_win", "total_runs",
@@ -163,7 +167,9 @@ def evaluate(predictions, games, runline_point=-1.5, total_point=8.5,
         }
 
     report["market_comparison"] = market_comparison(comparison_path)
-    report["live_gate"] = live_gate(report["market_comparison"])
+    report["forward_evidence"] = forward_evidence(forward_path)
+    report["live_gate"] = live_gate(report["market_comparison"],
+                                    report["forward_evidence"])
     return report
 
 
@@ -203,7 +209,16 @@ def market_comparison(path):
     }
 
 
-def live_gate(comparison):
+def forward_evidence(path):
+    path = Path(path)
+    if not path.exists():
+        return {"status": "unavailable",
+                "reason": "No forward-evidence report has been produced."}
+    evidence = json.loads(path.read_text(encoding="utf-8"))
+    return {"status": "available", "source": str(path), **evidence}
+
+
+def live_gate(comparison, evidence=None):
     """No path to `live` exists in this code; this records why, not whether."""
     if comparison.get("status") != "available":
         return {
@@ -215,15 +230,18 @@ def live_gate(comparison):
             ),
         }
     beaten = comparison.get("markets_model_beats_close") or []
+    evidence = evidence or {"status": "unavailable"}
+    forward_status = evidence.get("promotion_status", "unavailable")
     return {
         "status": "research_only",
         "reason": (
             f"The model beats the closing price on {len(beaten)} of "
             f"{len(comparison.get('close') or {})} markets with an interval "
             "excluding zero. Beating a closing price on log loss would in any "
-            "case be a necessary condition for staking, not a sufficient one: "
-            "it is measured before vig, stake sizing, and execution. This "
-            "repository does not place wagers."
+            "case be a necessary condition for staking, not a sufficient one. "
+            f"Forward evidence is {forward_status}; it requires independent "
+            "games, accepted fills, and positive sharp-close CLV before any "
+            "promotion review. This repository does not place wagers."
         ),
     }
 
@@ -235,23 +253,40 @@ def main():
     parser.add_argument("--kind", default="glm", choices=["gbm", "glm"])
     parser.add_argument("--report", default="validation.json")
     parser.add_argument("--predictions", default="data/predictions.csv")
+    parser.add_argument(
+        "--reuse-predictions", action="store_true",
+        help="evaluate an already generated prediction file after market and "
+             "forward reports have been refreshed",
+    )
     parser.add_argument("--market-comparison", default="market_comparison.json",
                         help="report from market.py; absent is reported as "
                              "unavailable rather than assumed")
+    parser.add_argument("--forward-evidence", default="forward_evidence.json")
     args = parser.parse_args()
-
-    from models import walk_forward
 
     features = pd.read_csv(args.features)
     games = pd.read_csv(args.games)
-    seasons = sorted(int(season) for season in features["season"].unique())
-    print(f"walk-forward over seasons {seasons} using {args.kind}")
-    predictions = walk_forward(features, games, seasons, kind=args.kind)
-    if not len(predictions):
-        raise SystemExit("no predictions produced")
-    predictions.to_csv(args.predictions, index=False)
-    report = evaluate(predictions, games, comparison_path=args.market_comparison)
+    if args.reuse_predictions:
+        predictions = pd.read_csv(args.predictions)
+        print(f"re-evaluating {len(predictions)} stored {args.kind} predictions")
+    else:
+        from models import walk_forward
+
+        seasons = sorted(int(season) for season in features["season"].unique())
+        print(f"walk-forward over seasons {seasons} using {args.kind}")
+        predictions = walk_forward(features, games, seasons, kind=args.kind)
+        if not len(predictions):
+            raise SystemExit("no predictions produced")
+        predictions.to_csv(args.predictions, index=False)
+    report = evaluate(predictions, games,
+                      comparison_path=args.market_comparison,
+                      forward_path=args.forward_evidence)
     report["model_kind"] = args.kind
+    revision = repository_revision()
+    report["model_revision"] = revision
+    report["feature_schema"] = feature_schema(FEATURE_COLUMNS)
+    report["model_version"] = model_version(
+        args.kind, FEATURE_COLUMNS, revision=revision)
     Path(args.report).write_text(json.dumps(report, indent=2), encoding="utf-8")
     summary = {key: report[key] for key in ("games", "seasons", "model_kind")}
     print(json.dumps(summary, indent=2))

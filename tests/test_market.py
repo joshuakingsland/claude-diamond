@@ -136,6 +136,26 @@ class BookGateTests(unittest.TestCase):
         row = self._frame(close_books=("a", "b", "c"))
         self.assertIsNotNone(row["close_prob"])
 
+    def test_market_leader_probability_survives_for_microstructure_fit(self):
+        rows = [
+            _quote("e1", "betonlineag", "h2h", 0.56, 0.44,
+                   "2025-04-30T20:00:00Z"),
+            _quote("e1", "a", "h2h", 0.50, 0.50,
+                   "2025-04-30T20:00:00Z"),
+            _quote("e1", "b", "h2h", 0.51, 0.49,
+                   "2025-04-30T20:00:00Z"),
+        ]
+        games = pd.DataFrame([{
+            "game_pk": 1, "home_team_name": "Home Nine",
+            "away_team_name": "Away Nine",
+            "game_date_utc": "2025-05-01T23:10:00Z",
+            "official_date": "2025-05-01",
+        }])
+        priced, _ = build_priced_games(pd.DataFrame(rows), games)
+        row = priced[priced["market"] == "h2h"].iloc[0]
+        self.assertAlmostEqual(row["entry_leader_prob"], 0.56)
+        self.assertEqual(row["entry_leader_books"], 1)
+
 
 class IntervalTests(unittest.TestCase):
     """The interval, not the sign of the point estimate, is the finding."""

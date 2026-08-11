@@ -27,8 +27,9 @@ actually being tested.
 | Question | Status |
 | --- | --- |
 | Does the model predict baseball? | **Yes.** Calibration, log loss, Brier against 13,857 completed games |
-| Does the model beat a price? | **No.** 186 days of 2025 prices. The close still wins the moneyline with an interval excluding zero; the run line and total are undecided |
-| Should anyone stake money? | **No.** The live gate reads `research_only` and there is no path to `live` in this code |
+| Does the standalone model beat a price? | **No.** On the coherent main-line comparison the close wins all three markets with date-clustered intervals excluding zero |
+| Is there a credible route to an edge? | **Possibly, but unproved.** A constrained market-offset model now targets residual outcome signal and leader-to-close movement instead of trying to replace the market |
+| Should anyone stake money? | **No.** The promotion gate requires 500 independent games, 95% accepted fills, and positive sharp-close CLV; there is no real-money path in this code |
 
 A well-calibrated model that loses money is the *normal* outcome in a liquid
 market, and that is what happened here. The two claims are reported
@@ -41,7 +42,7 @@ way this kind of project fools its author.
 | Source | Used for | Notes |
 | --- | --- | --- |
 | MLB StatsAPI | schedules, results, linescores, probable pitchers, venues | one request per season; no key |
-| Open-Meteo | first-pitch weather, archive and forecast | reanalysis and forecast share units and variables |
+| Open-Meteo | first-pitch historical forecast and live forecast | training uses the forecast available pregame, not realised reanalysis |
 | The Odds API | prices for all three markets | needs `ODDS_API_KEY`; the only paid input |
 
 ## Three decisions worth knowing about
@@ -62,20 +63,29 @@ diagonal of the joint distribution would be the easy fix and would bias every
 total downward, because extra innings add runs. Tied mass is moved into extra
 innings using a home edge and run bump measured from the games themselves.
 
-**Weather comes from one source for training and serving.** StatsAPI reports
-observed conditions, but only once a game is under way. Training on that and
-serving on a forecast would fit the model to information the live path never
-has. Open-Meteo supplies both, so it is the single source of truth, and
-StatsAPI weather is used only to check the join. The same logic governs
+**Weather comes from the same information set for training and serving.**
+StatsAPI reports observed conditions, but only once a game is under way.
+Training on realised weather and serving on a forecast fits information the
+live path never has. Historical games therefore use Open-Meteo's archived
+operational forecast and live games use its current forecast endpoint with
+the same variables and units. StatsAPI weather only checks the join. The same logic governs
 roofs: 2,034 games in 2021-2026 report "Roof Closed", but that is known
 after the fact, so the model sees the park's roof *category* and learns the
 average attenuation instead.
 
 ## Point-in-time discipline
 
-`features.py` walks games in date order, emits each feature row from current
+`features.py` walks games in actual first-pitch order, emits each feature row from current
 state, and only then folds that game's result into state. A feature
 therefore cannot see its own outcome by construction rather than by care.
+
+`schedule_snapshots.py` and `lineup_snapshots.py` add the other half of that
+contract: probable starters, status, and submitted batting orders are captured
+append-only before pricing. The live builder selects only versions available
+at decision time, so a late scratch cannot rewrite an earlier card, and the
+paper policy rejects a row until both batting orders are confirmed. The
+repository does not pretend to reconstruct historical starter or lineup
+snapshots that were never captured.
 
 This is enforced by a test that rewrites one game into a 30-0 blowout,
 rebuilds, and asserts every feature row up to and including that game is
@@ -89,6 +99,8 @@ config.py     markets, regions, gates, staking policy
 results.py    StatsAPI schedule and result ingestion
 parks.py      venue coordinates, elevation, orientation, roof category
 weather.py    Open-Meteo archive/forecast, wind resolved onto park axes
+schedule_snapshots.py  append-only pregame probable-starter provenance
+lineup_snapshots.py  append-only confirmed batting orders
 features.py   point-in-time feature construction
 runs.py       joint run distribution; the three markets are read off it
 models.py     expected-runs estimators and the pricing layer
@@ -96,6 +108,9 @@ validate.py   walk-forward validation and the honest report
 odds.py       three-market odds capture with paired-book de-vig
 historical_odds.py  capped, resumable historical snapshots
 market.py     joins prices to predictions; asks whether the model beats them
+market_offset.py  constrained market-logit residual and price-movement fit
+forward_evidence.py  accepted fills, independent games, sharp-close CLV gate
+signal_ledger.py  append-only, non-wager forward probe of predicted movement
 extremes.py   does a large disagreement pay? no, and here is why it looks like it does
 devig.py      four ways to strip the margin, and whether the benchmark book is right
 stationarity.py  does the run environment drift enough to reweight the seasons?
@@ -148,22 +163,36 @@ To serve it: **Settings → Pages → Source: Deploy from a branch → `main` /d
 
 ```bash
 python odds.py --require-key      # tonight's board
+python schedule_snapshots.py      # probable starters known at decision time
+python lineup_snapshots.py        # submitted batting orders
 python predict_upcoming.py        # model probabilities beside it
+python signal_ledger.py           # freeze the CLV hypothesis before the close
 python ledger.py                  # screen, record, settle
+python forward_evidence.py        # independent-game and sharp-close gate
 ```
 
-The card reports a `disagreement` column, never an `edge`. The market
-comparison above says the closing price beats this model, so a gap between the
-two is a disagreement the model is more likely to be wrong about — naming it
-edge would be the whole failure this project exists to avoid.
+The standalone model is no longer treated as the fair-price prior. The card
+starts from the paired-book, de-vigged market logit and retains only the
+constrained fraction of the model-market residual supported in expanding-date
+outcome tests. Currently that fraction is zero in all three markets:
+market-only. A separate fit asks whether the residual and market-leader gap
+predict movement toward a later main-line price; only moneyline and run line
+survive their clustered forward interval, and they feed the non-wager CLV
+probe. The raw model gap remains on the card as a diagnostic.
 
 Three properties keep the live path honest. It builds features with the *same*
 builder as training, which emits a row for an unplayed game and folds nothing
-into state. It takes forecast weather from Open-Meteo, the same source as the
-training archive, and keeps it in a separate file so a forecast can never
-overwrite reanalysis for a game that has since been played. And it drops games
+into state. It takes forecast weather from Open-Meteo, matching the
+historical-forecast training contract, and keeps it in a separate file. It drops games
 already under way, because the odds feed keeps quoting them and those prices
 reflect a score the model cannot see.
+
+Only one executable main point per market reaches the card: the point quoted
+by the broadest set of priced books. Alternate lines remain in the raw quote
+log for research. This prevents book-subset changes from producing both sides
+of a run line or several correlated totals. Historical evaluation reconstructs
+the stored joint distribution at the exact main point that was quoted instead
+of validating fixed -1.5 and 8.5 lines against a different universe.
 
 Whole-number lines push, and a book's two-way price has that mass removed
 already, so the model probability is renormalised onto the same basis before
@@ -182,9 +211,13 @@ with the gate that caused it:
 | --- | --- |
 | Disagreement too small | `EDGE_RULE` |
 | Market too thin | `MIN_MARKET_BOOKS` |
+| Batting orders not confirmed | `REQUIRE_CONFIRMED_LINEUPS` |
 | Outside the lock window | `MIN/MAX_LOCK_LEAD_MINUTES` |
 | Quote too old | `MAX_ODDS_AGE_MINUTES` |
+| Best book's own update too old | `MAX_BOOK_QUOTE_AGE_MINUTES` |
 | Best price too far from consensus | `MAX_EXECUTION_DEVIATION` |
+| Expected profit at executable price too small | `MIN_EXPECTED_VALUE` |
+| Correlated game bucket already used | `GAME_RISK_BUCKET_STAKE_CAP` |
 | Day's stake exhausted | `GAME_DAY_STAKE_CAP`, `MAX_STAKE` |
 
 Books disagreeing among themselves past `MARKET_DISAGREEMENT_WARNING` are
@@ -202,17 +235,25 @@ holding across runs rather than from the first capture.
 **No money moves.** Wagers are recorded at a price that was on the board and
 settled against real results. The expected outcome is a loss, and the ledger is
 worth running because it is the measurement that would show that honestly.
-`BOOTSTRAP_MODELS` and `WEATHER_SOURCE` remain unreferenced; they are
-documentation, not controls.
+The ledger records the git revision, ordered feature-schema hash, trained
+through date, offset version, actual book update time, and policy version, so
+materially different decisions cannot collapse under one static model label.
+
+Because outcome evidence currently supports no wagers, `signal_ledger.py`
+separately freezes the small price-movement prediction. It takes at most one
+main-line observation per game risk bucket and labels it `paper_quote`, never
+an accepted fill. This lets later sharp-close CLV test the only signal that
+survived expanding-date evaluation without loosening the wagering gates to
+manufacture a sample.
 
 ## Automation
 
 | Workflow | Trigger | What it does |
 | --- | --- | --- |
 | `tests.yml` | push, PR | Unit tests, plus a check that odds capture exits clean with no key |
-| `odds.yml` | hourly 15:00-03:00 UTC in season | Refreshes results, boxscores, umpires and weather; captures the board, prices the card, screens the ledger |
+| `odds.yml` | hourly 15:00-03:00 UTC in season | Refreshes inputs and starter snapshots; captures the main board, prices, screens, and refreshes forward evidence |
 | `backfill-odds.yml` | manual | Capped historical capture; dry run by default |
-| `revalidate.yml` | weekly, manual | Rebuilds features, re-runs the comparison and validation, settles the ledger |
+| `revalidate.yml` | weekly, manual | Builds predictions once, then market comparison, offset fit, forward evidence and final reports in provenance-safe order |
 
 `odds.yml` needs an `ODDS_API_KEY` repository secret and runs
 `odds.py --require-key`, so a missing secret fails loudly rather than
@@ -277,10 +318,14 @@ steady state is about fifteen games a day.
 python -m pip install -r requirements.txt
 python parks.py --refresh --seasons 2021-2026
 python results.py --seasons 2021-2026
-python weather.py            # resumable; rerun to fill any failed venue
+python weather.py --refresh-source  # historical operational forecasts
 python features.py
-python market.py             # before validate.py, which imports its verdict
-python validate.py
+python validate.py --kind glm --predictions data/predictions_glm.csv
+python market.py
+python market_offset.py
+python forward_evidence.py
+python validate.py --kind glm --reuse-predictions \
+  --predictions data/predictions_glm.csv
 PYTHONPATH=. python -m unittest discover -s tests -t .
 ```
 

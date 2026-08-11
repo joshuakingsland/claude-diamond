@@ -92,6 +92,19 @@ class NoLookaheadTests(unittest.TestCase):
         self.assertEqual(missing, [])
         self.assertFalse(frame[FEATURE_COLUMNS].isna().any().any())
 
+    def test_same_day_state_follows_first_pitch_not_game_id(self):
+        games = _games(2)
+        games.loc[0, ["game_pk", "game_date_utc"]] = [900,
+                                                       "2024-04-01T18:00:00Z"]
+        games.loc[1, ["game_pk", "game_date_utc"]] = [100,
+                                                       "2024-04-01T23:00:00Z"]
+        # Make both games the same teams so the second must inherit the first.
+        games.loc[1, ["home_team_id", "away_team_id"]] = games.loc[
+            0, ["home_team_id", "away_team_id"]].to_numpy()
+        frame = build(games, PARKS).set_index("game_pk")
+        self.assertEqual(frame.loc[900, "home_games_played"], 0)
+        self.assertEqual(frame.loc[100, "home_games_played"], 1)
+
 
 class WindGeometryTests(unittest.TestCase):
     """A sign error here silently inverts every wind effect in the model."""

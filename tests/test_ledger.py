@@ -11,10 +11,9 @@ from datetime import datetime, timedelta, timezone
 import pandas as pd
 
 from config import (EDGE_RULE, GAME_DAY_STAKE_CAP, MAX_EXECUTION_DEVIATION,
-                    MAX_ODDS_AGE_MINUTES, MIN_LOCK_LEAD_MINUTES,
-                    MIN_MARKET_BOOKS)
-from ledger import (_outcome, payout, screen, settle, staked_by_day,
-                    summarise)
+                    MAX_BOOK_QUOTE_AGE_MINUTES, MAX_ODDS_AGE_MINUTES,
+                    MIN_LOCK_LEAD_MINUTES, MIN_MARKET_BOOKS)
+from ledger import (_outcome, payout, screen, settle, staked_by_day, summarise)
 
 NOW = datetime(2026, 8, 5, 18, 0, tzinfo=timezone.utc)
 
@@ -28,6 +27,7 @@ def _card(**overrides):
         "model_prob_home": 0.60, "market_prob_home": 0.50,
         "disagreement": 0.10,
         "market_books": 8, "market_spread": 0.01,
+        "lineups_confirmed": 1,
         "consensus_price_home": -110.0, "consensus_price_away": -110.0,
         "best_price_home": -105.0, "best_book_home": "Book A",
         "best_price_away": -105.0, "best_book_away": "Book B",
@@ -60,6 +60,11 @@ class GateTests(unittest.TestCase):
         self.assertEqual(wagers, [])
         self.assertIn("too_few_books", _gates(rejections))
 
+    def test_unconfirmed_lineups_are_rejected(self):
+        wagers, rejections = screen(_card(lineups_confirmed=0), now=NOW)
+        self.assertEqual(wagers, [])
+        self.assertIn("lineups_unconfirmed", _gates(rejections))
+
     def test_a_quote_outside_the_lock_window_is_rejected(self):
         """Lineups post about three hours out; earlier is not a lock."""
         wagers, rejections = screen(
@@ -73,6 +78,14 @@ class GateTests(unittest.TestCase):
             _card(odds_fetched_at=old.strftime("%Y-%m-%dT%H:%M:%SZ")), now=NOW)
         self.assertEqual(wagers, [])
         self.assertIn("stale_quote", _gates(rejections))
+
+    def test_a_fresh_capture_with_a_stale_best_book_is_rejected(self):
+        old = NOW - timedelta(minutes=MAX_BOOK_QUOTE_AGE_MINUTES + 1)
+        wagers, rejections = screen(_card(
+            best_price_home_updated_at=old.strftime("%Y-%m-%dT%H:%M:%SZ")),
+            now=NOW)
+        self.assertEqual(wagers, [])
+        self.assertIn("stale_book_quote", _gates(rejections))
 
     def test_a_price_far_better_than_consensus_is_a_broken_quote(self):
         """Line shopping is worth a point or two, not twenty."""
@@ -100,6 +113,47 @@ class GateTests(unittest.TestCase):
         wagers, _ = screen(_card(market_spread=0.20), now=NOW)
         self.assertEqual(len(wagers), 1)
         self.assertEqual(wagers[0]["wide_market"], 1)
+
+    def test_probability_gap_without_positive_expected_value_is_rejected(self):
+        wagers, rejections = screen(_card(
+            fair_prob_home=0.60, fair_disagreement=0.10,
+            consensus_price_home=-200, best_price_home=-200), now=NOW)
+        self.assertEqual(wagers, [])
+        self.assertIn("below_expected_value", _gates(rejections))
+
+
+class RiskBucketTests(unittest.TestCase):
+    def test_adjacent_totals_compete_for_one_position(self):
+        low = _card(market="totals", point=8.5, game_pk=8,
+                    fair_prob_home=0.61, fair_disagreement=0.11,
+                    disagreement=0.11)
+        high = _card(market="totals", point=9.5, game_pk=8,
+                     fair_prob_home=0.65, fair_disagreement=0.15,
+                     disagreement=0.15)
+        wagers, rejections = screen(pd.concat([low, high], ignore_index=True),
+                                    now=NOW)
+        self.assertEqual(len(wagers), 1)
+        self.assertEqual(wagers[0]["point"], 9.5)
+        self.assertIn("risk_bucket_dominated", _gates(rejections))
+
+    def test_moneyline_and_runline_compete_for_side_exposure(self):
+        moneyline = _card(game_pk=9, fair_prob_home=0.61,
+                          fair_disagreement=0.11)
+        runline = _card(game_pk=9, market="spreads", point=-1.5,
+                        fair_prob_home=0.64, fair_disagreement=0.14,
+                        disagreement=0.14)
+        wagers, rejections = screen(
+            pd.concat([moneyline, runline], ignore_index=True), now=NOW)
+        self.assertEqual(len(wagers), 1)
+        self.assertEqual(wagers[0]["market"], "spreads")
+        self.assertIn("risk_bucket_dominated", _gates(rejections))
+
+    def test_a_prior_run_blocks_the_whole_bucket(self):
+        wagers, rejections = screen(
+            _card(game_pk=10, market="spreads", point=-1.5),
+            prior_risk_buckets={("10", "side")}, now=NOW)
+        self.assertEqual(wagers, [])
+        self.assertIn("risk_bucket_already_locked", _gates(rejections))
 
 
 class DayCapTests(unittest.TestCase):

@@ -3,8 +3,8 @@
 A sibling page exists for the UFC project and this one deliberately mirrors
 its layout, so the two read the same way. The content does not mirror it,
 because the results are not the same. That project reports no verified edge;
-this one has measured a specific negative — the closing price beats the model
-on the moneyline and the run line with intervals excluding zero — and a page
+this one has measured a specific negative — the closing price beats the
+standalone model on all three main-line markets with intervals excluding zero — and a page
 that buried that under a list of tonight's picks would be advertising, not a
 model card. The verdict sits above the card for that reason.
 
@@ -46,9 +46,14 @@ MARKET_LABELS = {"h2h": "moneyline", "spreads": "run line", "totals": "total"}
 GATE_LABELS = {
     "below_edge_rule": "below rule",
     "too_few_books": "thin market",
+    "lineups_unconfirmed": "lineups unconfirmed",
     "outside_lock_window": "outside lock window",
     "stale_quote": "stale quote",
+    "stale_book_quote": "stale book quote",
     "execution_deviation": "broken quote",
+    "below_expected_value": "negative/low EV",
+    "risk_bucket_already_locked": "game exposure used",
+    "risk_bucket_dominated": "better correlated position",
     "day_cap": "day cap",
     "already_locked": "already locked",
     "no_executable_price": "no price",
@@ -130,7 +135,8 @@ def build_board(card, ledger, rejections):
     board = []
     for row in card:
         point = _float(row["point"])
-        model_home = _float(row["model_prob_home"])
+        model_home = _float(row.get("fair_prob_home",
+                                    row.get("model_prob_home")))
         market_home = _float(row["market_prob_home"])
         if model_home is None or market_home is None:
             continue
@@ -361,11 +367,12 @@ TEMPLATE = """<!DOCTYPE html>
   <h1>Model<br>Card Read</h1>
   <p class="sub">Every quoted line on tonight's card, priced by a model trained on
   <b>__GAMES__ completed MLB games</b> and benchmarked against captured closing prices.
-  Consensus de-vigged prices inform the read; the best captured sportsbook price is what a
+  Fair probabilities begin at the consensus market and retain only historically supported
+  residual signal; the best captured sportsbook price is what a
   wager would execute at. A gap is a <b>disagreement</b>, not an edge — see below.</p>
   <div class="record" id="chips"></div>
   <div class="legend"><div class="key"><span class="tick"></span> consensus (de-vig)</div>
-    <div class="key"><span class="tick model"></span> model</div>
+    <div class="key"><span class="tick model"></span> market-offset fair</div>
     <div class="key"><span class="band"></span> probability gap</div></div>
   <div class="freshness current">Board captured <b>__CAPTURED__</b> | results through <b>__RESULTS__</b></div>
 </header>

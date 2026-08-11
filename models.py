@@ -21,10 +21,11 @@ from runs import (DEFAULT_EXTRA_INNING_MARGINS, DEFAULT_INNING_SHAPE,
                   DEFAULT_WALK_OFF_MARGINS,
                   calibrate_extra_innings,
                   calibrate_walk_off,
-                  fit_dispersion, fit_inning_shape, joint_distribution,
+                  fit_inning_shape, joint_distribution,
                   uncensor_home_mean,
                   moneyline_probability, push_probability,
                   runline_probability, total_over_probability)
+from provenance import feature_schema, model_version, repository_revision
 
 # The away side sees the same game from the other dugout. Swapping these
 # pairs turns a home-oriented row into an away-oriented one, so one estimator
@@ -78,6 +79,7 @@ class RunsModel:
         self.estimator = None
         self.dispersion = (4.0, 4.0)
         self.shape = DEFAULT_INNING_SHAPE
+        self.distribution_family = "inning-zero-inflated-nb-v1"
         self.extra_home_edge = 0.52
         self.extra_margins = DEFAULT_EXTRA_INNING_MARGINS
         self.walk_off_margins = DEFAULT_WALK_OFF_MARGINS
@@ -109,15 +111,12 @@ class RunsModel:
             )
             self.estimator.fit(design, target)
 
-        # Dispersion MUST be measured out of sample. Fitting it on training
-        # predictions was the single worst bug in this model: a gradient
-        # boosted estimator's in-sample residuals are artificially small, so
-        # the method-of-moments fit concluded there was no over-dispersion at
-        # all, pinned the size parameter at its ceiling, and produced a run
-        # distribution far too tight. Win probabilities then ran from 0.05 to
-        # 0.97 on baseball games and the moneyline scored worse than a
-        # constant. The estimator was fine; the width was measured wrong.
-        self.dispersion, self.shape = self._holdout_width(merged)
+        # Distribution width must be measured out of sample. The active
+        # inning family is fitted on a held-out block; its scoreless share and
+        # tail determine width. A former game-level dispersion estimate was
+        # dead whenever this family was active and has been removed from the
+        # serving fit rather than displayed as false precision.
+        self.shape = self._holdout_shape(merged)
         self.extra_home_edge, self.extra_margins = calibrate_extra_innings(merged)
         # Measured from the games rather than assumed, like the extra-innings
         # parameters: a walk-off ends on the go-ahead run most of the time but
@@ -125,17 +124,21 @@ class RunsModel:
         self.walk_off_margins = calibrate_walk_off(merged)
         return self
 
-    def _holdout_width(self, merged, folds=4):
-        """Dispersion and inning shape, from out-of-fold residuals only.
+    def _holdout_shape(self, merged, folds=4):
+        """Fit the active inning-family shape on held-out predictions.
 
-        Both describe how wide the distribution is and both are measured on
-        the same held-out block, for the same reason: an in-sample residual is
-        artificially small and every width fitted to one comes out too tight.
+        The earlier implementation also fitted a game-level negative-binomial
+        dispersion and displayed it as though pricing used it.  Once the
+        inning family is selected, ``run_pieces`` intentionally ignores that
+        parameter; tuning and reporting a dead knob made experiments look more
+        identified than they were.  The NB path remains a reversible research
+        family in ``runs.py``, but the serving model has one active width
+        contract: scoreless share plus inning tail.
         """
         merged = merged.sort_values("official_date").reset_index(drop=True)
         cut = int(len(merged) * (folds - 1) / folds)
         if cut < 200 or len(merged) - cut < 200:
-            return (4.0, 4.0), DEFAULT_INNING_SHAPE
+            return DEFAULT_INNING_SHAPE
         train, held = merged.iloc[:cut], merged.iloc[cut:]
         probe = RunsModel(kind=self.kind, seed=self.seed + 1)
         probe.scaler, probe.estimator = None, None
@@ -157,24 +160,14 @@ class RunsModel:
             probe.estimator.fit(design, target)
         held_design = pd.concat([_design(held), _design(mirror(held))], axis=0)
         predicted = probe._raw(held_design)
-        # Split back into the two sides. One pooled dispersion was a
-        # compromise between a censored side and an uncensored one: the home
-        # team does not bat in the bottom of the ninth when already ahead, so
-        # its scoring is truncated in roughly 43% of games. Pooling understated
-        # away variance by 15.5% across 11,428 games, which shows up as an
-        # over-confident total and a badly calibrated run line.
         cut = len(held)
-        dispersion = (fit_dispersion(held["home_score"].to_numpy(dtype=float),
-                                     predicted[:cut]),
-                      fit_dispersion(held["away_score"].to_numpy(dtype=float),
-                                     predicted[cut:]))
         # Away side only. It bats nine innings whatever the score, so its
         # observed spread is run scoring and nothing else; the home side's is
         # run scoring plus the censoring the shape is about to model, and
         # fitting on it would count those innings twice.
         shape = fit_inning_shape(held["away_score"].to_numpy(dtype=float),
                                  predicted[cut:])
-        return dispersion, shape
+        return shape
 
     def _joint(self, home_mean, away_mean, scheduled):
         """Price each scheduled length separately, then reassemble in order.
@@ -248,7 +241,19 @@ class RunsModel:
             "expected_home_runs": home_mean,
             "expected_away_runs": away_mean,
             "p_home_ml": moneyline_probability(joint),
+            "scheduled_innings": scheduled,
+            "distribution_family": self.distribution_family,
+            "dispersion_active": 0,
+            "dispersion_home": self.dispersion[0],
+            "dispersion_away": self.dispersion[1],
+            "inning_scoreless": self.shape[0],
+            "inning_tail": self.shape[1],
+            "extra_home_edge": self.extra_home_edge,
         })
+        for index, value in enumerate(self.extra_margins, 1):
+            out[f"extra_margin_{index}"] = value
+        for index, value in enumerate(self.walk_off_margins, 1):
+            out[f"walk_off_margin_{index}"] = value
         for point in runline_points:
             out[f"p_home_rl_{point}"] = runline_probability(joint, point)
             # Alternate run lines at whole numbers push, exactly as whole
@@ -263,6 +268,112 @@ class RunsModel:
             if np.any(push > 0):
                 out[f"push_over_{point}"] = push
         return out
+
+
+def reprice_requests(requests, predictions):
+    """Price arbitrary market points from stored walk-forward distributions.
+
+    Historical validation used to score only home -1.5 and total 8.5 because
+    those were the two columns written by ``walk_forward``.  The live path
+    priced every point offered by books, so the executed universe was never
+    the validated one.  Distribution provenance is now stored beside every
+    prediction and this function reconstructs the exact joint distribution at
+    whatever main point was actually quoted.
+    """
+    if not len(requests):
+        return requests.assign(model_prob_home=pd.Series(dtype=float),
+                               model_push_prob=pd.Series(dtype=float))
+    frame = requests.copy().reset_index(drop=True)
+    frame["_request_order"] = np.arange(len(frame))
+    joined = frame.merge(predictions, on="game_pk", how="left",
+                         suffixes=("", "_prediction"))
+    required = ("expected_home_runs", "expected_away_runs")
+    if any(column not in joined for column in required):
+        raise ValueError("predictions do not contain expected-run means")
+
+    defaults = {
+        "scheduled_innings": 9.0,
+        "dispersion_home": 4.0,
+        "dispersion_away": 4.0,
+        "inning_scoreless": DEFAULT_INNING_SHAPE[0],
+        "inning_tail": DEFAULT_INNING_SHAPE[1],
+        "extra_home_edge": 0.52,
+    }
+    for column, value in defaults.items():
+        if column not in joined:
+            joined[column] = value
+        joined[column] = joined[column].fillna(value)
+    for index, value in enumerate(DEFAULT_EXTRA_INNING_MARGINS, 1):
+        column = f"extra_margin_{index}"
+        if column not in joined:
+            joined[column] = value
+        joined[column] = joined[column].fillna(value)
+    for index, value in enumerate(DEFAULT_WALK_OFF_MARGINS, 1):
+        column = f"walk_off_margin_{index}"
+        if column not in joined:
+            joined[column] = value
+        joined[column] = joined[column].fillna(value)
+
+    probabilities = np.full(len(joined), np.nan)
+    pushes = np.full(len(joined), np.nan)
+    parameter_columns = [
+        "scheduled_innings", "dispersion_home", "dispersion_away",
+        "inning_scoreless", "inning_tail", "extra_home_edge",
+        *[f"extra_margin_{index}" for index in range(1, 5)],
+        *[f"walk_off_margin_{index}" for index in range(1, 5)],
+        "market", "point",
+    ]
+    grouped = joined.groupby(parameter_columns, dropna=False, sort=False)
+    for _, block in grouped:
+        positions = block.index.to_numpy()
+        first = block.iloc[0]
+        scheduled = int(float(first["scheduled_innings"]))
+        dispersion = (float(first["dispersion_home"]),
+                      float(first["dispersion_away"]))
+        shape = (float(first["inning_scoreless"]),
+                 float(first["inning_tail"]))
+        extra_margins = tuple(float(first[f"extra_margin_{index}"])
+                              for index in range(1, 5))
+        walk_off = tuple(float(first[f"walk_off_margin_{index}"])
+                         for index in range(1, 5))
+        home_target = block["expected_home_runs"].to_numpy(float)
+        away_mean = block["expected_away_runs"].to_numpy(float)
+        home_mean = uncensor_home_mean(
+            home_target, away_mean, dispersion, innings=scheduled,
+            walk_off_margins=walk_off,
+            extra_inning_home_edge=float(first["extra_home_edge"]),
+            extra_inning_margins=extra_margins, shape=shape,
+        )
+        joint = joint_distribution(
+            home_mean, away_mean, dispersion, innings=scheduled,
+            walk_off_margins=walk_off,
+            extra_inning_home_edge=float(first["extra_home_edge"]),
+            extra_inning_margins=extra_margins, shape=shape,
+        )
+        market = first["market"]
+        point = first["point"]
+        if market == "h2h":
+            probability = moneyline_probability(joint)
+            push = np.zeros(len(block))
+        elif market == "spreads":
+            probability = runline_probability(joint, float(point))
+            push = push_probability(joint, float(point), "spreads")
+        elif market == "totals":
+            probability = total_over_probability(joint, float(point))
+            push = push_probability(joint, float(point), "totals")
+        else:
+            continue
+        remaining = 1.0 - np.asarray(push, float)
+        probability = np.where(remaining > 0, probability / remaining,
+                               np.nan)
+        probabilities[positions] = probability
+        pushes[positions] = push
+
+    joined["model_prob_home"] = probabilities
+    joined["model_push_prob"] = pushes
+    return (joined.sort_values("_request_order")
+            [list(requests.columns) + ["model_prob_home", "model_push_prob"]]
+            .reset_index(drop=True))
 
 
 def walk_forward(features, games, seasons, kind="gbm", min_train_games=1500,
@@ -290,16 +401,23 @@ def walk_forward(features, games, seasons, kind="gbm", min_train_games=1500,
                           on="game_pk", how="left")["scheduled_innings"])
         priced = model.price(test_features, innings=lengths.to_numpy())
         priced["season"] = season
-        priced["dispersion_home"] = model.dispersion[0]
-        priced["dispersion_away"] = model.dispersion[1]
-        priced["inning_scoreless"] = model.shape[0]
-        priced["inning_tail"] = model.shape[1]
+        revision = repository_revision()
+        priced["model_kind"] = kind
+        priced["model_revision"] = revision
+        priced["feature_schema"] = feature_schema(FEATURE_COLUMNS)
+        priced["model_version"] = model_version(kind, FEATURE_COLUMNS,
+                                                revision=revision)
+        trained_dates = pd.to_datetime(train_features["official_date"],
+                                       errors="coerce")
+        priced["trained_through"] = (
+            str(trained_dates.max().date()) if trained_dates.notna().any()
+            else "")
         predictions.append(priced)
         if verbose:
             print(f"  {season}: trained on {len(train_features)} games, "
-                  f"predicted {len(test_features)}, dispersion "
-                  f"{model.dispersion[0]:.2f}/{model.dispersion[1]:.2f}, "
-                  f"scoreless innings {model.shape[0]:.3f}")
+                  f"predicted {len(test_features)}, distribution "
+                  f"{model.distribution_family}, scoreless innings "
+                  f"{model.shape[0]:.3f}, tail {model.shape[1]:.3f}")
     if not predictions:
         return pd.DataFrame()
     return pd.concat(predictions, ignore_index=True)

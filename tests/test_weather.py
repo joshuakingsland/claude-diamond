@@ -10,7 +10,8 @@ in the future and every venue failed.
 import datetime
 import unittest
 
-from weather import ARCHIVE_LAG_DAYS, build_for_games, servable_window
+from weather import (ARCHIVE_LAG_DAYS, build_for_games, game_weather,
+                     servable_window)
 
 TODAY = datetime.date(2026, 8, 5)
 
@@ -26,6 +27,18 @@ class WindowTests(unittest.TestCase):
         low, high = servable_window(False, TODAY)
         self.assertLess(low, str(TODAY))
         self.assertGreater(high, str(TODAY))
+
+    def test_training_rows_are_labelled_historical_forecast(self):
+        hourly = {"2026-07-01T18:00": {
+            "temperature_2m": 20.0, "relative_humidity_2m": 50.0,
+            "surface_pressure": 1010.0, "wind_speed_10m": 1.0,
+            "wind_direction_10m": 90.0, "precipitation": 0.0,
+        }}
+        park = {"azimuth_angle": 45.0, "roof_type": "Open"}
+        row = game_weather(1, "2026-07-01T18:00:00Z", park, hourly,
+                           archive=True)
+        self.assertEqual(row["weather_source"],
+                         "open-meteo-historical-forecast")
 
 
 class FilterTests(unittest.TestCase):

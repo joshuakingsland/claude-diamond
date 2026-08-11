@@ -3,9 +3,10 @@ name: revalidate
 # Rebuild the whole chain and re-answer both questions: does the model predict
 # baseball (validate.py), and does it beat a price (market.py).
 #
-# The order is not arbitrary. market.py has to run before validate.py, because
-# validate.py imports the comparison rather than recomputing it, and a
-# validation report written first would carry the previous run's verdict.
+# The order is not arbitrary. Fresh walk-forward predictions feed the market
+# comparison and offset fit; those reports then feed validation. Reusing the
+# predictions on the second validation pass prevents two different model fits
+# from being called one run.
 #
 # Nothing here touches the odds API. It reads the quotes already captured, so
 # it costs nothing to run and can be re-run freely after a code change.
@@ -67,7 +68,7 @@ jobs:
         # a workaround.
         run: |
           for attempt in 1 2 3 4; do
-            python weather.py && break
+            python weather.py --refresh-source && break
             echo "weather attempt $attempt incomplete; resuming"
             sleep $((attempt * 5))
           done
@@ -75,25 +76,44 @@ jobs:
       - name: Build point-in-time features
         run: python features.py
 
-      - name: Compare against the market
-        # Runs first so validate.py reads a current verdict rather than a
-        # stale one.
-        run: python market.py
-
-      - name: Validate
+      - name: Generate walk-forward predictions
         run: |
-          python validate.py --kind glm --report validation_glm.json \
+          python validate.py --kind glm --report /tmp/validation_glm_pre_market.json \
             --predictions data/predictions_glm.csv
-          python validate.py --kind gbm --report validation_gbm.json \
+          python validate.py --kind gbm --report /tmp/validation_gbm_pre_market.json \
             --predictions data/predictions_gbm.csv
 
-      - name: Regenerate the model card
-        run: python model_card.py
+      - name: Compare against the market
+        # Uses the predictions generated in this job, never the prior commit.
+        run: python market.py
+
+      - name: Fit the conservative market offset
+        # The live fair price starts from the market. Historical evidence may
+        # retain only the constrained fraction of the standalone residual that
+        # improved outcomes or predicted later price movement.
+        run: python market_offset.py
 
       - name: Settle the paper ledger
         # Settle only. New wagers are screened by the capture workflow, which
         # is the only place that sees a live board inside the lock window.
         run: python ledger.py --settle-only
+
+      - name: Measure forward sharp-close evidence
+        run: python forward_evidence.py
+
+      - name: Write final validation reports
+        # Only evaluate here: market comparison and forward evidence now both
+        # belong to the same repository revision and prediction artifacts.
+        run: |
+          python validate.py --kind glm --reuse-predictions \
+            --report validation_glm.json \
+            --predictions data/predictions_glm.csv
+          python validate.py --kind gbm --reuse-predictions \
+            --report validation_gbm.json \
+            --predictions data/predictions_gbm.csv
+
+      - name: Regenerate the model card
+        run: python model_card.py
 
       - name: Summarise
         run: |
@@ -112,9 +132,12 @@ jobs:
               print(f"  close {market}: n={block['games']} "
                     f"delta={block['delta']} {block['verdict']}")
           print(f"live gate: {report['live_gate']['status']}")
+          evidence = report["forward_evidence"]
+          print(f"forward evidence: {evidence.get('promotion_status', evidence['status'])}")
           PY
 
       - name: Commit reports
         run: |
           bash commit_data.sh "data: revalidate $(date -u +%Y-%m-%d)" \
-            data docs validation_glm.json validation_gbm.json market_comparison.json
+            data docs validation_glm.json validation_gbm.json \
+            market_comparison.json market_offset.json forward_evidence.json

@@ -41,6 +41,9 @@ UNION_KEYS = {
                                   "side", "gate"),
     "data/historical_quotes.csv": ("snapshot_id",),
     "data/historical_manifest.csv": ("requested_date",),
+    "data/schedule_snapshots.csv": ("snapshot_id",),
+    "data/lineup_snapshots.csv": ("snapshot_id",),
+    "data/clv_signals.csv": ("wager_id",),
 }
 
 # Monthly quote logs are named by month, so they are matched by shape.

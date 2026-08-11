@@ -36,19 +36,27 @@ from pathlib import Path
 
 import pandas as pd
 
-from config import (EDGE_RULE, GAME_DAY_STAKE_CAP, MARKET_DISAGREEMENT_WARNING,
+from config import (EDGE_RULE, GAME_DAY_STAKE_CAP, GAME_RISK_BUCKET_STAKE_CAP,
+                    MARKET_DISAGREEMENT_WARNING, MAX_BOOK_QUOTE_AGE_MINUTES,
                     MAX_EXECUTION_DEVIATION, MAX_ODDS_AGE_MINUTES,
-                    MAX_LOCK_LEAD_MINUTES, MAX_STAKE, MIN_LOCK_LEAD_MINUTES,
-                    MIN_MARKET_BOOKS, MODEL_VERSION, STAKING_POLICY_VERSION)
+                    MAX_LOCK_LEAD_MINUTES, MAX_STAKE, MIN_EXPECTED_VALUE,
+                    MIN_LOCK_LEAD_MINUTES, MIN_MARKET_BOOKS,
+                    REQUIRE_CONFIRMED_LINEUPS, STAKING_POLICY_VERSION)
 from odds import american_to_prob
 
 LEDGER_FIELDS = [
-    "wager_id", "placed_at", "game_pk", "official_date", "commence_time",
+    "wager_id", "placed_at", "event_id", "game_pk", "official_date",
+    "commence_time",
     "home_team", "away_team", "market", "point", "side",
-    "model_prob", "market_prob", "disagreement",
+    "standalone_model_prob", "model_prob", "market_prob", "disagreement",
+    "predicted_clv", "expected_value", "risk_bucket",
     "price", "book", "stake", "market_books", "market_spread",
-    "lead_minutes", "wide_market", "model_version", "model_kind",
-    "staking_policy_version",
+    "book_updated_at", "quote_age_minutes", "lead_minutes", "wide_market",
+    "model_version", "model_revision", "feature_schema", "model_kind",
+    "distribution_family",
+    "trained_through", "market_offset_version", "staking_policy_version",
+    "leader_weight",
+    "execution_status",
     "settled_at", "outcome", "profit",
 ]
 
@@ -104,7 +112,29 @@ def staked_by_day(ledger):
     return totals
 
 
-def screen(card, open_ids=None, prior_stakes=None, now=None):
+def risk_bucket(row):
+    """Correlated positions that compete for one unit of game exposure."""
+    return "total" if row.get("market") == "totals" else "side"
+
+
+def locked_risk_buckets(ledger):
+    """Risk buckets already used by the append-only ledger across runs."""
+    if not len(ledger):
+        return set()
+    locked = set()
+    for row in ledger.to_dict("records"):
+        game_pk = row.get("game_pk")
+        if unset(game_pk):
+            continue
+        bucket = row.get("risk_bucket")
+        if unset(bucket):
+            bucket = risk_bucket(row)
+        locked.add((str(game_pk), str(bucket)))
+    return locked
+
+
+def screen(card, open_ids=None, prior_stakes=None, prior_risk_buckets=None,
+           now=None):
     """Apply the staking policy to a priced card.
 
     Returns ``(wagers, rejections)``. Every row that does not become a wager
@@ -119,14 +149,18 @@ def screen(card, open_ids=None, prior_stakes=None, now=None):
     """
     open_ids = open_ids or set()
     prior_stakes = dict(prior_stakes or {})
+    prior_risk_buckets = set(prior_risk_buckets or set())
     now = now or datetime.now(timezone.utc)
     stamp = f"{now:%Y-%m-%dT%H:%M:%SZ}"
 
     candidates, rejections = [], []
     for row in card.to_dict("records"):
-        disagreement = float(row["disagreement"])
+        disagreement = float(row.get("fair_disagreement",
+                                     row["disagreement"]))
         side = "home" if disagreement > 0 else "away"
         identifier = _wager_id(row, side)
+        bucket = risk_bucket(row)
+        bucket_key = (str(row["game_pk"]), bucket)
 
         def reject(gate, detail=""):
             rejections.append({
@@ -139,11 +173,18 @@ def screen(card, open_ids=None, prior_stakes=None, now=None):
         if identifier in open_ids:
             reject("already_locked")
             continue
+        if bucket_key in prior_risk_buckets:
+            reject("risk_bucket_already_locked", bucket)
+            continue
         if abs(disagreement) < EDGE_RULE:
             reject("below_edge_rule", f"{abs(disagreement):.4f} < {EDGE_RULE}")
             continue
         if int(row["market_books"]) < MIN_MARKET_BOOKS:
             reject("too_few_books", row["market_books"])
+            continue
+        if REQUIRE_CONFIRMED_LINEUPS and not int(
+                row.get("lineups_confirmed", 0) or 0):
+            reject("lineups_unconfirmed")
             continue
 
         lead = int(row["lead_minutes"])
@@ -167,6 +208,19 @@ def screen(card, open_ids=None, prior_stakes=None, now=None):
         if pd.isna(price) or pd.isna(consensus):
             reject("no_executable_price")
             continue
+        update_column = ("best_price_home_updated_at" if side == "home"
+                         else "best_price_away_updated_at")
+        book_updated_at = row.get(update_column)
+        if unset(book_updated_at):
+            # Backward-compatible for old captured cards. New captures always
+            # carry the individual book timestamp.
+            book_updated_at = row["odds_fetched_at"]
+        book_age = (now - pd.to_datetime(book_updated_at, utc=True))
+        book_age_minutes = book_age.total_seconds() / 60.0
+        if book_age_minutes > MAX_BOOK_QUOTE_AGE_MINUTES:
+            reject("stale_book_quote",
+                   f"{book_age_minutes:.1f} min > {MAX_BOOK_QUOTE_AGE_MINUTES}")
+            continue
         # Both sides of this comparison carry vig, so it measures line shopping
         # rather than the de-vig. A point or two is a real edge in a liquid
         # market; a gap this wide is a stale or mis-mapped quote.
@@ -177,11 +231,26 @@ def screen(card, open_ids=None, prior_stakes=None, now=None):
 
         market_probability = (float(row["market_prob_home"]) if side == "home"
                               else 1.0 - float(row["market_prob_home"]))
-        model_probability = (float(row["model_prob_home"]) if side == "home"
-                             else 1.0 - float(row["model_prob_home"]))
+        fair_home = float(row.get("fair_prob_home", row["model_prob_home"]))
+        model_probability = (fair_home if side == "home" else 1.0 - fair_home)
+        standalone_home = float(row["model_prob_home"])
+        standalone_probability = (standalone_home if side == "home"
+                                  else 1.0 - standalone_home)
+        expected_value = (model_probability * payout(price)
+                          - (1.0 - model_probability))
+        if expected_value < MIN_EXPECTED_VALUE:
+            reject("below_expected_value",
+                   f"{expected_value:.4f} < {MIN_EXPECTED_VALUE}")
+            continue
+        raw_predicted_clv = row.get("predicted_clv", 0.0)
+        predicted_clv = (0.0 if unset(raw_predicted_clv)
+                         else float(raw_predicted_clv))
+        if side == "away":
+            predicted_clv = -predicted_clv
         candidates.append({
             "wager_id": identifier,
             "placed_at": stamp,
+            "event_id": row.get("event_id", ""),
             "game_pk": row["game_pk"],
             "official_date": row["official_date"],
             "commence_time": row["commence_time"],
@@ -190,15 +259,21 @@ def screen(card, open_ids=None, prior_stakes=None, now=None):
             "market": row["market"],
             "point": "" if unset(row["point"]) else row["point"],
             "side": side,
+            "standalone_model_prob": round(standalone_probability, 6),
             "model_prob": round(model_probability, 6),
             "market_prob": round(market_probability, 6),
             "disagreement": round(abs(disagreement), 6),
+            "predicted_clv": round(predicted_clv, 6),
+            "expected_value": round(expected_value, 6),
+            "risk_bucket": bucket,
             "price": price,
             "book": (row["best_book_home"] if side == "home"
                      else row["best_book_away"]),
             "stake": float(MAX_STAKE),
             "market_books": row["market_books"],
             "market_spread": row["market_spread"],
+            "book_updated_at": book_updated_at,
+            "quote_age_minutes": round(book_age_minutes, 3),
             "lead_minutes": lead,
             # Books disagreeing this much among themselves usually means a
             # mis-mapped line rather than a market. Recorded, not rejected:
@@ -206,20 +281,52 @@ def screen(card, open_ids=None, prior_stakes=None, now=None):
             # its own awkward rows is not measuring anything.
             "wide_market": int(float(row["market_spread"])
                                > MARKET_DISAGREEMENT_WARNING),
-            "model_version": row.get("model_version", MODEL_VERSION),
+            "model_version": row.get("model_version", "unknown"),
+            "model_revision": row.get("model_revision", "unknown"),
+            "feature_schema": row.get("feature_schema", "unknown"),
             "model_kind": row.get("model_kind", ""),
+            "distribution_family": row.get("distribution_family", ""),
+            "trained_through": row.get("trained_through", ""),
+            "market_offset_version": row.get("market_offset_version", ""),
+            "leader_weight": row.get("leader_weight", ""),
             "staking_policy_version": STAKING_POLICY_VERSION,
+            "execution_status": "paper",
             "settled_at": "", "outcome": "", "profit": "",
         })
 
-    # The day cap is applied last, to the widest disagreements first. Applying
-    # it while scanning would hand the cap to whichever games happened to sort
-    # earliest, which is a property of the file rather than of the card.
-    candidates.sort(key=lambda item: -item["disagreement"])
+    # One non-dominated position per correlated game bucket. H2H and spreads
+    # compete for the side bucket; all total points compete for the total
+    # bucket. Ranking is expected profit at the executable quote, then
+    # predicted closing-line value, not raw probability disagreement.
+    candidates.sort(key=lambda item: (-item["expected_value"],
+                                      -item["predicted_clv"],
+                                      -item["disagreement"]))
+    unique, used = [], set(prior_risk_buckets)
+    for candidate in candidates:
+        key = (str(candidate["game_pk"]), candidate["risk_bucket"])
+        if key in used:
+            rejections.append({
+                "screened_at": stamp, "game_pk": candidate["game_pk"],
+                "market": candidate["market"], "point": candidate["point"],
+                "side": candidate["side"],
+                "disagreement": candidate["disagreement"],
+                "gate": "risk_bucket_dominated",
+                "detail": candidate["risk_bucket"],
+            })
+            continue
+        used.add(key)
+        unique.append(candidate)
+    candidates = unique
+
+    # The day cap is applied last, to the highest expected values first.
     taken, per_day = [], prior_stakes
     for candidate in candidates:
         day = candidate["official_date"]
-        if per_day.get(day, 0.0) + candidate["stake"] > GAME_DAY_STAKE_CAP:
+        bucket_stake = candidate["stake"]
+        if bucket_stake > GAME_RISK_BUCKET_STAKE_CAP:
+            bucket_stake = float(GAME_RISK_BUCKET_STAKE_CAP)
+            candidate["stake"] = bucket_stake
+        if per_day.get(day, 0.0) + bucket_stake > GAME_DAY_STAKE_CAP:
             rejections.append({
                 "screened_at": stamp, "game_pk": candidate["game_pk"],
                 "market": candidate["market"], "point": candidate["point"],
@@ -228,7 +335,7 @@ def screen(card, open_ids=None, prior_stakes=None, now=None):
                 "gate": "day_cap", "detail": f"{day} at {GAME_DAY_STAKE_CAP}u",
             })
             continue
-        per_day[day] = per_day.get(day, 0.0) + candidate["stake"]
+        per_day[day] = per_day.get(day, 0.0) + bucket_stake
         taken.append(candidate)
     return taken, rejections
 
@@ -382,7 +489,9 @@ def main(argv=None):
         if len(card):
             open_ids = set(ledger["wager_id"].astype(str)) if len(ledger) else set()
             wagers, rejections = screen(card, open_ids,
-                                        prior_stakes=staked_by_day(ledger))
+                                        prior_stakes=staked_by_day(ledger),
+                                        prior_risk_buckets=locked_risk_buckets(
+                                            ledger))
             _append(args.ledger, LEDGER_FIELDS, wagers)
             _append(args.rejections, REJECTION_FIELDS, rejections)
             counts = {}

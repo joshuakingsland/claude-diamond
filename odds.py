@@ -21,6 +21,7 @@ import argparse
 import csv
 import hashlib
 import json
+import math
 import os
 import statistics
 import urllib.parse
@@ -42,9 +43,12 @@ QUOTE_FIELDS = [
 
 LINE_FIELDS = [
     "date", "commence_time", "event_id", "home_team", "away_team",
-    "market", "point", "consensus_prob_home", "market_books", "market_spread",
+    "market", "point", "line_role", "consensus_prob_home", "market_books",
+    "market_spread", "consensus_book_keys",
     "consensus_price_home", "consensus_price_away",
     "best_price_home", "best_book_home", "best_price_away", "best_book_away",
+    "best_price_home_updated_at", "best_price_away_updated_at",
+    "consensus_oldest_updated_at", "consensus_latest_updated_at",
     "leader_prob_home", "leader_books", "follower_prob_home", "follower_books",
     "odds_source", "fetched_at",
 ]
@@ -174,11 +178,60 @@ def leader_split(paired):
     }
 
 
-def consensus_lines(event, paired=None):
-    """One consensus row per (market, point) offered on an event."""
+def main_line_points(paired):
+    """Choose one well-covered point per market.
+
+    Different books can expose different main points at the same instant.  A
+    consensus calculated independently at every point is not a coherent price
+    surface: the subsets of books change, and the live policy can end up
+    backing both teams -1.5 or two adjacent Overs.  Until a full latent market
+    distribution is fitted, the honest executable universe is the modal point
+    with the broadest priced-book coverage.
+
+    Ties are resolved toward the cross-book median point, then
+    deterministically by the numeric point.  Research-only regions never
+    choose the executable line.
+    """
+    priced = priced_quotes(paired)
+    selected = {}
+    for market in MARKETS:
+        subset = [quote for quote in priced if quote["market"] == market]
+        if not subset:
+            continue
+        if market == "h2h":
+            selected[market] = None
+            continue
+        groups = {}
+        for quote in subset:
+            groups.setdefault(float(quote["point"]), []).append(quote)
+        median = float(statistics.median(
+            [float(quote["point"]) for quote in subset]))
+        selected[market] = max(
+            groups,
+            key=lambda point: (
+                len({quote["book_key"] for quote in groups[point]}),
+                -abs(point - median),
+                -abs(point),
+                -point,
+            ),
+        )
+    return selected
+
+
+def consensus_lines(event, paired=None, main_only=True):
+    """Consensus rows for one event; executable output is main-line only."""
     paired = paired_book_quotes(event) if paired is None else paired
+    selected = main_line_points(paired) if main_only else None
     grouped = {}
     for quote in paired:
+        if selected is not None and quote["market"] in selected:
+            wanted = selected[quote["market"]]
+            point = quote["point"]
+            if wanted is None:
+                if point is not None:
+                    continue
+            elif point is None or not math.isclose(float(point), float(wanted)):
+                continue
         grouped.setdefault((quote["market"], quote["point"]), []).append(quote)
     rows = []
     for (market, point), quotes in sorted(
@@ -190,18 +243,28 @@ def consensus_lines(event, paired=None):
         probabilities = [quote["devig_prob_home"] for quote in priced]
         best_home = max(priced, key=lambda quote: quote["price_home"])
         best_away = max(priced, key=lambda quote: quote["price_away"])
+        updates = sorted(str(quote.get("book_updated_at") or "")
+                         for quote in priced
+                         if quote.get("book_updated_at"))
         rows.append({
             "market": market,
             "point": "" if point is None else point,
+            "line_role": "main" if main_only else "offered",
             "consensus_prob_home": round(float(statistics.median(probabilities)), 8),
             "market_books": len(priced),
             "market_spread": round(float(max(probabilities) - min(probabilities)), 8),
+            "consensus_book_keys": ",".join(sorted(
+                {quote["book_key"] for quote in priced})),
             "consensus_price_home": _upper_median([q["price_home"] for q in priced]),
             "consensus_price_away": _upper_median([q["price_away"] for q in priced]),
             "best_price_home": best_home["price_home"],
             "best_book_home": best_home["book_title"],
             "best_price_away": best_away["price_away"],
             "best_book_away": best_away["book_title"],
+            "best_price_home_updated_at": best_home.get("book_updated_at", ""),
+            "best_price_away_updated_at": best_away.get("book_updated_at", ""),
+            "consensus_oldest_updated_at": updates[0] if updates else "",
+            "consensus_latest_updated_at": updates[-1] if updates else "",
             **leader_split(quotes),
         })
     return rows

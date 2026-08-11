@@ -19,10 +19,9 @@ and folds a result into state only after emitting its row, so an unplayed game
 produces a feature row and contributes nothing. Serving is the same code path
 as training rather than a reimplementation that drifts from it.
 
-**Forecast weather, kept apart.** The archive is the training source of truth.
-Forecasts land in their own file, because a forecast row for a game that has
-since been played would replace reanalysis with a guess, and `weather.py`
-skips any game_pk it already holds, so nothing would ever correct it.
+**Forecast weather, kept apart.** The historical-forecast product is the
+training source of truth. Live forecasts land in their own file so a future
+reading can never overwrite a historical training row.
 
 **Started games are dropped.** The odds feed keeps returning a game after
 first pitch and those prices reflect the current score. Pricing them produces
@@ -42,20 +41,33 @@ from pathlib import Path
 
 import pandas as pd
 
-from config import MODEL_VERSION
-from features import build, load_inputs
+from features import FEATURE_COLUMNS, build, load_inputs
 from market import match_events_to_games, normalise
+from market_offset import apply as apply_market_offset
+from market_offset import load as load_market_offset
+from lineup_snapshots import confirmed_games
 from models import RunsModel
 from odds import _is_future
+from provenance import feature_schema, model_version, repository_revision
+from schedule_snapshots import apply_probable_snapshots
 
 CARD_FIELDS = [
-    "game_pk", "official_date", "commence_time", "home_team", "away_team",
-    "market", "point", "model_prob_home", "market_prob_home", "disagreement",
-    "market_books", "market_spread", "consensus_price_home",
-    "consensus_price_away",
+    "event_id", "game_pk", "official_date", "commence_time", "home_team",
+    "away_team", "market", "point", "line_role", "lineups_confirmed",
+    "model_prob_home",
+    "fair_prob_home", "predicted_close_prob_home", "market_prob_home",
+    "standalone_disagreement", "fair_disagreement", "predicted_clv",
+    "disagreement", "market_books", "market_spread",
+    "leader_prob_home", "leader_books", "follower_prob_home",
+    "follower_books",
+    "consensus_price_home", "consensus_price_away", "consensus_book_keys",
     "best_price_home", "best_book_home", "best_price_away", "best_book_away",
+    "best_price_home_updated_at", "best_price_away_updated_at",
     "expected_home_runs", "expected_away_runs", "lead_minutes",
-    "odds_fetched_at", "model_version", "model_kind", "priced_at",
+    "distribution_family",
+    "odds_fetched_at", "model_version", "model_revision", "feature_schema",
+    "model_kind", "trained_through", "market_offset_version",
+    "outcome_weight", "movement_weight", "leader_weight", "priced_at",
 ]
 
 
@@ -119,9 +131,12 @@ def model_probability(priced, market, point):
     return probability
 
 
-def build_card(lines, games, features, kind="glm", now=None, verbose=True):
+def build_card(lines, games, features, kind="glm", now=None, verbose=True,
+               offset_artifact=None, confirmed_lineup_games=None):
     """Train on everything played, then price the games still to come."""
     now = now or datetime.now(timezone.utc)
+    confirmed_lineup_games = {str(value) for value in
+                              (confirmed_lineup_games or set())}
     lines = lines[[_is_future(value, now) for value in lines["commence_time"]]]
     if not len(lines):
         return pd.DataFrame(), {"reason": "no future games on the board",
@@ -145,10 +160,12 @@ def build_card(lines, games, features, kind="glm", now=None, verbose=True):
     played = set(games.loc[games["home_score"].notna(), "game_pk"])
     trained = features[features["game_pk"].isin(played)]
     model = RunsModel(kind=kind).fit(trained, games)
+    offset_artifact = (load_market_offset() if offset_artifact is None
+                       else offset_artifact)
     if verbose:
         print(f"trained on {len(trained)} completed games, "
-              f"dispersion {model.dispersion[0]:.2f}/"
-              f"{model.dispersion[1]:.2f}")
+              f"distribution {model.distribution_family}, "
+              f"inning shape {model.shape[0]:.3f}/{model.shape[1]:.3f}")
 
     card_pks = {game_pk for game_pk, _ in matched.values()}
     card = features[features["game_pk"].isin(card_pks)]
@@ -168,6 +185,13 @@ def build_card(lines, games, features, kind="glm", now=None, verbose=True):
     priced = priced.set_index("game_pk")
 
     stamp = f"{datetime.now(timezone.utc):%Y-%m-%dT%H:%M:%SZ}"
+    version = model_version(kind, FEATURE_COLUMNS)
+    revision = repository_revision()
+    schema = feature_schema(FEATURE_COLUMNS)
+    trained_dates = pd.to_datetime(trained["official_date"], errors="coerce")
+    trained_through = (str(trained_dates.max().date())
+                       if len(trained_dates) and trained_dates.notna().any()
+                       else "")
     rows = []
     for row in lines.to_dict("records"):
         target = matched.get(row["event_id"])
@@ -183,8 +207,14 @@ def build_card(lines, games, features, kind="glm", now=None, verbose=True):
             continue
         model_prob = float(probability.iloc[0])
         market_prob = float(row["consensus_prob_home"])
+        adjusted = apply_market_offset(
+            model_prob, market_prob, row["market"], offset_artifact,
+            leader_probability=row.get("leader_prob_home"))
+        fair_prob = adjusted["fair_prob_home"]
+        predicted_close = adjusted["predicted_close_prob_home"]
         commence = pd.to_datetime(row["commence_time"], utc=True)
         rows.append({
+            "event_id": row["event_id"],
             "game_pk": game_pk,
             "official_date": official_date,
             "commence_time": row["commence_time"],
@@ -192,25 +222,49 @@ def build_card(lines, games, features, kind="glm", now=None, verbose=True):
             "away_team": row["away_team"],
             "market": row["market"],
             "point": "" if point is None else point,
+            "line_role": row.get("line_role", "main"),
+            "lineups_confirmed": int(str(game_pk) in confirmed_lineup_games),
             "model_prob_home": round(model_prob, 6),
+            "fair_prob_home": round(fair_prob, 6),
+            "predicted_close_prob_home": round(predicted_close, 6),
             "market_prob_home": round(market_prob, 6),
-            "disagreement": round(model_prob - market_prob, 6),
+            "standalone_disagreement": round(model_prob - market_prob, 6),
+            "fair_disagreement": round(fair_prob - market_prob, 6),
+            "predicted_clv": round(predicted_close - market_prob, 6),
+            "disagreement": round(fair_prob - market_prob, 6),
             "market_books": row["market_books"],
             "market_spread": row["market_spread"],
+            "leader_prob_home": row.get("leader_prob_home", ""),
+            "leader_books": row.get("leader_books", 0),
+            "follower_prob_home": row.get("follower_prob_home", ""),
+            "follower_books": row.get("follower_books", 0),
             "consensus_price_home": row["consensus_price_home"],
             "consensus_price_away": row["consensus_price_away"],
+            "consensus_book_keys": row.get("consensus_book_keys", ""),
             "best_price_home": row["best_price_home"],
             "best_book_home": row["best_book_home"],
             "best_price_away": row["best_price_away"],
             "best_book_away": row["best_book_away"],
+            "best_price_home_updated_at": row.get(
+                "best_price_home_updated_at", ""),
+            "best_price_away_updated_at": row.get(
+                "best_price_away_updated_at", ""),
             "expected_home_runs": round(
                 float(priced.loc[game_pk, "expected_home_runs"]), 4),
             "expected_away_runs": round(
                 float(priced.loc[game_pk, "expected_away_runs"]), 4),
+            "distribution_family": model.distribution_family,
             "lead_minutes": int((commence - now).total_seconds() // 60),
             "odds_fetched_at": row["fetched_at"],
-            "model_version": MODEL_VERSION,
+            "model_version": version,
+            "model_revision": revision,
+            "feature_schema": schema,
             "model_kind": kind,
+            "trained_through": trained_through,
+            "market_offset_version": adjusted["offset_version"],
+            "outcome_weight": adjusted["outcome_weight"],
+            "movement_weight": adjusted["movement_weight"],
+            "leader_weight": adjusted["leader_weight"],
             "priced_at": stamp,
         })
     summary = {
@@ -218,8 +272,9 @@ def build_card(lines, games, features, kind="glm", now=None, verbose=True):
         "events": int(len(events)),
         "unmatched_events": len(unmatched),
         "priced_rows": len(rows),
-        "dispersion_home": round(float(model.dispersion[0]), 4),
-        "dispersion_away": round(float(model.dispersion[1]), 4),
+        "distribution_family": model.distribution_family,
+        "inning_scoreless": round(float(model.shape[0]), 4),
+        "inning_tail": round(float(model.shape[1]), 4),
     }
     return pd.DataFrame(rows), summary
 
@@ -230,6 +285,9 @@ def main(argv=None):
     parser.add_argument("--games", default="data/games.csv")
     parser.add_argument("--weather", default="data/weather.csv")
     parser.add_argument("--forecast", default="data/weather_forecast.csv")
+    parser.add_argument("--schedule-snapshots",
+                        default="data/schedule_snapshots.csv")
+    parser.add_argument("--lineup-snapshots", default="data/lineup_snapshots.csv")
     parser.add_argument("--out", default="data/predictions_upcoming.csv")
     parser.add_argument("--kind", default="glm", choices=["gbm", "glm"])
     parser.add_argument("--skip-forecast", action="store_true",
@@ -247,6 +305,15 @@ def main(argv=None):
 
     games, parks, weather, pitching, umpires = load_inputs(args.games,
                                                             args.weather)
+    snapshot_path = Path(args.schedule_snapshots)
+    snapshots = (pd.read_csv(snapshot_path) if snapshot_path.exists()
+                 else pd.DataFrame())
+    decision_time = datetime.now(timezone.utc)
+    games = apply_probable_snapshots(games, snapshots, as_of=decision_time)
+    lineup_path = Path(args.lineup_snapshots)
+    lineup_snapshots = (pd.read_csv(lineup_path) if lineup_path.exists()
+                        else pd.DataFrame())
+    lineups = confirmed_games(lineup_snapshots, as_of=decision_time)
     card_games = [game for game in games.to_dict("records")
                   if game.get("home_score") != game.get("home_score")]
 
@@ -259,12 +326,14 @@ def main(argv=None):
             print(f"{len(failed)} venue(s) had no forecast; those games fall "
                   f"back to defaults")
 
-    # Archive first: if a game somehow has both, the reanalysis wins.
+    # Historical table first: if a game somehow has both, the training-source
+    # row wins over a transient live forecast.
     combined = pd.concat([weather, forecast], ignore_index=True)
     combined = combined.drop_duplicates(subset="game_pk", keep="first")
 
     features = build(games, parks, combined, pitching, umpires)
-    card, summary = build_card(lines, games, features, kind=args.kind)
+    card, summary = build_card(lines, games, features, kind=args.kind,
+                               confirmed_lineup_games=lineups)
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     if len(card):
         card.to_csv(args.out, index=False)
@@ -302,8 +371,9 @@ def main(argv=None):
             line = "" if row["point"] == "" else f" {row['point']:+g}"
             print(f"  {row['away_team']} @ {row['home_team']} "
                   f"{row['market']}{line}: model {row['model_prob_home']:.3f} "
-                  f"vs market {row['market_prob_home']:.3f} "
-                  f"({row['disagreement']:+.3f})")
+                  f"fair {row['fair_prob_home']:.3f} vs market "
+                  f"{row['market_prob_home']:.3f} "
+                  f"({row['fair_disagreement']:+.3f})")
     print(f"\nwrote {len(card)} rows to {args.out}")
 
 

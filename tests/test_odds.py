@@ -1,7 +1,8 @@
 import unittest
 from datetime import datetime, timedelta, timezone
 
-from odds import _is_future, american_to_prob, consensus_lines, leader_split, paired_book_quotes
+from odds import (_is_future, american_to_prob, consensus_lines,
+                  leader_split, main_line_points, paired_book_quotes)
 
 
 def _event(books, home="Home Nine", away="Away Nine"):
@@ -77,6 +78,45 @@ class MarketPairingTests(unittest.TestCase):
         self.assertNotEqual(with_eu[0]["best_book_away"], "Pinnacle")
         # It does count as a market leader, which is why eu is captured.
         self.assertEqual(with_eu[0]["leader_books"], 2)
+
+
+class MainLineTests(unittest.TestCase):
+    def _totals(self, point, home=-110, away=-110):
+        return [{"key": "totals", "outcomes": [
+            {"name": "Over", "price": home, "point": point},
+            {"name": "Under", "price": away, "point": point},
+        ]}]
+
+    def test_broadest_book_point_is_the_only_executable_line(self):
+        books = [
+            ("a", "A", self._totals(8.5)),
+            ("b", "B", self._totals(8.5)),
+            ("c", "C", self._totals(8.5)),
+            ("d", "D", self._totals(9.5)),
+        ]
+        event = _event(books)
+        paired = paired_book_quotes(event)
+        self.assertEqual(main_line_points(paired)["totals"], 8.5)
+        rows = consensus_lines(event, paired)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["point"], 8.5)
+        self.assertEqual(rows[0]["line_role"], "main")
+
+    def test_best_price_carries_that_books_own_update_time(self):
+        event = _event([
+            ("a", "A", self._totals(8.5, -110, -110)),
+            ("b", "B", self._totals(8.5, 105, -125)),
+            ("c", "C", self._totals(8.5, -105, -115)),
+        ])
+        event["bookmakers"][0]["last_update"] = "2099-01-01T00:00:00Z"
+        event["bookmakers"][1]["last_update"] = "2099-01-01T00:02:00Z"
+        event["bookmakers"][2]["last_update"] = "2099-01-01T00:01:00Z"
+        row = consensus_lines(event)[0]
+        self.assertEqual(row["best_book_home"], "B")
+        self.assertEqual(row["best_price_home_updated_at"],
+                         "2099-01-01T00:02:00Z")
+        self.assertEqual(row["consensus_oldest_updated_at"],
+                         "2099-01-01T00:00:00Z")
 
 
 if __name__ == "__main__":

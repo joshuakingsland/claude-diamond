@@ -40,6 +40,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from models import reprice_requests
+from config import LEADER_BOOK_KEYS
+from odds import main_line_points
+from provenance import repository_revision
+
 MIN_ENTRY_LEAD_HOURS = 20
 
 # How far an odds event's advertised start may sit from a scheduled game
@@ -78,6 +83,27 @@ def _devig_consensus(quotes, market, point=None):
     return float(subset["devig_prob_home"].median()), int(subset["book_key"].nunique())
 
 
+def _leader_follower(quotes, market, point=None):
+    subset = quotes[quotes["market"] == market]
+    if point is not None:
+        subset = subset[np.isclose(subset["point"].astype(float), float(point))]
+    leaders = subset[subset["book_key"].isin(LEADER_BOOK_KEYS)]
+    followers = subset[~subset["book_key"].isin(LEADER_BOOK_KEYS)]
+
+    def summary(frame):
+        if not len(frame):
+            return None, 0
+        return (float(frame["devig_prob_home"].median()),
+                int(frame["book_key"].nunique()))
+
+    leader_prob, leader_books = summary(leaders)
+    follower_prob, follower_books = summary(followers)
+    return {
+        "leader_prob": leader_prob, "leader_books": leader_books,
+        "follower_prob": follower_prob, "follower_books": follower_books,
+    }
+
+
 def match_events_to_games(events, games):
     """Map each odds event to a game_pk by team pair and scheduled start.
 
@@ -112,7 +138,13 @@ def match_events_to_games(events, games):
 
 
 def build_priced_games(quotes, games, min_books=3):
-    """One row per game per market, with entry and close consensus."""
+    """One row per game-market with the main point at entry and close.
+
+    The point can move between entry and close and therefore travels with each
+    probability.  Hardcoding -1.5 and 8.5 discarded roughly half the live
+    execution universe and made the historical comparison answer a different
+    question from the paper policy.
+    """
     quotes = quotes.copy()
     quotes["commence"] = pd.to_datetime(quotes["commence_time"], utc=True,
                                         errors="coerce")
@@ -143,23 +175,44 @@ def build_priced_games(quotes, games, min_books=3):
         game_pk, official_date = target
         entry_pool = group[group["lead_hours"] >= MIN_ENTRY_LEAD_HOURS]
         close_pool = group
-        for market, point in (("h2h", None), ("spreads", -1.5), ("totals", 8.5)):
+        for market in ("h2h", "spreads", "totals"):
             record = {"game_pk": game_pk, "official_date": official_date,
-                      "market": market, "point": point}
+                      "market": market}
             for label, pool in (("entry", entry_pool), ("close", close_pool)):
                 if not len(pool):
-                    record[f"{label}_prob"], record[f"{label}_books"] = None, 0
+                    record[f"{label}_prob"] = None
+                    record[f"{label}_point"] = None
+                    record[f"{label}_books"] = 0
+                    record[f"{label}_leader_prob"] = None
+                    record[f"{label}_leader_books"] = 0
+                    record[f"{label}_follower_prob"] = None
+                    record[f"{label}_follower_books"] = 0
                     continue
                 target_time = (pool["taken"].min() if label == "entry"
                                else pool["taken"].max())
                 snap = pool[pool["taken"] == target_time]
+                selected = main_line_points(snap.to_dict("records"))
+                if market not in selected:
+                    record[f"{label}_prob"] = None
+                    record[f"{label}_point"] = None
+                    record[f"{label}_books"] = 0
+                    record[f"{label}_leader_prob"] = None
+                    record[f"{label}_leader_books"] = 0
+                    record[f"{label}_follower_prob"] = None
+                    record[f"{label}_follower_books"] = 0
+                    continue
+                point = selected[market]
                 probability, books = _devig_consensus(snap, market, point)
+                split = _leader_follower(snap, market, point)
                 # A consensus thinner than the gate is not a market price.
                 # Gating per column rather than per row matters because a game
                 # can carry a well-covered entry and a one-book close, and the
                 # comparison must not read that single book as the close.
                 record[f"{label}_prob"] = probability if books >= min_books else None
+                record[f"{label}_point"] = point
                 record[f"{label}_books"] = books
+                for name, value in split.items():
+                    record[f"{label}_{name}"] = value
                 record[f"{label}_lead_hours"] = round(
                     float(snap["lead_hours"].iloc[0]), 2) if len(snap) else None
             rows.append(record)
@@ -225,7 +278,7 @@ def verdict(interval):
 
 
 def compare(priced, predictions, games, price_column="close_prob"):
-    """Model versus market on the same games, per market."""
+    """Model versus market on the same games and points, per market."""
     outcomes = games[["game_pk", "home_win", "total_runs", "run_diff"]]
     merged = (priced.merge(predictions, on="game_pk", how="inner")
                     .merge(outcomes, on="game_pk", how="inner"))
@@ -237,25 +290,52 @@ def compare(priced, predictions, games, price_column="close_prob"):
     merged = merged[merged["home_win"].notna() & merged["total_runs"].notna()
                     & merged["run_diff"].notna()]
     report = {}
-    specs = {
-        "h2h": ("p_home_ml", lambda f: f["home_win"].astype(float)),
-        "spreads": ("p_home_rl_-1.5",
-                    lambda f: (f["run_diff"] > 1.5).astype(float)),
-        "totals": ("p_over_8.5", lambda f: (f["total_runs"] > 8.5).astype(float)),
-    }
-    for market, (column, outcome_fn) in specs.items():
-        subset = merged[(merged["market"] == market) & merged[column].notna()]
+    label = price_column.removesuffix("_prob")
+    point_column = f"{label}_point"
+    for market in ("h2h", "spreads", "totals"):
+        subset = merged[merged["market"] == market].copy()
+        if market != "h2h":
+            subset = subset[subset[point_column].notna()]
         if len(subset) < 50:
             report[market] = {"games": int(len(subset)),
                               "status": "insufficient sample"}
             continue
-        outcome = outcome_fn(subset).to_numpy()
-        model = subset[column].to_numpy(dtype=float)
+        requests = subset[["game_pk", "official_date", "market",
+                           point_column]].rename(columns={point_column: "point"})
+        repriced = reprice_requests(requests, subset)
+        subset = subset.reset_index(drop=True)
+        subset["model_prob_home"] = repriced["model_prob_home"]
+        subset["model_push_prob"] = repriced["model_push_prob"]
+        if market == "h2h":
+            outcome = subset["home_win"].astype(float)
+            pushed = np.zeros(len(subset), dtype=bool)
+        elif market == "spreads":
+            point = subset[point_column].astype(float)
+            outcome = (subset["run_diff"] > -point).astype(float)
+            pushed = np.isclose(subset["run_diff"], -point)
+        else:
+            point = subset[point_column].astype(float)
+            outcome = (subset["total_runs"] > point).astype(float)
+            pushed = np.isclose(subset["total_runs"], point)
+        push_count = int(np.asarray(pushed).sum())
+        subset = subset.loc[~np.asarray(pushed)].copy()
+        outcome = np.asarray(outcome)[~np.asarray(pushed)]
+        subset["market_outcome"] = outcome
+        subset = subset[subset["model_prob_home"].notna()]
+        outcome = subset["market_outcome"].to_numpy(float)
+        model = subset["model_prob_home"].to_numpy(dtype=float)
         market_probability = subset[price_column].to_numpy(dtype=float)
-        interval = delta_interval(subset, column, price_column, outcome)
+        interval = delta_interval(subset, "model_prob_home", price_column,
+                                  outcome)
+        point_counts = ({str(point): int(count) for point, count in
+                         subset[point_column].value_counts(dropna=False).items()}
+                        if market != "h2h" else {})
         report[market] = {
             "games": int(len(subset)),
+            "pushes_excluded": push_count,
             "price": price_column,
+            "point_column": point_column,
+            "points": point_counts,
             "log_loss_model": round(log_loss(model, outcome), 5),
             "log_loss_market": round(log_loss(market_probability, outcome), 5),
             "delta": round(log_loss(model, outcome)
@@ -301,7 +381,8 @@ def main():
             round(float(priced["close_lead_hours"].median()), 2)
             if len(priced) and priced["close_lead_hours"].notna().any() else None),
     }
-    report = {"coverage": coverage}
+    report = {"repository_revision": repository_revision(),
+              "coverage": coverage}
     for price_column in ("close_prob", "entry_prob"):
         report[price_column] = compare(priced, predictions, games, price_column)
     Path(args.report).write_text(json.dumps(report, indent=2), encoding="utf-8")

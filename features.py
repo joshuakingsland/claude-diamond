@@ -435,7 +435,20 @@ def build(games, parks, weather=None, pitching=None, umpires=None):
         for row in pitching.to_dict("records"):
             pitching_by_game.setdefault(id_key(row["game_pk"]), []).append(row)
 
-    games = games.sort_values(["official_date", "game_pk"]).reset_index(drop=True)
+    # Information order is first-pitch time, not calendar date or game id.
+    # Sorting by ``official_date, game_pk`` let a later same-day result update
+    # state before an earlier game, and could expose the first game of a
+    # doubleheader to the second in the wrong direction.
+    games = games.copy()
+    starts = (games["game_date_utc"] if "game_date_utc" in games
+              else pd.Series(pd.NaT, index=games.index))
+    games["_information_time"] = pd.to_datetime(
+        starts, utc=True, errors="coerce")
+    fallback = pd.to_datetime(games["official_date"], utc=True,
+                              errors="coerce")
+    games["_information_time"] = games["_information_time"].fillna(fallback)
+    games = games.sort_values(
+        ["_information_time", "game_pk"]).reset_index(drop=True)
     teams = defaultdict(TeamState)
     pitchers = defaultdict(PitcherState)
     components = defaultdict(PitcherComponents)

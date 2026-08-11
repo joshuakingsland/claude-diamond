@@ -129,12 +129,16 @@ jobs:
           python results.py --seasons "$(date -u +%Y)" || echo "results refresh failed; using the table on disk"
           python boxscores.py --limit 120 || echo "boxscores incomplete; resumes next run"
           python umpires.py --limit 120 || echo "umpires incomplete; resumes next run"
-          python weather.py || echo "weather incomplete; resumes next run"
+          python weather.py --refresh-source || echo "weather incomplete; resumes next run"
+          python schedule_snapshots.py || echo "starter snapshot failed; using the last capture"
+          python lineup_snapshots.py || echo "lineup snapshot failed; card remains ineligible"
           # Not best-effort. A board that prices nothing is the failure this
           # step exists to surface, and letting it through would write an
           # empty page over a good one.
           python predict_upcoming.py
+          python signal_ledger.py
           python ledger.py
+          python forward_evidence.py
           python model_card.py
 
       - name: Commit new quotes
