@@ -1,0 +1,31 @@
+name: backfill per-game full-game MLB odds
+on:
+  workflow_dispatch:
+    inputs:
+      start: {description: 'First date (YYYY-MM-DD)', required: true, default: '2020-07-23'}
+      end: {description: 'Last date (YYYY-MM-DD)', required: true, default: '2024-09-29'}
+      max_events: {description: 'Hard event cap (~30 credits each)', required: true, default: '100'}
+      lead_minutes: {description: 'Minutes before each game start', required: true, default: '20'}
+      snapshot_role: {description: 'early or close', required: true, default: 'close'}
+      dry_run: {description: 'Estimate only; no API calls', type: boolean, default: true}
+permissions: {contents: write}
+concurrency: {group: full-game-event-backfill, cancel-in-progress: false}
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install -r requirements.txt
+      - name: Capture
+        env: {ODDS_API_KEY: '${{ secrets.ODDS_API_KEY }}'}
+        run: python full_game_event_odds.py --start '${{ inputs.start }}' --end '${{ inputs.end }}' --max-events '${{ inputs.max_events }}' --lead-minutes '${{ inputs.lead_minutes }}' --snapshot-role '${{ inputs.snapshot_role }}' ${{ inputs.dry_run && '--dry-run' || '' }}
+      - name: Commit data
+        if: ${{ !inputs.dry_run }}
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add data/full_game_event_audit.csv data/full_game_event_quotes.csv
+          git diff --cached --quiet || (git commit -m 'data: per-game full-game odds' && git push)
