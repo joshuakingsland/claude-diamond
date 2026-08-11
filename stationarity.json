@@ -1,0 +1,228 @@
+{
+  "drift": {
+    "runs_per_team_per_game": {
+      "2021": 4.5307,
+      "2022": 4.2833,
+      "2023": 4.6156,
+      "2024": 4.3934,
+      "2025": 4.4473,
+      "2026": 4.4854
+    },
+    "range": 0.3323,
+    "season_to_season_sd": 0.2121,
+    "single_game_sd": 3.1797,
+    "drift_as_share_of_game_noise": 0.1045
+  },
+  "walk_forward": {
+    "moneyline": {
+      "baseline": 0.67967,
+      "schemes": {
+        "half_life_0.5": {
+          "log_loss": 0.67998,
+          "delta": 0.0003,
+          "ci90_date_clustered": [
+            -0.00028,
+            0.00086
+          ],
+          "helps": false
+        },
+        "half_life_1": {
+          "log_loss": 0.67965,
+          "delta": -2e-05,
+          "ci90_date_clustered": [
+            -0.00035,
+            0.0003
+          ],
+          "helps": false
+        },
+        "half_life_2": {
+          "log_loss": 0.67959,
+          "delta": -8e-05,
+          "ci90_date_clustered": [
+            -0.00026,
+            9e-05
+          ],
+          "helps": false
+        },
+        "half_life_4": {
+          "log_loss": 0.67961,
+          "delta": -6e-05,
+          "ci90_date_clustered": [
+            -0.00015,
+            2e-05
+          ],
+          "helps": false
+        },
+        "last_1": {
+          "log_loss": 0.68093,
+          "delta": 0.00126,
+          "ci90_date_clustered": [
+            0.00025,
+            0.00225
+          ],
+          "helps": false
+        },
+        "last_2": {
+          "log_loss": 0.67974,
+          "delta": 6e-05,
+          "ci90_date_clustered": [
+            -0.00033,
+            0.00044
+          ],
+          "helps": false
+        },
+        "last_3": {
+          "log_loss": 0.67969,
+          "delta": 1e-05,
+          "ci90_date_clustered": [
+            -0.00018,
+            0.00021
+          ],
+          "helps": false
+        }
+      }
+    },
+    "runline": {
+      "baseline": 0.6389,
+      "schemes": {
+        "half_life_0.5": {
+          "log_loss": 0.63879,
+          "delta": -0.00011,
+          "ci90_date_clustered": [
+            -0.0007,
+            0.00048
+          ],
+          "helps": false
+        },
+        "half_life_1": {
+          "log_loss": 0.63859,
+          "delta": -0.00031,
+          "ci90_date_clustered": [
+            -0.00067,
+            4e-05
+          ],
+          "helps": false
+        },
+        "half_life_2": {
+          "log_loss": 0.63865,
+          "delta": -0.00025,
+          "ci90_date_clustered": [
+            -0.00045,
+            -7e-05
+          ],
+          "helps": true
+        },
+        "half_life_4": {
+          "log_loss": 0.63875,
+          "delta": -0.00015,
+          "ci90_date_clustered": [
+            -0.00025,
+            -6e-05
+          ],
+          "helps": true
+        },
+        "last_1": {
+          "log_loss": 0.64,
+          "delta": 0.0011,
+          "ci90_date_clustered": [
+            9e-05,
+            0.00217
+          ],
+          "helps": false
+        },
+        "last_2": {
+          "log_loss": 0.63873,
+          "delta": -0.00017,
+          "ci90_date_clustered": [
+            -0.00059,
+            0.00022
+          ],
+          "helps": false
+        },
+        "last_3": {
+          "log_loss": 0.63876,
+          "delta": -0.00014,
+          "ci90_date_clustered": [
+            -0.00034,
+            5e-05
+          ],
+          "helps": false
+        }
+      }
+    },
+    "total": {
+      "baseline": 0.68781,
+      "schemes": {
+        "half_life_0.5": {
+          "log_loss": 0.68816,
+          "delta": 0.00036,
+          "ci90_date_clustered": [
+            -0.00027,
+            0.00098
+          ],
+          "helps": false
+        },
+        "half_life_1": {
+          "log_loss": 0.68778,
+          "delta": -3e-05,
+          "ci90_date_clustered": [
+            -0.0004,
+            0.00036
+          ],
+          "helps": false
+        },
+        "half_life_2": {
+          "log_loss": 0.6877,
+          "delta": -0.00011,
+          "ci90_date_clustered": [
+            -0.00032,
+            0.00011
+          ],
+          "helps": false
+        },
+        "half_life_4": {
+          "log_loss": 0.68772,
+          "delta": -8e-05,
+          "ci90_date_clustered": [
+            -0.00019,
+            3e-05
+          ],
+          "helps": false
+        },
+        "last_1": {
+          "log_loss": 0.69067,
+          "delta": 0.00286,
+          "ci90_date_clustered": [
+            0.00157,
+            0.0041
+          ],
+          "helps": false
+        },
+        "last_2": {
+          "log_loss": 0.68807,
+          "delta": 0.00026,
+          "ci90_date_clustered": [
+            -0.00021,
+            0.00076
+          ],
+          "helps": false
+        },
+        "last_3": {
+          "log_loss": 0.68792,
+          "delta": 0.00012,
+          "ci90_date_clustered": [
+            -0.00018,
+            0.00042
+          ],
+          "helps": false
+        }
+      }
+    },
+    "look_elsewhere": {
+      "comparisons": 21,
+      "expected_by_chance_each_side": 1.05,
+      "excluded_zero_helping": 2,
+      "excluded_zero_hurting": 3
+    }
+  }
+}

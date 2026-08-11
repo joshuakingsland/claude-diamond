@@ -97,6 +97,8 @@ odds.py       three-market odds capture with paired-book de-vig
 historical_odds.py  capped, resumable historical snapshots
 market.py     joins prices to predictions; asks whether the model beats them
 extremes.py   does a large disagreement pay? no, and here is why it looks like it does
+devig.py      four ways to strip the margin, and whether the benchmark book is right
+stationarity.py  does the run environment drift enough to reweight the seasons?
 mean_calibration.py  the predicted means are over-spread; correcting them makes pricing worse
 umpires.py    home-plate umpire assignments, one per game
 umpire_effect.py  permutation tests for an umpire main effect
@@ -659,6 +661,82 @@ Colorado's own runs +1.47, +0.17, −0.05, +0.48, **−0.39** — and in 2026 th
 are scoring *more* on the road than predicted, not less. The pooled −0.44 is
 carried by 2022 and 2025. There is no persistent trait to model, so a per-team
 home/road split would be fitting five seasons of noise.
+
+### Auditing the scoreboard: is the de-vig right? Is the benchmark?
+
+Two of the ten assumptions this project rests on live in the *measurement*
+rather than the model, and if either is wrong the headline verdict is partly
+arithmetic. Both are now tested, and the answer is that the scoreboard is
+sound — which is worth knowing before spending more effort on the model.
+
+**The de-vig.** `odds.py` strips the bookmaker's margin proportionally, which
+is the convenient choice rather than a justified one. `devig.py` scores four
+methods against what actually happened, over 43,060 settled quotes:
+
+| Method | Per quote | Consensus | Δ vs current | 90% interval |
+| --- | ---: | ---: | ---: | --- |
+| **Proportional** (current) | 0.69547 | **0.68540** | — | — |
+| Additive | 0.69609 | 0.68554 | +0.00015 | [−0.00013, +0.00044] |
+| Power | 0.69644 | 0.68565 | +0.00025 | [−0.00016, +0.00071] |
+| Shin | 0.69609 | 0.68554 | +0.00015 | [−0.00013, +0.00043] |
+
+At consensus level all four are indistinguishable and the current one is
+nominally best. It wins clearly on the moneyline (0.70786 against 0.70899 to
+0.70962), where prices are most lopsided and the methods most disagree; power
+edges it on spreads by 0.0008.
+
+There was never much room for it to matter. The median overround is **4.64%**,
+and the four methods differ by a mean of **0.26 to 0.39 probability points** —
+with 78% of quotes in the 0.40–0.60 band where they differ by 0.15 to 0.28p. A
+quarter of a point cannot produce a 0.00562 log-loss gap. The de-vig is not why
+the market wins.
+
+**The benchmark.** `market.py` scores the model against the median of US
+books, while Pinnacle — the sharp reference — is captured under `eu` and
+deliberately not priced. On the 1,644 captures where both exist, Pinnacle is
+the better price: 0.68671 against 0.68781, and better on all three markets.
+
+That runs the *wrong* way for the model. If the benchmark is soft, the model's
+deficit against the market that actually exists is understated, not
+overstated. But those 1,644 rows span only **5 distinct dates**, and the
+interval is date-clustered, so it rests on five clusters and is not settled.
+`devig.py` says so in its own output rather than leaving it to be noticed. The
+sample grows on its own; promoting a region is a model change, not a config
+flip, and it is not being made on five days of data.
+
+### Is 2022 baseball the same game as 2026 baseball?
+
+The model trains on every prior season with equal weight and no era term,
+across the pitch clock and shift ban (2023) and the challenge system (2026).
+Stationarity is a wrong assumption in plain sight, and wrong assumptions are
+the category that has paid here.
+
+The run environment does move — and not much:
+
+| Season | 2021 | 2022 | 2023 | 2024 | 2025 | 2026 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Runs per team per game | 4.531 | 4.283 | **4.616** | 4.393 | 4.447 | 4.485 |
+
+The 2023 jump is visible and is the rule changes. But the whole range is 0.332
+runs against a single game's own standard deviation of 3.180 — **10% of the
+noise in one game**.
+
+`stationarity.py` walks forward under seven schemes. The result splits cleanly:
+
+- **Discarding old seasons is definitively bad.** Training on the last season
+  only costs +0.00126 on the moneyline, +0.00110 on the run line and +0.00286
+  on the total, all three intervals excluding zero. The model wants the data
+  more than it minds the drift.
+- **Gentle recency weighting is at the chance rate.** A two-season half-life
+  helps the run line by 0.00025 with an interval excluding zero, and is inside
+  noise on the other two. But 7 schemes × 3 markets is 21 comparisons at 90%,
+  so ~1.05 should exclude zero each way by chance — and 2 did. That is the
+  `extremes.py` correction applied to my own result, and it says this is not
+  evidence.
+
+So the model is unchanged. The honest statement is not that seasons are
+interchangeable — they visibly are not — but that the drift is small next to
+game noise and far smaller than the cost of throwing data away.
 
 ### A real defect that must not be fixed
 

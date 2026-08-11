@@ -1,0 +1,96 @@
+{
+  "quotes": 43060,
+  "median_overround": 1.0463,
+  "per_quote": {
+    "proportional": 0.69547,
+    "additive": 0.69609,
+    "power": 0.69644,
+    "shin": 0.69609
+  },
+  "consensus_rows": 2392,
+  "books_per_consensus": 8.05,
+  "per_consensus": {
+    "proportional": 0.6854,
+    "additive": 0.68554,
+    "power": 0.68565,
+    "shin": 0.68554
+  },
+  "by_market": {
+    "h2h": {
+      "proportional": 0.70786,
+      "additive": 0.70899,
+      "power": 0.70962,
+      "shin": 0.70899
+    },
+    "spreads": {
+      "proportional": 0.65664,
+      "additive": 0.6561,
+      "power": 0.65587,
+      "shin": 0.6561
+    },
+    "totals": {
+      "proportional": 0.69308,
+      "additive": 0.69308,
+      "power": 0.69309,
+      "shin": 0.69308
+    }
+  },
+  "vs_proportional": {
+    "additive": {
+      "delta": 0.00015,
+      "ci90_date_clustered": [
+        -0.00013,
+        0.00044
+      ],
+      "better": false
+    },
+    "power": {
+      "delta": 0.00025,
+      "ci90_date_clustered": [
+        -0.00016,
+        0.00071
+      ],
+      "better": false
+    },
+    "shin": {
+      "delta": 0.00015,
+      "ci90_date_clustered": [
+        -0.00013,
+        0.00043
+      ],
+      "better": false
+    }
+  },
+  "benchmark": {
+    "book": "pinnacle",
+    "rows": 1644,
+    "dates": 5,
+    "priced_median_log_loss": 0.68781,
+    "reference_log_loss": 0.68671,
+    "delta": -0.0011,
+    "ci90_date_clustered": [
+      -0.00157,
+      -0.00052
+    ],
+    "mean_abs_gap_points": 0.517,
+    "by_market": {
+      "h2h": {
+        "rows": 558,
+        "priced_median": 0.71387,
+        "reference": 0.71299
+      },
+      "spreads": {
+        "rows": 547,
+        "priced_median": 0.66016,
+        "reference": 0.6581
+      },
+      "totals": {
+        "rows": 539,
+        "priced_median": 0.68889,
+        "reference": 0.68853
+      }
+    },
+    "interval_trustworthy": false,
+    "status": "reference book is better"
+  }
+}
