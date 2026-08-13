@@ -1,0 +1,1 @@
+event_id,game_pk,official_date,season,market,point,entry_prob,close_prob,entry_books,close_books,entry_lead_hours,close_lead_hours,trained_through,model_prob,entry_logit,close_logit,move_logit,abs_entry_logit,leader_gap_logit,follower_gap_logit,leader_available,follower_available,entry_market_spread,month_sin,month_cos,model_gap_logit

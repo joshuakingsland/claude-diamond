@@ -1,0 +1,121 @@
+{
+  "study": "MLB 24-hour entry to 20-minute close movement",
+  "repository_revision": "b39bcffc440c",
+  "protocol": {
+    "version": "full-game-entry-close-v1",
+    "entry_snapshot": "24 hours before scheduled first pitch",
+    "close_snapshot": "20 minutes before scheduled first pitch",
+    "training_year": 2022,
+    "candidate_selection_year": 2023,
+    "sealed_confirmation_year": 2024,
+    "primary_market": "h2h",
+    "secondary_market_rule": "same point at entry and close",
+    "primary_metric": "close-logit MSE improvement versus no movement",
+    "confirmation_gate": "date-clustered 95% interval lower bound > 0",
+    "minimum_rows_per_stage": 500,
+    "candidate_features": {
+      "microstructure": [
+        "entry_logit",
+        "abs_entry_logit",
+        "leader_gap_logit",
+        "follower_gap_logit",
+        "leader_available",
+        "follower_available",
+        "entry_market_spread",
+        "entry_books",
+        "entry_lead_hours",
+        "point",
+        "month_sin",
+        "month_cos"
+      ],
+      "microstructure_plus_model": [
+        "entry_logit",
+        "abs_entry_logit",
+        "leader_gap_logit",
+        "follower_gap_logit",
+        "leader_available",
+        "follower_available",
+        "entry_market_spread",
+        "entry_books",
+        "entry_lead_hours",
+        "point",
+        "month_sin",
+        "month_cos",
+        "model_gap_logit"
+      ]
+    },
+    "ridge_alphas": [
+      0.1,
+      1.0,
+      10.0,
+      100.0
+    ],
+    "confirmation_is_not_used_for_selection": true,
+    "protocol_hash": "eeaa8fa0b399ff9c"
+  },
+  "coverage": {
+    "2022": {
+      "close_attempted": 2549,
+      "close_offered": 2516,
+      "early_attempted": 0,
+      "early_offered": 0,
+      "early_failed": 0,
+      "complete": false
+    },
+    "2023": {
+      "close_attempted": 2365,
+      "close_offered": 2342,
+      "early_attempted": 0,
+      "early_offered": 0,
+      "early_failed": 0,
+      "complete": false
+    },
+    "2024": {
+      "close_attempted": 2444,
+      "close_offered": 2423,
+      "early_attempted": 0,
+      "early_offered": 0,
+      "early_failed": 0,
+      "complete": false
+    }
+  },
+  "integrity": {
+    "trained_through_violations": 0,
+    "raw_quote_events": 10233,
+    "unmatched_schedule_events": 1251,
+    "qualified_movement_rows": 0,
+    "confirmation_sealed": true
+  },
+  "markets": {
+    "h2h": {
+      "rows_by_season": {
+        "2022": 0,
+        "2023": 0,
+        "2024": 0
+      },
+      "primary_baseline": "no movement",
+      "status": "awaiting complete 2022-23 early archive"
+    },
+    "spreads": {
+      "rows_by_season": {
+        "2022": 0,
+        "2023": 0,
+        "2024": 0
+      },
+      "primary_baseline": "no movement",
+      "status": "awaiting complete 2022-23 early archive"
+    },
+    "totals": {
+      "rows_by_season": {
+        "2022": 0,
+        "2023": 0,
+        "2024": 0
+      },
+      "primary_baseline": "no movement",
+      "status": "awaiting complete 2022-23 early archive"
+    }
+  },
+  "confirmed_markets": [],
+  "promotion_status": "research_only; no wager path",
+  "bets_placed": 0
+}
