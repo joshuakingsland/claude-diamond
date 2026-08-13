@@ -1,11 +1,11 @@
 {
   "status": "market_baseline_only",
-  "events": 975,
-  "quoted_events": 980,
-  "mean_books": 2.619,
-  "yrfi_rate": 0.50154,
-  "market_mean_yrfi_probability": 0.49693,
-  "market_brier": 0.246845,
-  "market_log_loss": 0.686807,
+  "events": 1036,
+  "quoted_events": 1041,
+  "mean_books": 2.585,
+  "yrfi_rate": 0.50097,
+  "market_mean_yrfi_probability": 0.49682,
+  "market_brier": 0.246526,
+  "market_log_loss": 0.68617,
   "note": "Data-quality baseline only; no first-inning predictive model or bet rule exists."
 }
