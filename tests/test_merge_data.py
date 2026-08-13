@@ -39,6 +39,8 @@ class KeyTests(unittest.TestCase):
         self.assertEqual(
             union_key("data/full_game_event_quotes/quotes_2024.csv"),
             ("snapshot_id",))
+        self.assertEqual(
+            union_key("data/full_game_event_audit.csv"), ("audit_id",))
 
     def test_regenerated_snapshots_are_replaced(self):
         for path in ("data/lines_upcoming.csv", "docs/index.html",
@@ -74,6 +76,20 @@ class MergeTests(unittest.TestCase):
         self.assertEqual(added, 0)
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]["outcome"], "win")
+
+    def test_stale_full_game_audit_cannot_delete_remote_rows(self):
+        """A live capture started earlier must retain newer backfill attempts."""
+        theirs = self.dir / "theirs.csv"
+        ours = self.dir / "ours.csv"
+        _write(theirs, ["audit_id", "status"],
+               [{"audit_id": "old", "status": "offered"},
+                {"audit_id": "new-checkpoint", "status": "offered"}])
+        _write(ours, ["audit_id", "status"],
+               [{"audit_id": "old", "status": "offered"}])
+        (fields, rows), added = merge_csv(ours, theirs, ("audit_id",))
+        self.assertEqual(added, 0)
+        self.assertEqual({row["audit_id"] for row in rows},
+                         {"old", "new-checkpoint"})
 
     def test_a_column_added_by_a_newer_writer_survives(self):
         theirs = self.dir / "theirs.csv"
