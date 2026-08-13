@@ -1,60 +1,97 @@
 name: automated full-game MLB early backfill
 on:
-  schedule: [{cron: '37 9 * * *'}]
+  schedule:
+    - cron: '37 9 * * *'
   workflow_dispatch: {}
-permissions: {contents: write}
-concurrency: {group: full-game-event-backfill, cancel-in-progress: false}
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/automated-full-game-early-backfill.yml'
+permissions:
+  contents: write
+concurrency:
+  group: full-game-event-backfill
+  cancel-in-progress: false
 jobs:
   backfill:
     runs-on: ubuntu-latest
     timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
       - uses: actions/setup-python@v5
-        with: {python-version: '3.11'}
+        with:
+          python-version: '3.11'
       - run: pip install -r requirements.txt
-      - name: Capture next 1,000 early snapshots
-        env: {ODDS_API_KEY: '${{ secrets.ODDS_API_KEY }}'}
+      - name: Capture all remaining early snapshots
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
         run: |
-          progress=$(python - <<'PY'
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git pull --ff-only origin main
+          checkpoint=1
+
+          while true; do
+            # Each provider pull must begin from the current main manifest.
+            # This prevents retries from replaying a stale workflow commit.
+            git pull --rebase origin main
+            progress=$(python - <<'PY'
           import pandas as pd
           frame = pd.read_csv('data/full_game_event_audit.csv', dtype=str)
           dates = pd.to_datetime(frame['commence_time'], utc=True, errors='coerce')
           wanted = dates.dt.year.isin([2022, 2023, 2024])
-          close = frame[wanted & frame['snapshot_role'].eq('close')]
-          early = frame[wanted & frame['snapshot_role'].eq('early')]
-          print(f'{len(early)} {len(close)}')
+          close = int((wanted & frame['snapshot_role'].eq('close')).sum())
+          early = int((wanted & frame['snapshot_role'].eq('early')).sum())
+          print(f'{early} {close}')
           PY
-          )
-          set -- $progress; count=$1; target=$2
-          echo "early attempts: $count / $target"
-          if [ "$count" -ge "$target" ]; then
-            echo 'full-game early provider coverage complete'
-          else
-            left=1000; n=1
-            while [ "$left" -gt 0 ]; do
-              progress=$(python - <<'PY'
-          import pandas as pd
-          frame = pd.read_csv('data/full_game_event_audit.csv', dtype=str)
-          dates = pd.to_datetime(frame['commence_time'], utc=True, errors='coerce')
-          wanted = dates.dt.year.isin([2022, 2023, 2024])
-          print((wanted & frame['snapshot_role'].eq('early')).sum())
-          PY
-              )
-              [ "$progress" -ge "$target" ] && break
-              chunk=$([ "$left" -gt 100 ] && echo 100 || echo "$left")
-              python full_game_event_odds.py --start 2022-01-01 --end 2024-09-29 --max-events "$chunk" --lead-minutes 1440 --snapshot-role early
-              git config user.name github-actions[bot]
-              git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-              git add data/full_game_event_audit.csv data/full_game_event_quotes
-              if ! git diff --cached --quiet; then
-                git commit -m "data: automated full-game early checkpoint $n"
-                git pull --rebase origin main
-                git push origin HEAD:main
+            )
+            set -- $progress
+            count=$1
+            target=$2
+            remaining=$((target-count))
+            echo "early attempts: $count / $target"
+            [ "$remaining" -le 0 ] && break
+
+            if [ "$remaining" -gt 100 ]; then
+              chunk=100
+            else
+              chunk=$remaining
+            fi
+
+            python full_game_event_odds.py \
+              --start 2022-01-01 \
+              --end 2024-09-29 \
+              --max-events "$chunk" \
+              --lead-minutes 1440 \
+              --snapshot-role early
+
+            git add data/full_game_event_audit.csv data/full_game_event_quotes
+            if git diff --cached --quiet; then
+              echo "collector made no progress with $remaining attempts remaining"
+              exit 1
+            fi
+            git commit -m "data: automated full-game early checkpoint $checkpoint"
+
+            pushed=0
+            for push_attempt in 1 2 3 4 5; do
+              if git push origin HEAD:main; then
+                pushed=1
+                break
               fi
-              left=$((left-chunk)); n=$((n+1))
+              echo "push race $push_attempt; rebasing on current main"
+              git pull --rebase origin main
             done
-          fi
+            if [ "$pushed" -ne 1 ]; then
+              echo 'could not publish checkpoint after five attempts'
+              exit 1
+            fi
+            checkpoint=$((checkpoint+1))
+          done
+
+          echo "full-game early provider coverage complete: $count / $target"
       - name: Refresh sealed movement report
         run: |
           python full_game_movement_evaluation.py
