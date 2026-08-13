@@ -1,6 +1,6 @@
 {
   "study": "MLB 24-hour entry to 20-minute close movement",
-  "repository_revision": "d000c3a29c3d",
+  "repository_revision": "02c3b72bd61e",
   "protocol": {
     "version": "full-game-entry-close-v1",
     "entry_snapshot": "24 hours before scheduled first pitch",
@@ -65,54 +65,953 @@
     "2023": {
       "close_attempted": 2365,
       "close_offered": 2342,
-      "early_attempted": 1451,
-      "early_offered": 1265,
-      "early_failed": 186,
-      "complete": false
+      "early_attempted": 2365,
+      "early_offered": 1935,
+      "early_failed": 430,
+      "complete": true
     },
     "2024": {
       "close_attempted": 2444,
       "close_offered": 2423,
-      "early_attempted": 0,
-      "early_offered": 0,
-      "early_failed": 0,
+      "early_attempted": 86,
+      "early_offered": 67,
+      "early_failed": 19,
       "complete": false
     }
   },
   "integrity": {
     "trained_through_violations": 0,
-    "raw_quote_events": 10253,
-    "unmatched_schedule_events": 1270,
-    "qualified_movement_rows": 4786,
+    "raw_quote_events": 10260,
+    "unmatched_schedule_events": 1277,
+    "qualified_movement_rows": 6128,
     "confirmation_sealed": true
   },
   "markets": {
     "h2h": {
       "rows_by_season": {
         "2022": 1074,
-        "2023": 967,
-        "2024": 0
+        "2023": 1503,
+        "2024": 66
       },
       "primary_baseline": "no movement",
-      "status": "awaiting complete 2022-23 early archive"
+      "candidate_selection": {
+        "fit_year": 2022,
+        "selection_year": 2023,
+        "candidates": [
+          {
+            "candidate": "microstructure_ridge_alpha_0.1",
+            "feature_family": "microstructure",
+            "alpha": 0.1,
+            "features": [
+              "entry_logit",
+              "abs_entry_logit",
+              "leader_gap_logit",
+              "follower_gap_logit",
+              "leader_available",
+              "follower_available",
+              "entry_market_spread",
+              "entry_books",
+              "entry_lead_hours",
+              "point",
+              "month_sin",
+              "month_cos"
+            ],
+            "selection_2023": {
+              "rows": 1503,
+              "rmse_no_move_logit": 0.09140136,
+              "rmse_candidate_logit": 0.09092247,
+              "mse_improvement": 8.73133e-05,
+              "relative_mse_reduction": 0.01045141,
+              "improvement_ci95_date_clustered": [
+                -0.00010927,
+                0.00029278
+              ],
+              "direction_accuracy_nontrivial_moves": 0.551395,
+              "movement_correlation": 0.124147,
+              "mean_actual_move_logit": 0.00689219,
+              "mean_predicted_move_logit": 0.01293344
+            }
+          },
+          {
+            "candidate": "microstructure_ridge_alpha_1",
+            "feature_family": "microstructure",
+            "alpha": 1.0,
+            "features": [
+              "entry_logit",
+              "abs_entry_logit",
+              "leader_gap_logit",
+              "follower_gap_logit",
+              "leader_available",
+              "follower_available",
+              "entry_market_spread",
+              "entry_books",
+              "entry_lead_hours",
+              "point",
+              "month_sin",
+              "month_cos"
+            ],
+            "selection_2023": {
+              "rows": 1503,
+              "rmse_no_move_logit": 0.09140136,
+              "rmse_candidate_logit": 0.09092104,
+              "mse_improvement": 8.75742e-05,
+              "relative_mse_reduction": 0.01048264,
+              "improvement_ci95_date_clustered": [
+                -0.00010877,
+                0.00029296
+              ],
+              "direction_accuracy_nontrivial_moves": 0.550661,
+              "movement_correlation": 0.12414,
+              "mean_actual_move_logit": 0.00689219,
+              "mean_predicted_move_logit": 0.01292999
+            }
+          },
+          {
+            "candidate": "microstructure_ridge_alpha_10",
+            "feature_family": "microstructure",
+            "alpha": 10.0,
+            "features": [
+              "entry_logit",
+              "abs_entry_logit",
+              "leader_gap_logit",
+              "follower_gap_logit",
+              "leader_available",
+              "follower_available",
+              "entry_market_spread",
+              "entry_books",
+              "entry_lead_hours",
+              "point",
+              "month_sin",
+              "month_cos"
+            ],
+            "selection_2023": {
+              "rows": 1503,
+              "rmse_no_move_logit": 0.09140136,
+              "rmse_candidate_logit": 0.09090716,
+              "mse_improvement": 9.00976e-05,
+              "relative_mse_reduction": 0.0107847,
+              "improvement_ci95_date_clustered": [
+                -0.00010495,
+                0.00029464
+              ],
+              "direction_accuracy_nontrivial_moves": 0.550661,
+              "movement_correlation": 0.124067,
+              "mean_actual_move_logit": 0.00689219,
+              "mean_predicted_move_logit": 0.012896
+            }
+          },
+          {
+            "candidate": "microstructure_ridge_alpha_100",
+            "feature_family": "microstructure",
+            "alpha": 100.0,
+            "features": [
+              "entry_logit",
+              "abs_entry_logit",
+              "leader_gap_logit",
+              "follower_gap_logit",
+              "leader_available",
+              "follower_available",
+              "entry_market_spread",
+              "entry_books",
+              "entry_lead_hours",
+              "point",
+              "month_sin",
+              "month_cos"
+            ],
+            "selection_2023": {
+              "rows": 1503,
+              "rmse_no_move_logit": 0.09140136,
+              "rmse_candidate_logit": 0.09080489,
+              "mse_improvement": 0.0001086821,
+              "relative_mse_reduction": 0.01300926,
+              "improvement_ci95_date_clustered": [
+                -7.391e-05,
+                0.00029932
+              ],
+              "direction_accuracy_nontrivial_moves": 0.557269,
+              "movement_correlation": 0.123126,
+              "mean_actual_move_logit": 0.00689219,
+              "mean_predicted_move_logit": 0.01259859
+            }
+          },
+          {
+            "candidate": "microstructure_plus_model_ridge_alpha_0.1",
+            "feature_family": "microstructure_plus_model",
+            "alpha": 0.1,
+            "features": [
+              "entry_logit",
+              "abs_entry_logit",
+              "leader_gap_logit",
+              "follower_gap_logit",
+              "leader_available",
+              "follower_available",
+              "entry_market_spread",
+              "entry_books",
+              "entry_lead_hours",
+              "point",
+              "month_sin",
+              "month_cos",
+              "model_gap_logit"
+            ],
+            "selection_2023": {
+              "rows": 1503,
+              "rmse_no_move_logit": 0.09140136,
+              "rmse_candidate_logit": 0.08960982,
+              "mse_improvement": 0.0003242893,
+              "relative_mse_reduction": 0.03881747,
+              "improvement_ci95_date_clustered": [
+                0.00011954,
+                0.00053976
+              ],
+              "direction_accuracy_nontrivial_moves": 0.571219,
+              "movement_correlation": 0.197793,
+              "mean_actual_move_logit": 0.00689219,
+              "mean_predicted_move_logit": 0.01274792
+            }
+          },
+          {
+            "candidate": "microstructure_plus_model_ridge_alpha_1",
+            "feature_family": "microstructure_plus_model",
+            "alpha": 1.0,
+            "features": [
+              "entry_logit",
+              "abs_entry_logit",
+              "leader_gap_logit",
+              "follower_gap_logit",
+              "leader_available",
+              "follower_available",
+              "entry_market_spread",
+              "entry_books",
+              "entry_lead_hours",
+              "point",
+              "month_sin",
+              "month_cos",
+              "model_gap_logit"
+            ],
+            "selection_2023": {
+              "rows": 1503,
+              "rmse_no_move_logit": 0.09140136,
+              "rmse_candidate_logit": 0.08960927,
+              "mse_improvement": 0.0003243877,
+              "relative_mse_reduction": 0.03882925,
+              "improvement_ci95_date_clustered": [
+                0.00011985,
+                0.00053975
+              ],
+              "direction_accuracy_nontrivial_moves": 0.571219,
+              "movement_correlation": 0.197765,
+              "mean_actual_move_logit": 0.00689219,
+              "mean_predicted_move_logit": 0.01274465
+            }
+          },
+          {
+            "candidate": "microstructure_plus_model_ridge_alpha_10",
+            "feature_family": "microstructure_plus_model",
+            "alpha": 10.0,
+            "features": [
+              "entry_logit",
+              "abs_entry_logit",
+              "leader_gap_logit",
+              "follower_gap_logit",
+              "leader_available",
+              "follower_available",
+              "entry_market_spread",
+              "entry_books",
+              "entry_lead_hours",
+              "point",
+              "month_sin",
+              "month_cos",
+              "model_gap_logit"
+            ],
+            "selection_2023": {
+              "rows": 1503,
+              "rmse_no_move_logit": 0.09140136,
+              "rmse_candidate_logit": 0.08960428,
+              "mse_improvement": 0.0003252823,
+              "relative_mse_reduction": 0.03893634,
+              "improvement_ci95_date_clustered": [
+                0.00012282,
+                0.00053933
+              ],
+              "direction_accuracy_nontrivial_moves": 0.571219,
+              "movement_correlation": 0.197485,
+              "mean_actual_move_logit": 0.00689219,
+              "mean_predicted_move_logit": 0.01271243
+            }
+          },
+          {
+            "candidate": "microstructure_plus_model_ridge_alpha_100",
+            "feature_family": "microstructure_plus_model",
+            "alpha": 100.0,
+            "features": [
+              "entry_logit",
+              "abs_entry_logit",
+              "leader_gap_logit",
+              "follower_gap_logit",
+              "leader_available",
+              "follower_available",
+              "entry_market_spread",
+              "entry_books",
+              "entry_lead_hours",
+              "point",
+              "month_sin",
+              "month_cos",
+              "model_gap_logit"
+            ],
+            "selection_2023": {
+              "rows": 1503,
+              "rmse_no_move_logit": 0.09140136,
+              "rmse_candidate_logit": 0.08959137,
+              "mse_improvement": 0.0003275961,
+              "relative_mse_reduction": 0.0392133,
+              "improvement_ci95_date_clustered": [
+                0.0001396,
+                0.00052668
+              ],
+              "direction_accuracy_nontrivial_moves": 0.571953,
+              "movement_correlation": 0.194491,
+              "mean_actual_move_logit": 0.00689219,
+              "mean_predicted_move_logit": 0.01243327
+            }
+          }
+        ],
+        "selected": "microstructure_plus_model_ridge_alpha_100",
+        "selected_features": [
+          "entry_logit",
+          "abs_entry_logit",
+          "leader_gap_logit",
+          "follower_gap_logit",
+          "leader_available",
+          "follower_available",
+          "entry_market_spread",
+          "entry_books",
+          "entry_lead_hours",
+          "point",
+          "month_sin",
+          "month_cos",
+          "model_gap_logit"
+        ],
+        "selected_alpha": 100.0
+      },
+      "development_signal": true,
+      "status": "candidate locked; 2024 confirmation remains sealed"
     },
     "spreads": {
       "rows_by_season": {
         "2022": 966,
-        "2023": 815,
-        "2024": 0
+        "2023": 1221,
+        "2024": 47
       },
       "primary_baseline": "no movement",
-      "status": "awaiting complete 2022-23 early archive"
+      "candidate_selection": {
+        "fit_year": 2022,
+        "selection_year": 2023,
+        "candidates": [
+          {
+            "candidate": "microstructure_ridge_alpha_0.1",
+            "feature_family": "microstructure",
+            "alpha": 0.1,
+            "features": [
+              "entry_logit",
+              "abs_entry_logit",
+              "leader_gap_logit",
+              "follower_gap_logit",
+              "leader_available",
+              "follower_available",
+              "entry_market_spread",
+              "entry_books",
+              "entry_lead_hours",
+              "point",
+              "month_sin",
+              "month_cos"
+            ],
+            "selection_2023": {
+              "rows": 1221,
+              "rmse_no_move_logit": 0.0864133,
+              "rmse_candidate_logit": 0.0858278,
+              "mse_improvement": 0.0001008468,
+              "relative_mse_reduction": 0.0135052,
+              "improvement_ci95_date_clustered": [
+                -0.00014583,
+                0.00033
+              ],
+              "direction_accuracy_nontrivial_moves": 0.567666,
+              "movement_correlation": 0.167863,
+              "mean_actual_move_logit": 0.00072422,
+              "mean_predicted_move_logit": 0.00219591
+            }
+          },
+          {
+            "candidate": "microstructure_ridge_alpha_1",
+            "feature_family": "microstructure",
+            "alpha": 1.0,
+            "features": [
+              "entry_logit",
+              "abs_entry_logit",
+              "leader_gap_logit",
+              "follower_gap_logit",
+              "leader_available",
+              "follower_available",
+              "entry_market_spread",
+              "entry_books",
+              "entry_lead_hours",
+              "point",
+              "month_sin",
+              "month_cos"
+            ],
+            "selection_2023": {
+              "rows": 1221,
+              "rmse_no_move_logit": 0.0864133,
+              "rmse_candidate_logit": 0.08582343,
+              "mse_improvement": 0.000101596,
+              "relative_mse_reduction": 0.01360553,
+              "improvement_ci95_date_clustered": [
+                -0.00014481,
+                0.00033074
+              ],
+              "direction_accuracy_nontrivial_moves": 0.567666,
+              "movement_correlation": 0.167883,
+              "mean_actual_move_logit": 0.00072422,
+              "mean_predicted_move_logit": 0.00219199
+            }
+          },
+          {
+            "candidate": "microstructure_ridge_alpha_10",
+            "feature_family": "microstructure",
+            "alpha": 10.0,
+            "features": [
+              "entry_logit",
+              "abs_entry_logit",
+              "leader_gap_logit",
+              "follower_gap_logit",
+              "leader_available",
+              "follower_available",
+              "entry_market_spread",
+              "entry_books",
+              "entry_lead_hours",
+              "point",
+              "month_sin",
+              "month_cos"
+            ],
+            "selection_2023": {
+              "rows": 1221,
+              "rmse_no_move_logit": 0.0864133,
+              "rmse_candidate_logit": 0.08578219,
+              "mse_improvement": 0.0001086745,
+              "relative_mse_reduction": 0.01455347,
+              "improvement_ci95_date_clustered": [
+                -0.00013508,
+                0.00033524
+              ],
+              "direction_accuracy_nontrivial_moves": 0.566757,
+              "movement_correlation": 0.168056,
+              "mean_actual_move_logit": 0.00072422,
+              "mean_predicted_move_logit": 0.00215466
+            }
+          },
+          {
+            "candidate": "microstructure_ridge_alpha_100",
+            "feature_family": "microstructure",
+            "alpha": 100.0,
+            "features": [
+              "entry_logit",
+              "abs_entry_logit",
+              "leader_gap_logit",
+              "follower_gap_logit",
+              "leader_available",
+              "follower_available",
+              "entry_market_spread",
+              "entry_books",
+              "entry_lead_hours",
+              "point",
+              "month_sin",
+              "month_cos"
+            ],
+            "selection_2023": {
+              "rows": 1221,
+              "rmse_no_move_logit": 0.0864133,
+              "rmse_candidate_logit": 0.08552794,
+              "mse_improvement": 0.0001522294,
+              "relative_mse_reduction": 0.02038625,
+              "improvement_ci95_date_clustered": [
+                -6.804e-05,
+                0.0003539
+              ],
+              "direction_accuracy_nontrivial_moves": 0.563124,
+              "movement_correlation": 0.168369,
+              "mean_actual_move_logit": 0.00072422,
+              "mean_predicted_move_logit": 0.00191391
+            }
+          },
+          {
+            "candidate": "microstructure_plus_model_ridge_alpha_0.1",
+            "feature_family": "microstructure_plus_model",
+            "alpha": 0.1,
+            "features": [
+              "entry_logit",
+              "abs_entry_logit",
+              "leader_gap_logit",
+              "follower_gap_logit",
+              "leader_available",
+              "follower_available",
+              "entry_market_spread",
+              "entry_books",
+              "entry_lead_hours",
+              "point",
+              "month_sin",
+              "month_cos",
+              "model_gap_logit"
+            ],
+            "selection_2023": {
+              "rows": 1221,
+              "rmse_no_move_logit": 0.0864133,
+              "rmse_candidate_logit": 0.08414202,
+              "mse_improvement": 0.0003873786,
+              "relative_mse_reduction": 0.05187695,
+              "improvement_ci95_date_clustered": [
+                0.00012604,
+                0.0006287
+              ],
+              "direction_accuracy_nontrivial_moves": 0.578565,
+              "movement_correlation": 0.238787,
+              "mean_actual_move_logit": 0.00072422,
+              "mean_predicted_move_logit": 0.00185728
+            }
+          },
+          {
+            "candidate": "microstructure_plus_model_ridge_alpha_1",
+            "feature_family": "microstructure_plus_model",
+            "alpha": 1.0,
+            "features": [
+              "entry_logit",
+              "abs_entry_logit",
+              "leader_gap_logit",
+              "follower_gap_logit",
+              "leader_available",
+              "follower_available",
+              "entry_market_spread",
+              "entry_books",
+              "entry_lead_hours",
+              "point",
+              "month_sin",
+              "month_cos",
+              "model_gap_logit"
+            ],
+            "selection_2023": {
+              "rows": 1221,
+              "rmse_no_move_logit": 0.0864133,
+              "rmse_candidate_logit": 0.08414019,
+              "mse_improvement": 0.0003876859,
+              "relative_mse_reduction": 0.05191811,
+              "improvement_ci95_date_clustered": [
+                0.00012688,
+                0.00062857
+              ],
+              "direction_accuracy_nontrivial_moves": 0.579473,
+              "movement_correlation": 0.238734,
+              "mean_actual_move_logit": 0.00072422,
+              "mean_predicted_move_logit": 0.00185382
+            }
+          },
+          {
+            "candidate": "microstructure_plus_model_ridge_alpha_10",
+            "feature_family": "microstructure_plus_model",
+            "alpha": 10.0,
+            "features": [
+              "entry_logit",
+              "abs_entry_logit",
+              "leader_gap_logit",
+              "follower_gap_logit",
+              "leader_available",
+              "follower_available",
+              "entry_market_spread",
+              "entry_books",
+              "entry_lead_hours",
+              "point",
+              "month_sin",
+              "month_cos",
+              "model_gap_logit"
+            ],
+            "selection_2023": {
+              "rows": 1221,
+              "rmse_no_move_logit": 0.0864133,
+              "rmse_candidate_logit": 0.08412465,
+              "mse_improvement": 0.0003903013,
+              "relative_mse_reduction": 0.05226836,
+              "improvement_ci95_date_clustered": [
+                0.00013339,
+                0.00062741
+              ],
+              "direction_accuracy_nontrivial_moves": 0.578565,
+              "movement_correlation": 0.238183,
+              "mean_actual_move_logit": 0.00072422,
+              "mean_predicted_move_logit": 0.00182106
+            }
+          },
+          {
+            "candidate": "microstructure_plus_model_ridge_alpha_100",
+            "feature_family": "microstructure_plus_model",
+            "alpha": 100.0,
+            "features": [
+              "entry_logit",
+              "abs_entry_logit",
+              "leader_gap_logit",
+              "follower_gap_logit",
+              "leader_available",
+              "follower_available",
+              "entry_market_spread",
+              "entry_books",
+              "entry_lead_hours",
+              "point",
+              "month_sin",
+              "month_cos",
+              "model_gap_logit"
+            ],
+            "selection_2023": {
+              "rows": 1221,
+              "rmse_no_move_logit": 0.0864133,
+              "rmse_candidate_logit": 0.08412511,
+              "mse_improvement": 0.0003902231,
+              "relative_mse_reduction": 0.05225788,
+              "improvement_ci95_date_clustered": [
+                0.00016241,
+                0.00059684
+              ],
+              "direction_accuracy_nontrivial_moves": 0.577657,
+              "movement_correlation": 0.231521,
+              "mean_actual_move_logit": 0.00072422,
+              "mean_predicted_move_logit": 0.00162719
+            }
+          }
+        ],
+        "selected": "microstructure_plus_model_ridge_alpha_10",
+        "selected_features": [
+          "entry_logit",
+          "abs_entry_logit",
+          "leader_gap_logit",
+          "follower_gap_logit",
+          "leader_available",
+          "follower_available",
+          "entry_market_spread",
+          "entry_books",
+          "entry_lead_hours",
+          "point",
+          "month_sin",
+          "month_cos",
+          "model_gap_logit"
+        ],
+        "selected_alpha": 10.0
+      },
+      "development_signal": true,
+      "status": "candidate locked; 2024 confirmation remains sealed"
     },
     "totals": {
       "rows_by_season": {
         "2022": 523,
-        "2023": 441,
-        "2024": 0
+        "2023": 695,
+        "2024": 33
       },
       "primary_baseline": "no movement",
-      "status": "awaiting complete 2022-23 early archive"
+      "candidate_selection": {
+        "fit_year": 2022,
+        "selection_year": 2023,
+        "candidates": [
+          {
+            "candidate": "microstructure_ridge_alpha_0.1",
+            "feature_family": "microstructure",
+            "alpha": 0.1,
+            "features": [
+              "entry_logit",
+              "abs_entry_logit",
+              "leader_gap_logit",
+              "follower_gap_logit",
+              "leader_available",
+              "follower_available",
+              "entry_market_spread",
+              "entry_books",
+              "entry_lead_hours",
+              "point",
+              "month_sin",
+              "month_cos"
+            ],
+            "selection_2023": {
+              "rows": 695,
+              "rmse_no_move_logit": 0.06842327,
+              "rmse_candidate_logit": 0.05492265,
+              "mse_improvement": 0.0016652459,
+              "relative_mse_reduction": 0.35568927,
+              "improvement_ci95_date_clustered": [
+                0.00130648,
+                0.00202691
+              ],
+              "direction_accuracy_nontrivial_moves": 0.72695,
+              "movement_correlation": 0.596704,
+              "mean_actual_move_logit": 0.00354411,
+              "mean_predicted_move_logit": 0.00042661
+            }
+          },
+          {
+            "candidate": "microstructure_ridge_alpha_1",
+            "feature_family": "microstructure",
+            "alpha": 1.0,
+            "features": [
+              "entry_logit",
+              "abs_entry_logit",
+              "leader_gap_logit",
+              "follower_gap_logit",
+              "leader_available",
+              "follower_available",
+              "entry_market_spread",
+              "entry_books",
+              "entry_lead_hours",
+              "point",
+              "month_sin",
+              "month_cos"
+            ],
+            "selection_2023": {
+              "rows": 695,
+              "rmse_no_move_logit": 0.06842327,
+              "rmse_candidate_logit": 0.0549229,
+              "mse_improvement": 0.0016652183,
+              "relative_mse_reduction": 0.35568336,
+              "improvement_ci95_date_clustered": [
+                0.00130653,
+                0.00202662
+              ],
+              "direction_accuracy_nontrivial_moves": 0.72695,
+              "movement_correlation": 0.596695,
+              "mean_actual_move_logit": 0.00354411,
+              "mean_predicted_move_logit": 0.00043641
+            }
+          },
+          {
+            "candidate": "microstructure_ridge_alpha_10",
+            "feature_family": "microstructure",
+            "alpha": 10.0,
+            "features": [
+              "entry_logit",
+              "abs_entry_logit",
+              "leader_gap_logit",
+              "follower_gap_logit",
+              "leader_available",
+              "follower_available",
+              "entry_market_spread",
+              "entry_books",
+              "entry_lead_hours",
+              "point",
+              "month_sin",
+              "month_cos"
+            ],
+            "selection_2023": {
+              "rows": 695,
+              "rmse_no_move_logit": 0.06842327,
+              "rmse_candidate_logit": 0.05493059,
+              "mse_improvement": 0.0016643737,
+              "relative_mse_reduction": 0.35550295,
+              "improvement_ci95_date_clustered": [
+                0.001312,
+                0.00202125
+              ],
+              "direction_accuracy_nontrivial_moves": 0.72695,
+              "movement_correlation": 0.596589,
+              "mean_actual_move_logit": 0.00354411,
+              "mean_predicted_move_logit": 0.00052842
+            }
+          },
+          {
+            "candidate": "microstructure_ridge_alpha_100",
+            "feature_family": "microstructure",
+            "alpha": 100.0,
+            "features": [
+              "entry_logit",
+              "abs_entry_logit",
+              "leader_gap_logit",
+              "follower_gap_logit",
+              "leader_available",
+              "follower_available",
+              "entry_market_spread",
+              "entry_books",
+              "entry_lead_hours",
+              "point",
+              "month_sin",
+              "month_cos"
+            ],
+            "selection_2023": {
+              "rows": 695,
+              "rmse_no_move_logit": 0.06842327,
+              "rmse_candidate_logit": 0.05533168,
+              "mse_improvement": 0.0016201488,
+              "relative_mse_reduction": 0.34605672,
+              "improvement_ci95_date_clustered": [
+                0.00130615,
+                0.00193772
+              ],
+              "direction_accuracy_nontrivial_moves": 0.723404,
+              "movement_correlation": 0.594374,
+              "mean_actual_move_logit": 0.00354411,
+              "mean_predicted_move_logit": 0.00104046
+            }
+          },
+          {
+            "candidate": "microstructure_plus_model_ridge_alpha_0.1",
+            "feature_family": "microstructure_plus_model",
+            "alpha": 0.1,
+            "features": [
+              "entry_logit",
+              "abs_entry_logit",
+              "leader_gap_logit",
+              "follower_gap_logit",
+              "leader_available",
+              "follower_available",
+              "entry_market_spread",
+              "entry_books",
+              "entry_lead_hours",
+              "point",
+              "month_sin",
+              "month_cos",
+              "model_gap_logit"
+            ],
+            "selection_2023": {
+              "rows": 695,
+              "rmse_no_move_logit": 0.06842327,
+              "rmse_candidate_logit": 0.05628559,
+              "mse_improvement": 0.0015136754,
+              "relative_mse_reduction": 0.32331446,
+              "improvement_ci95_date_clustered": [
+                0.00113008,
+                0.00187679
+              ],
+              "direction_accuracy_nontrivial_moves": 0.719858,
+              "movement_correlation": 0.599932,
+              "mean_actual_move_logit": 0.00354411,
+              "mean_predicted_move_logit": -0.00980949
+            }
+          },
+          {
+            "candidate": "microstructure_plus_model_ridge_alpha_1",
+            "feature_family": "microstructure_plus_model",
+            "alpha": 1.0,
+            "features": [
+              "entry_logit",
+              "abs_entry_logit",
+              "leader_gap_logit",
+              "follower_gap_logit",
+              "leader_available",
+              "follower_available",
+              "entry_market_spread",
+              "entry_books",
+              "entry_lead_hours",
+              "point",
+              "month_sin",
+              "month_cos",
+              "model_gap_logit"
+            ],
+            "selection_2023": {
+              "rows": 695,
+              "rmse_no_move_logit": 0.06842327,
+              "rmse_candidate_logit": 0.05627942,
+              "mse_improvement": 0.0015143709,
+              "relative_mse_reduction": 0.32346302,
+              "improvement_ci95_date_clustered": [
+                0.00113115,
+                0.00187688
+              ],
+              "direction_accuracy_nontrivial_moves": 0.721631,
+              "movement_correlation": 0.599918,
+              "mean_actual_move_logit": 0.00354411,
+              "mean_predicted_move_logit": -0.00978541
+            }
+          },
+          {
+            "candidate": "microstructure_plus_model_ridge_alpha_10",
+            "feature_family": "microstructure_plus_model",
+            "alpha": 10.0,
+            "features": [
+              "entry_logit",
+              "abs_entry_logit",
+              "leader_gap_logit",
+              "follower_gap_logit",
+              "leader_available",
+              "follower_available",
+              "entry_market_spread",
+              "entry_books",
+              "entry_lead_hours",
+              "point",
+              "month_sin",
+              "month_cos",
+              "model_gap_logit"
+            ],
+            "selection_2023": {
+              "rows": 695,
+              "rmse_no_move_logit": 0.06842327,
+              "rmse_candidate_logit": 0.05622415,
+              "mse_improvement": 0.0015205889,
+              "relative_mse_reduction": 0.32479114,
+              "improvement_ci95_date_clustered": [
+                0.00114115,
+                0.00187786
+              ],
+              "direction_accuracy_nontrivial_moves": 0.719858,
+              "movement_correlation": 0.599772,
+              "mean_actual_move_logit": 0.00354411,
+              "mean_predicted_move_logit": -0.00955082
+            }
+          },
+          {
+            "candidate": "microstructure_plus_model_ridge_alpha_100",
+            "feature_family": "microstructure_plus_model",
+            "alpha": 100.0,
+            "features": [
+              "entry_logit",
+              "abs_entry_logit",
+              "leader_gap_logit",
+              "follower_gap_logit",
+              "leader_available",
+              "follower_available",
+              "entry_market_spread",
+              "entry_books",
+              "entry_lead_hours",
+              "point",
+              "month_sin",
+              "month_cos",
+              "model_gap_logit"
+            ],
+            "selection_2023": {
+              "rows": 695,
+              "rmse_no_move_logit": 0.06842327,
+              "rmse_candidate_logit": 0.05613217,
+              "mse_improvement": 0.0015309233,
+              "relative_mse_reduction": 0.32699854,
+              "improvement_ci95_date_clustered": [
+                0.00119625,
+                0.00184285
+              ],
+              "direction_accuracy_nontrivial_moves": 0.714539,
+              "movement_correlation": 0.597875,
+              "mean_actual_move_logit": 0.00354411,
+              "mean_predicted_move_logit": -0.00770721
+            }
+          }
+        ],
+        "selected": "microstructure_ridge_alpha_0.1",
+        "selected_features": [
+          "entry_logit",
+          "abs_entry_logit",
+          "leader_gap_logit",
+          "follower_gap_logit",
+          "leader_available",
+          "follower_available",
+          "entry_market_spread",
+          "entry_books",
+          "entry_lead_hours",
+          "point",
+          "month_sin",
+          "month_cos"
+        ],
+        "selected_alpha": 0.1
+      },
+      "development_signal": true,
+      "status": "candidate locked; 2024 confirmation remains sealed"
     }
   },
   "confirmed_markets": [],
