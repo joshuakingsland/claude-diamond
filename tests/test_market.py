@@ -171,6 +171,7 @@ class BookGateTests(unittest.TestCase):
         row = priced[priced["market"] == "h2h"].iloc[0]
         self.assertAlmostEqual(row["entry_leader_prob"], 0.56)
         self.assertEqual(row["entry_leader_books"], 1)
+        self.assertAlmostEqual(row["entry_market_spread"], 0.06)
 
 
 class IntervalTests(unittest.TestCase):

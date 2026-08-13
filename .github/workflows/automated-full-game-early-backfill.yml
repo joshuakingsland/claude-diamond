@@ -1,0 +1,68 @@
+name: automated full-game MLB early backfill
+on:
+  schedule: [{cron: '37 9 * * *'}]
+  workflow_dispatch: {}
+permissions: {contents: write}
+concurrency: {group: full-game-event-backfill, cancel-in-progress: false}
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install -r requirements.txt
+      - name: Capture next 1,000 early snapshots
+        env: {ODDS_API_KEY: '${{ secrets.ODDS_API_KEY }}'}
+        run: |
+          progress=$(python - <<'PY'
+          import pandas as pd
+          frame = pd.read_csv('data/full_game_event_audit.csv', dtype=str)
+          dates = pd.to_datetime(frame['commence_time'], utc=True, errors='coerce')
+          wanted = dates.dt.year.isin([2022, 2023, 2024])
+          close = frame[wanted & frame['snapshot_role'].eq('close')]
+          early = frame[wanted & frame['snapshot_role'].eq('early')]
+          print(f'{len(early)} {len(close)}')
+          PY
+          )
+          set -- $progress; count=$1; target=$2
+          echo "early attempts: $count / $target"
+          if [ "$count" -ge "$target" ]; then
+            echo 'full-game early provider coverage complete'
+          else
+            left=1000; n=1
+            while [ "$left" -gt 0 ]; do
+              progress=$(python - <<'PY'
+          import pandas as pd
+          frame = pd.read_csv('data/full_game_event_audit.csv', dtype=str)
+          dates = pd.to_datetime(frame['commence_time'], utc=True, errors='coerce')
+          wanted = dates.dt.year.isin([2022, 2023, 2024])
+          print((wanted & frame['snapshot_role'].eq('early')).sum())
+          PY
+              )
+              [ "$progress" -ge "$target" ] && break
+              chunk=$([ "$left" -gt 100 ] && echo 100 || echo "$left")
+              python full_game_event_odds.py --start 2022-01-01 --end 2024-09-29 --max-events "$chunk" --lead-minutes 1440 --snapshot-role early
+              git config user.name github-actions[bot]
+              git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+              git add data/full_game_event_audit.csv data/full_game_event_quotes
+              if ! git diff --cached --quiet; then
+                git commit -m "data: automated full-game early checkpoint $n"
+                git pull --rebase origin main
+                git push origin HEAD:main
+              fi
+              left=$((left-chunk)); n=$((n+1))
+            done
+          fi
+      - name: Refresh sealed movement report
+        run: |
+          python full_game_movement_evaluation.py
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add full_game_movement_evaluation.json data/research/full_game_movement_rows.csv
+          if ! git diff --cached --quiet; then
+            git commit -m "research: refresh full-game movement evidence"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi

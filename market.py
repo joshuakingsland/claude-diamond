@@ -84,6 +84,17 @@ def _devig_consensus(quotes, market, point=None):
     return float(subset["devig_prob_home"].median()), int(subset["book_key"].nunique())
 
 
+def _market_spread(quotes, market, point=None):
+    """Cross-book probability range at one executable market point."""
+    subset = quotes[quotes["market"] == market]
+    if point is not None:
+        subset = subset[np.isclose(subset["point"].astype(float), float(point))]
+    values = pd.to_numeric(subset["devig_prob_home"], errors="coerce").dropna()
+    if not len(values):
+        return None
+    return float(values.max() - values.min())
+
+
 def _leader_follower(quotes, market, point=None):
     subset = quotes[quotes["market"] == market]
     if point is not None:
@@ -189,6 +200,7 @@ def build_priced_games(quotes, games, min_books=3):
                     record[f"{label}_leader_books"] = 0
                     record[f"{label}_follower_prob"] = None
                     record[f"{label}_follower_books"] = 0
+                    record[f"{label}_market_spread"] = None
                     record[f"{label}_lead_hours"] = None
                     continue
                 target_time = (pool["taken"].min() if label == "entry"
@@ -203,11 +215,13 @@ def build_priced_games(quotes, games, min_books=3):
                     record[f"{label}_leader_books"] = 0
                     record[f"{label}_follower_prob"] = None
                     record[f"{label}_follower_books"] = 0
+                    record[f"{label}_market_spread"] = None
                     record[f"{label}_lead_hours"] = None
                     continue
                 point = selected[market]
                 probability, books = _devig_consensus(snap, market, point)
                 split = _leader_follower(snap, market, point)
+                market_spread = _market_spread(snap, market, point)
                 # A consensus thinner than the gate is not a market price.
                 # Gating per column rather than per row matters because a game
                 # can carry a well-covered entry and a one-book close, and the
@@ -217,6 +231,7 @@ def build_priced_games(quotes, games, min_books=3):
                 record[f"{label}_books"] = books
                 for name, value in split.items():
                     record[f"{label}_{name}"] = value
+                record[f"{label}_market_spread"] = market_spread
                 record[f"{label}_lead_hours"] = round(
                     float(snap["lead_hours"].iloc[0]), 2) if len(snap) else None
             rows.append(record)

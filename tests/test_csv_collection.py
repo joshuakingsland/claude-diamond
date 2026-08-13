@@ -25,6 +25,13 @@ class CsvCollectionTests(unittest.TestCase):
             Path("data/quotes/quotes_2024.csv"),
         )
 
+    def test_yearly_part_can_separate_snapshot_roles(self):
+        self.assertEqual(
+            yearly_part("data/quotes", "2024-05-01T20:00:00Z",
+                        prefix="quotes_early"),
+            Path("data/quotes/quotes_early_2024.csv"),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

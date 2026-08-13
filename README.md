@@ -109,6 +109,7 @@ odds.py       three-market odds capture with paired-book de-vig
 historical_odds.py  capped, resumable historical snapshots
 full_game_event_odds.py  per-event full-game closes, sharded by season
 full_game_close_evaluation.py  frozen walk-forward model-versus-close report
+full_game_movement_evaluation.py  sealed 24-hour-to-close movement study
 first_inning_odds.py  capped historical YRFI/NRFI market-coverage audit
 first_inning_results.py  exact first-inning result labels from MLB linescores
 first_inning_report.py  market-only data-integrity report; not a prediction model
@@ -261,6 +262,7 @@ manufacture a sample.
 | `first-inning-audit.yml` | manual | One-market, one-region historical YRFI/NRFI coverage audit; dry run by default |
 | `first-inning-study.yml` | manual | Stratified, capped historical first-inning sample plus official outcome labels; dry run by default |
 | `first-inning-labels.yml` | manual | Free refresh of StatsAPI labels and the market-only baseline; no odds request |
+| `automated-full-game-early-backfill.yml` | daily, manual | Capped 24-hour snapshots and sealed entry-to-close evaluation; no betting |
 | `revalidate.yml` | weekly, manual | Builds predictions once, then market comparison, offset fit, forward evidence and final reports in provenance-safe order |
 
 `odds.yml` needs an `ODDS_API_KEY` repository secret and runs
@@ -391,6 +393,35 @@ GLM, and equal-weight ensemble on all three markets, including the 2024
 confirmation block. A development-selected market-anchored offset also finds
 no confirmed incremental signal. See `FULL_GAME_CLOSE_EVALUATION.md` and
 `full_game_close_evaluation.json`. Nothing in that result authorises a wager.
+
+### Frozen entry-to-close movement study
+
+The next experiment treats the market as the baseline rather than trying to
+replace it. The completed per-game archive supplies the 20-minute close; a
+separate resumable collector adds one 24-hour snapshot for 2022--24. New early
+rows are written to `quotes_early_YYYY.csv` parts so no season file approaches
+the host's large-file limit.
+
+The protocol is frozen before those rows arrive: fit candidates on 2022,
+select exactly one on 2023, and keep 2024 sealed until every provider event has
+an attempted early snapshot. The primary target is moneyline close-logit
+movement versus a no-move baseline. Run lines and totals are secondary and
+enter only when their main point is unchanged. A date-clustered 95% interval
+must clear zero before the result can be called a research signal; even then it
+feeds only the existing paper CLV ledger and never authorises a wager.
+
+```bash
+python full_game_event_odds.py --start 2022-01-01 --end 2024-09-29 \
+  --max-events 100 --lead-minutes 1440 --snapshot-role early --dry-run
+python full_game_movement_evaluation.py
+```
+
+The automated workflow is capped at 1,000 paid event attempts per day. Full
+2022--24 coverage is 7,358 attempts, roughly 220,740 odds credits. The
+completed close manifest is reused as the event catalog, eliminating recurring
+historical-discovery calls. The last completed close row reported more than 4.58
+million credits remaining, but the audit still records the live balance on
+every paid response.
 
 ## First result
 
