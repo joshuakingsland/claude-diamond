@@ -1,6 +1,6 @@
 {
   "study": "MLB 24-hour entry to 20-minute close movement",
-  "repository_revision": "e7330b9a435c",
+  "repository_revision": "f78aeaca34e9",
   "protocol": {
     "version": "full-game-entry-close-v1",
     "entry_snapshot": "24 hours before scheduled first pitch",
@@ -57,9 +57,9 @@
     "2022": {
       "close_attempted": 2549,
       "close_offered": 2516,
-      "early_attempted": 1000,
-      "early_offered": 272,
-      "early_failed": 728,
+      "early_attempted": 2000,
+      "early_offered": 812,
+      "early_failed": 1187,
       "complete": false
     },
     "2023": {
@@ -83,13 +83,13 @@
     "trained_through_violations": 0,
     "raw_quote_events": 10240,
     "unmatched_schedule_events": 1258,
-    "qualified_movement_rows": 597,
+    "qualified_movement_rows": 1849,
     "confirmation_sealed": true
   },
   "markets": {
     "h2h": {
       "rows_by_season": {
-        "2022": 256,
+        "2022": 781,
         "2023": 0,
         "2024": 0
       },
@@ -98,7 +98,7 @@
     },
     "spreads": {
       "rows_by_season": {
-        "2022": 228,
+        "2022": 703,
         "2023": 0,
         "2024": 0
       },
@@ -107,7 +107,7 @@
     },
     "totals": {
       "rows_by_season": {
-        "2022": 113,
+        "2022": 365,
         "2023": 0,
         "2024": 0
       },
