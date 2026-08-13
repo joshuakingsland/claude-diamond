@@ -1,0 +1,53 @@
+name: continue full-game MLB early backfill
+on:
+  workflow_run:
+    workflows: ['automated full-game MLB early backfill']
+    types: [completed]
+permissions:
+  actions: write
+  contents: read
+jobs:
+  continue:
+    # A failed collection must stop the chain. Never hide it by launching a
+    # fresh green run over the top of the failure.
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: main}
+      - name: Count completed attempts
+        id: progress
+        run: |
+          progress=$(python - <<'PY'
+          import csv
+          from datetime import datetime
+
+          with open('data/full_game_event_audit.csv', newline='') as handle:
+              rows = list(csv.DictReader(handle))
+
+          def wanted(row):
+              try:
+                  return 2022 <= datetime.fromisoformat(
+                      row['commence_time'].replace('Z', '+00:00')).year <= 2024
+              except (KeyError, TypeError, ValueError):
+                  return False
+
+          close = sum(wanted(row) and row['snapshot_role'] == 'close'
+                      for row in rows)
+          early = sum(wanted(row) and row['snapshot_role'] == 'early'
+                      for row in rows)
+          print(f'{early} {close}')
+          PY
+          )
+          set -- $progress
+          echo "completed=$1" >> "$GITHUB_OUTPUT"
+          echo "target=$2" >> "$GITHUB_OUTPUT"
+          echo "early attempts: $1 / $2"
+      - name: Launch exactly one successor batch
+        if: ${{ fromJSON(steps.progress.outputs.completed) < fromJSON(steps.progress.outputs.target) }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run automated-full-game-early-backfill.yml --ref main
+      - name: Mark archive complete
+        if: ${{ fromJSON(steps.progress.outputs.completed) >= fromJSON(steps.progress.outputs.target) }}
+        run: echo 'full-game early provider coverage complete; chain stopped'
