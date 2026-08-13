@@ -1,6 +1,6 @@
 {
   "study": "MLB 24-hour entry to 20-minute close movement",
-  "repository_revision": "882b88ee164c",
+  "repository_revision": "d000c3a29c3d",
   "protocol": {
     "version": "full-game-entry-close-v1",
     "entry_snapshot": "24 hours before scheduled first pitch",
@@ -65,9 +65,9 @@
     "2023": {
       "close_attempted": 2365,
       "close_offered": 2342,
-      "early_attempted": 451,
-      "early_offered": 397,
-      "early_failed": 54,
+      "early_attempted": 1451,
+      "early_offered": 1265,
+      "early_failed": 186,
       "complete": false
     },
     "2024": {
@@ -81,16 +81,16 @@
   },
   "integrity": {
     "trained_through_violations": 0,
-    "raw_quote_events": 10246,
-    "unmatched_schedule_events": 1264,
-    "qualified_movement_rows": 3255,
+    "raw_quote_events": 10253,
+    "unmatched_schedule_events": 1270,
+    "qualified_movement_rows": 4786,
     "confirmation_sealed": true
   },
   "markets": {
     "h2h": {
       "rows_by_season": {
         "2022": 1074,
-        "2023": 302,
+        "2023": 967,
         "2024": 0
       },
       "primary_baseline": "no movement",
@@ -99,7 +99,7 @@
     "spreads": {
       "rows_by_season": {
         "2022": 966,
-        "2023": 242,
+        "2023": 815,
         "2024": 0
       },
       "primary_baseline": "no movement",
@@ -108,7 +108,7 @@
     "totals": {
       "rows_by_season": {
         "2022": 523,
-        "2023": 148,
+        "2023": 441,
         "2024": 0
       },
       "primary_baseline": "no movement",
