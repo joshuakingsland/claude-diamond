@@ -36,8 +36,9 @@ jobs:
 
           while true; do
             # Each provider pull must begin from the current main manifest.
-            # This prevents retries from replaying a stale workflow commit.
-            git pull --rebase origin main
+            # commit_data.sh publishes append-only data by audit key, so a
+            # concurrent live capture cannot delete this checkpoint.
+            git pull --ff-only origin main
             progress=$(python - <<'PY'
           import pandas as pd
           frame = pd.read_csv('data/full_game_event_audit.csv', dtype=str)
@@ -68,26 +69,13 @@ jobs:
               --lead-minutes 1440 \
               --snapshot-role early
 
-            git add data/full_game_event_audit.csv data/full_game_event_quotes
-            if git diff --cached --quiet; then
+            if git diff --quiet -- data/full_game_event_audit.csv data/full_game_event_quotes; then
               echo "collector made no progress with $remaining attempts remaining"
               exit 1
             fi
-            git commit -m "data: automated full-game early checkpoint $checkpoint"
-
-            pushed=0
-            for push_attempt in 1 2 3 4 5; do
-              if git push origin HEAD:main; then
-                pushed=1
-                break
-              fi
-              echo "push race $push_attempt; rebasing on current main"
-              git pull --rebase origin main
-            done
-            if [ "$pushed" -ne 1 ]; then
-              echo 'could not publish checkpoint after five attempts'
-              exit 1
-            fi
+            bash commit_data.sh \
+              "data: automated full-game early checkpoint $checkpoint" \
+              data/full_game_event_audit.csv data/full_game_event_quotes
             checkpoint=$((checkpoint+1))
           done
 
@@ -95,11 +83,7 @@ jobs:
       - name: Refresh sealed movement report
         run: |
           python full_game_movement_evaluation.py
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add full_game_movement_evaluation.json data/research/full_game_movement_rows.csv
-          if ! git diff --cached --quiet; then
-            git commit -m "research: refresh full-game movement evidence"
-            git pull --rebase origin main
-            git push origin HEAD:main
-          fi
+          bash commit_data.sh \
+            "research: refresh full-game movement evidence" \
+            full_game_movement_evaluation.json \
+            data/research/full_game_movement_rows.csv
