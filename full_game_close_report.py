@@ -3,7 +3,9 @@ import argparse, json
 from pathlib import Path
 import pandas as pd
 
-TARGET = 10618
+# Verified historical-event coverage from the provider, not a theoretical
+# MLB schedule count.  The latter includes games this endpoint cannot return.
+TARGET = 10354
 def build(audit, quotes):
     if audit.empty: return {"status":"waiting_for_data","events":0}
     a=audit.copy(); a["lead_minutes"]=(pd.to_datetime(a["commence_time"],utc=True)-pd.to_datetime(a["requested_snapshot"],utc=True)).dt.total_seconds()/60
