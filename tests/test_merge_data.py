@@ -36,6 +36,9 @@ class KeyTests(unittest.TestCase):
         self.assertEqual(union_key("data/paper_ledger.csv"), ("wager_id",))
         self.assertEqual(union_key("data/market_quotes/quotes_2026-08.csv"),
                          ("snapshot_id",))
+        self.assertEqual(
+            union_key("data/full_game_event_quotes/quotes_2024.csv"),
+            ("snapshot_id",))
 
     def test_regenerated_snapshots_are_replaced(self):
         for path in ("data/lines_upcoming.csv", "docs/index.html",

@@ -52,12 +52,16 @@ UNION_KEYS = {
 # Monthly quote logs are named by month, so they are matched by shape.
 QUOTE_LOG_DIR = "data/market_quotes"
 QUOTE_LOG_KEY = ("snapshot_id",)
+FULL_GAME_QUOTE_DIR = "data/full_game_event_quotes"
 
 
 def union_key(relative):
     if relative in UNION_KEYS:
         return UNION_KEYS[relative]
     if relative.startswith(QUOTE_LOG_DIR + "/") and relative.endswith(".csv"):
+        return QUOTE_LOG_KEY
+    if (relative.startswith(FULL_GAME_QUOTE_DIR + "/")
+            and relative.endswith(".csv")):
         return QUOTE_LOG_KEY
     return None
 

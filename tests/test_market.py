@@ -136,6 +136,22 @@ class BookGateTests(unittest.TestCase):
         row = self._frame(close_books=("a", "b", "c"))
         self.assertIsNotNone(row["close_prob"])
 
+    def test_close_only_dataset_has_an_explicit_empty_entry_lead(self):
+        quotes = pd.DataFrame([
+            _quote("e1", book, "h2h", 0.5, 0.5,
+                   "2025-05-01T22:50:00Z")
+            for book in ("a", "b", "c")
+        ])
+        games = pd.DataFrame([{
+            "game_pk": 1, "home_team_name": "Home Nine",
+            "away_team_name": "Away Nine",
+            "game_date_utc": "2025-05-01T23:10:00Z",
+            "official_date": "2025-05-01",
+        }])
+        priced, _ = build_priced_games(quotes, games)
+        self.assertIn("entry_lead_hours", priced.columns)
+        self.assertTrue(priced["entry_lead_hours"].isna().all())
+
     def test_market_leader_probability_survives_for_microstructure_fit(self):
         rows = [
             _quote("e1", "betonlineag", "h2h", 0.56, 0.44,

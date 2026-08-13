@@ -2,6 +2,7 @@
 import argparse, json
 from pathlib import Path
 import pandas as pd
+from csv_collection import read_csv_collection
 
 # Verified historical-event coverage from the provider, not a theoretical
 # MLB schedule count.  The latter includes games this endpoint cannot return.
@@ -15,7 +16,7 @@ def build(audit, quotes):
         q=quotes.drop_duplicates(["event_id","market","book_key"]); result["paired_quotes"]=int(len(quotes)); result["mean_books_per_market"] = round(float(q.groupby(["event_id","market"]).book_key.nunique().mean()),3)
     return result
 def main():
- p=argparse.ArgumentParser();p.add_argument('--audit',default='data/full_game_event_audit.csv');p.add_argument('--quotes',default='data/full_game_event_quotes.csv');p.add_argument('--out',default='full_game_close_evidence.json');a=p.parse_args()
- load=lambda x: pd.read_csv(x) if Path(x).exists() else pd.DataFrame()
+ p=argparse.ArgumentParser();p.add_argument('--audit',default='data/full_game_event_audit.csv');p.add_argument('--quotes',default='data/full_game_event_quotes');p.add_argument('--out',default='full_game_close_evidence.json');a=p.parse_args()
+ load=lambda x: pd.read_csv(x) if Path(x).is_file() else read_csv_collection(x)
  r=build(load(a.audit),load(a.quotes));Path(a.out).write_text(json.dumps(r,indent=2));print(json.dumps(r,indent=2))
 if __name__=='__main__':main()

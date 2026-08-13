@@ -44,6 +44,7 @@ from models import reprice_requests
 from config import LEADER_BOOK_KEYS
 from odds import main_line_points
 from provenance import repository_revision
+from csv_collection import read_csv_collection
 
 MIN_ENTRY_LEAD_HOURS = 20
 
@@ -176,7 +177,8 @@ def build_priced_games(quotes, games, min_books=3):
         entry_pool = group[group["lead_hours"] >= MIN_ENTRY_LEAD_HOURS]
         close_pool = group
         for market in ("h2h", "spreads", "totals"):
-            record = {"game_pk": game_pk, "official_date": official_date,
+            record = {"event_id": event_id, "game_pk": game_pk,
+                      "official_date": official_date,
                       "market": market}
             for label, pool in (("entry", entry_pool), ("close", close_pool)):
                 if not len(pool):
@@ -187,6 +189,7 @@ def build_priced_games(quotes, games, min_books=3):
                     record[f"{label}_leader_books"] = 0
                     record[f"{label}_follower_prob"] = None
                     record[f"{label}_follower_books"] = 0
+                    record[f"{label}_lead_hours"] = None
                     continue
                 target_time = (pool["taken"].min() if label == "entry"
                                else pool["taken"].max())
@@ -200,6 +203,7 @@ def build_priced_games(quotes, games, min_books=3):
                     record[f"{label}_leader_books"] = 0
                     record[f"{label}_follower_prob"] = None
                     record[f"{label}_follower_books"] = 0
+                    record[f"{label}_lead_hours"] = None
                     continue
                 point = selected[market]
                 probability, books = _devig_consensus(snap, market, point)
@@ -358,7 +362,7 @@ def main():
     parser.add_argument("--report", default="market_comparison.json")
     args = parser.parse_args()
 
-    quotes = pd.read_csv(args.quotes)
+    quotes = read_csv_collection(args.quotes)
     games = pd.read_csv(args.games)
     predictions = pd.read_csv(args.predictions)
     priced, unmatched = build_priced_games(quotes, games)

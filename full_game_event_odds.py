@@ -7,8 +7,9 @@ from first_inning_odds import _append, _credit, _iso, _load_rows, events_on_day,
 from historical_odds import _request
 from odds import QUOTE_FIELDS, _quote_rows, append_quote_log, paired_book_quotes
 from first_inning_odds import EVENT_ODDS_API, _url
+from csv_collection import yearly_part
 
-MANIFEST=Path('data/full_game_event_audit.csv'); QUOTES=Path('data/full_game_event_quotes.csv')
+MANIFEST=Path('data/full_game_event_audit.csv'); QUOTES=Path('data/full_game_event_quotes')
 FIELDS=['audit_id','event_id','home_team','away_team','commence_time','snapshot_role','requested_snapshot','returned_snapshot','status','quote_count','odds_credits_used','discovery_credits_used','credits_remaining','error']
 def days(start,end):
  d=date.fromisoformat(start); e=date.fromisoformat(end)
@@ -32,7 +33,9 @@ def run(key,start,end,max_events,lead_minutes=20,role='close',region='us',manife
   try:
    payload,h=_request(url(key,event['id'],snap,region)); priced=dict(event); got=response_events(payload)
    if got: priced.update(got[0])
-   qs=paired_book_quotes(priced,region,MARKETS); append_quote_log(quotes,_quote_rows(priced,qs,payload.get('timestamp') or base['requested_snapshot']))
+   qs=paired_book_quotes(priced,region,MARKETS)
+   quote_path=yearly_part(quotes,event['commence_time'])
+   append_quote_log(quote_path,_quote_rows(priced,qs,payload.get('timestamp') or base['requested_snapshot']))
    row={**base,'returned_snapshot':payload.get('timestamp',''),'status':'offered' if qs else 'no_offer','quote_count':len(qs),'odds_credits_used':_credit(h.get('used')),'credits_remaining':h.get('remaining',''),'error':''}
   except Exception as err: row={**base,'returned_snapshot':'','status':'failed','quote_count':0,'odds_credits_used':0,'credits_remaining':'','error':repr(err)}
   _append(manifest,FIELDS,[row]); rows.append(row)

@@ -32,7 +32,7 @@ jobs:
             chunk='${{ inputs.events_per_checkpoint }}'; [ "$chunk" -gt "$left" ] && chunk="$left"
             python full_game_event_odds.py --start '${{ inputs.start }}' --end '${{ inputs.end }}' --max-events "$chunk" --lead-minutes '${{ inputs.lead_minutes }}' --snapshot-role '${{ inputs.snapshot_role }}'
             git config user.name github-actions[bot]; git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-            git add data/full_game_event_audit.csv data/full_game_event_quotes.csv
+            git add data/full_game_event_audit.csv data/full_game_event_quotes
             git diff --cached --quiet || (git commit -m "data: full-game event checkpoint $n" && git push)
             left=$((left-chunk)); n=$((n+1))
           done

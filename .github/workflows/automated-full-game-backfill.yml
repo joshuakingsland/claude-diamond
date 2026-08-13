@@ -34,7 +34,7 @@ jobs:
             [ "$count" -ge 10354 ] && break
             python full_game_event_odds.py --start 2020-07-23 --end 2024-09-29 --max-events $([ "$left" -gt 100 ] && echo 100 || echo "$left") --lead-minutes 20 --snapshot-role close
             git config user.name github-actions[bot]; git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-            git add data/full_game_event_audit.csv data/full_game_event_quotes.csv
+            git add data/full_game_event_audit.csv data/full_game_event_quotes
             if ! git diff --cached --quiet; then
               git commit -m "data: automated full-game close checkpoint $n"
               # The concurrent live-board job can push between checkpoints.

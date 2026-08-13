@@ -107,6 +107,8 @@ models.py     expected-runs estimators and the pricing layer
 validate.py   walk-forward validation and the honest report
 odds.py       three-market odds capture with paired-book de-vig
 historical_odds.py  capped, resumable historical snapshots
+full_game_event_odds.py  per-event full-game closes, sharded by season
+full_game_close_evaluation.py  frozen walk-forward model-versus-close report
 first_inning_odds.py  capped historical YRFI/NRFI market-coverage audit
 first_inning_results.py  exact first-inning result labels from MLB linescores
 first_inning_report.py  market-only data-integrity report; not a prediction model
@@ -371,6 +373,24 @@ Or `./run_pipeline.sh`, which runs the same chain in the same order.
 
 `weather.py` is resumable by design: a venue that fails a TLS handshake is
 reported and skipped, and rerunning fills only what is missing.
+
+### Completed per-game close archive
+
+The 2020-2024 per-event archive is stored as yearly parts under
+`data/full_game_event_quotes/`; no part approaches GitHub's 100 MB file limit.
+Run the frozen comparison with:
+
+```bash
+python full_game_close_report.py
+python full_game_close_evaluation.py
+```
+
+The completed 2022-2024 comparison contains 6,914 games with walk-forward
+predictions and qualified closes. The closing market beats the standalone GBM,
+GLM, and equal-weight ensemble on all three markets, including the 2024
+confirmation block. A development-selected market-anchored offset also finds
+no confirmed incremental signal. See `FULL_GAME_CLOSE_EVALUATION.md` and
+`full_game_close_evaluation.json`. Nothing in that result authorises a wager.
 
 ## First result
 

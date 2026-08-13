@@ -1,15 +1,15 @@
 {
   "status": "research_only",
-  "target_events": 10618,
-  "attempted_events": 8700,
-  "offered_events": 8588,
-  "failed_events": 110,
+  "target_events": 10354,
+  "attempted_events": 10354,
+  "offered_events": 10233,
+  "failed_events": 119,
   "no_offer_events": 2,
-  "completion_rate": 0.81936,
-  "offer_rate": 0.98713,
+  "completion_rate": 1.0,
+  "offer_rate": 0.98831,
   "lead_minutes_median": 20.0,
   "pregame_requested_rate": 1.0,
   "note": "Integrity and coverage only. No model selection, bets, or performance claims.",
-  "paired_quotes": 376156,
-  "mean_books_per_market": 14.69
+  "paired_quotes": 428839,
+  "mean_books_per_market": 14.041
 }
