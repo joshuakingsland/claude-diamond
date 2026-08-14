@@ -2,10 +2,18 @@ name: automated first-inning MLB research backfill
 on:
   schedule: [{cron: '43 16 * * *'}]
   workflow_dispatch: {}
+  # A workflow-only repair commit can launch one immediate run. Ordinary data
+  # and code pushes do not spend historical-odds credits.
+  push:
+    branches: [main]
+    paths: ['.github/workflows/automated-first-inning-backfill.yml']
 permissions: {contents: write}
 concurrency: {group: first-inning-study, cancel-in-progress: false}
 jobs:
   backfill:
+    # Push-triggered runs are opt-in through the repair commit message. This
+    # keeps later workflow edits from unexpectedly buying historical odds.
+    if: github.event_name != 'push' || contains(github.event.head_commit.message, '[run-yrfi]')
     runs-on: ubuntu-latest
     timeout-minutes: 360
     steps:
@@ -28,6 +36,6 @@ jobs:
             # Preserve every paid row if another workflow advances main while
             # this chunk is running. commit_data.sh retries rejected pushes and
             # unions the append-only first-inning files by their stable keys.
-            bash commit_data.sh               "data: automated first-inning checkpoint $n"               data first_inning_evidence.json
+            bash commit_data.sh "data: automated first-inning checkpoint $n" data first_inning_evidence.json
             left=$((left-chunk)); n=$((n+1))
           done
