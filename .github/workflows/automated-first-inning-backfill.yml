@@ -23,13 +23,11 @@ jobs:
           while [ "$left" -gt 0 ]; do
             chunk=$([ "$left" -gt 100 ] && echo 100 || echo "$left")
             python first_inning_odds.py --start 2023-05-03 --end 2026-08-10 --max-events "$chunk" --days-per-season 180 --lead-minutes 10
-            python first_inning_results.py; python first_inning_report.py
-            git config user.name github-actions[bot]; git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-            git add data first_inning_evidence.json
-            if ! git diff --cached --quiet; then
-              git commit -m "data: automated first-inning checkpoint $n"
-              git pull --rebase origin main
-              git push origin HEAD:main
-            fi
+            python first_inning_results.py
+            python first_inning_report.py
+            # Preserve every paid row if another workflow advances main while
+            # this chunk is running. commit_data.sh retries rejected pushes and
+            # unions the append-only first-inning files by their stable keys.
+            bash commit_data.sh               "data: automated first-inning checkpoint $n"               data first_inning_evidence.json
             left=$((left-chunk)); n=$((n+1))
           done
