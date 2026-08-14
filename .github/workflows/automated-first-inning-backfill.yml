@@ -1,4 +1,5 @@
 name: automated first-inning MLB research backfill
+# Manual launch serial: 2
 on:
   schedule: [{cron: '43 16 * * *'}]
   workflow_dispatch: {}
