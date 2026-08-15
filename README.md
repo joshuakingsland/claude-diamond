@@ -28,7 +28,7 @@ actually being tested.
 | --- | --- |
 | Does the model predict baseball? | **Yes.** Calibration, log loss, Brier against 13,857 completed games |
 | Does the standalone model beat a price? | **No.** On the coherent main-line comparison the close wins all three markets with date-clustered intervals excluding zero |
-| Is there a credible route to an edge? | **Possibly, but unproved.** A constrained market-offset model now targets residual outcome signal and leader-to-close movement instead of trying to replace the market |
+| Is there a credible route to an edge? | **A price-movement route, not an outcome edge.** The frozen 24-hour-to-close study confirmed all three markets; totals reached 73.1% direction accuracy and 38.1% relative MSE reduction in 2024. It is now a paper CLV probe only |
 | Should anyone stake money? | **No.** The promotion gate requires 500 independent games, 95% accepted fills, and positive sharp-close CLV; there is no real-money path in this code |
 
 A well-calibrated model that loses money is the *normal* outcome in a liquid
@@ -110,9 +110,11 @@ historical_odds.py  capped, resumable historical snapshots
 full_game_event_odds.py  per-event full-game closes, sharded by season
 full_game_close_evaluation.py  frozen walk-forward model-versus-close report
 full_game_movement_evaluation.py  sealed 24-hour-to-close movement study
+movement_forecast.py  frozen 24-hour movement artifact and serving gate
 first_inning_odds.py  capped historical YRFI/NRFI market-coverage audit
 first_inning_results.py  exact first-inning result labels from MLB linescores
 first_inning_report.py  market-only data-integrity report; not a prediction model
+first_inning_model_evaluation.py  frozen 2023/2024/2025 market-anchored YRFI test
 market.py     joins prices to predictions; asks whether the model beats them
 market_offset.py  constrained market-logit residual and price-movement fit
 forward_evidence.py  accepted fills, independent games, sharp-close CLV gate
@@ -181,10 +183,12 @@ The standalone model is no longer treated as the fair-price prior. The card
 starts from the paired-book, de-vigged market logit and retains only the
 constrained fraction of the model-market residual supported in expanding-date
 outcome tests. Currently that fraction is zero in all three markets:
-market-only. A separate fit asks whether the residual and market-leader gap
-predict movement toward a later main-line price; only moneyline and run line
-survive their clustered forward interval, and they feed the non-wager CLV
-probe. The raw model gap remains on the card as a diagnostic.
+market-only. The completed per-game archive separately confirms that 24-hour
+market microstructure predicts the 20-minute close in all three markets, with
+the largest result on totals. `movement_forecast.py` serves that frozen model
+only between 23 and 25 hours before first pitch and feeds a non-wager CLV
+probe. It is never extrapolated into the late lock window. The raw model gap
+remains on the card as a diagnostic.
 
 Three properties keep the live path honest. It builds features with the *same*
 builder as training, which emits a row for an unplayed game and folds nothing
@@ -246,11 +250,12 @@ through date, offset version, actual book update time, and policy version, so
 materially different decisions cannot collapse under one static model label.
 
 Because outcome evidence currently supports no wagers, `signal_ledger.py`
-separately freezes the small price-movement prediction. It takes at most one
-main-line observation per game risk bucket and labels it `paper_quote`, never
-an accepted fill. This lets later sharp-close CLV test the only signal that
-survived expanding-date evaluation without loosening the wagering gates to
-manufacture a sample.
+separately freezes price-movement predictions. The confirmed 24-hour model is
+recorded as `paper_clv_probe`; the older lock-window diagnostic remains a
+`paper_quote`. At most one main-line observation per game risk bucket and
+target is kept, and neither is an accepted fill. This lets later sharp-close
+CLV test the only signal that survived confirmation without loosening the
+wagering gates to manufacture a sample.
 
 ## Automation
 

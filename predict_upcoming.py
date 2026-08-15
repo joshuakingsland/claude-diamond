@@ -45,6 +45,8 @@ from features import FEATURE_COLUMNS, build, load_inputs
 from market import match_events_to_games, normalise
 from market_offset import apply as apply_market_offset
 from market_offset import load as load_market_offset
+from movement_forecast import apply as apply_movement_forecast
+from movement_forecast import load as load_movement_forecast
 from lineup_snapshots import confirmed_games
 from models import RunsModel
 from odds import _is_future
@@ -67,6 +69,7 @@ CARD_FIELDS = [
     "distribution_family",
     "odds_fetched_at", "model_version", "model_revision", "feature_schema",
     "model_kind", "trained_through", "market_offset_version",
+    "movement_model_version", "movement_target", "movement_model_eligible",
     "outcome_weight", "movement_weight", "leader_weight", "priced_at",
 ]
 
@@ -132,7 +135,8 @@ def model_probability(priced, market, point):
 
 
 def build_card(lines, games, features, kind="glm", now=None, verbose=True,
-               offset_artifact=None, confirmed_lineup_games=None):
+               offset_artifact=None, movement_artifact=None,
+               confirmed_lineup_games=None):
     """Train on everything played, then price the games still to come."""
     now = now or datetime.now(timezone.utc)
     confirmed_lineup_games = {str(value) for value in
@@ -162,6 +166,8 @@ def build_card(lines, games, features, kind="glm", now=None, verbose=True,
     model = RunsModel(kind=kind).fit(trained, games)
     offset_artifact = (load_market_offset() if offset_artifact is None
                        else offset_artifact)
+    movement_artifact = (load_movement_forecast()
+                         if movement_artifact is None else movement_artifact)
     if verbose:
         print(f"trained on {len(trained)} completed games, "
               f"distribution {model.distribution_family}, "
@@ -211,8 +217,19 @@ def build_card(lines, games, features, kind="glm", now=None, verbose=True,
             model_prob, market_prob, row["market"], offset_artifact,
             leader_probability=row.get("leader_prob_home"))
         fair_prob = adjusted["fair_prob_home"]
-        predicted_close = adjusted["predicted_close_prob_home"]
         commence = pd.to_datetime(row["commence_time"], utc=True)
+        lead_minutes = int((commence - now).total_seconds() // 60)
+        movement = apply_movement_forecast(
+            model_prob, market_prob, row["market"], movement_artifact,
+            leader_probability=row.get("leader_prob_home"),
+            follower_probability=row.get("follower_prob_home"),
+            market_spread=row.get("market_spread", 0.0),
+            market_books=row.get("market_books", 0),
+            lead_minutes=lead_minutes, point=point,
+            official_date=official_date)
+        predicted_close = (movement["predicted_close_prob_home"]
+                           if movement["eligible"]
+                           else adjusted["predicted_close_prob_home"])
         rows.append({
             "event_id": row["event_id"],
             "game_pk": game_pk,
@@ -254,7 +271,7 @@ def build_card(lines, games, features, kind="glm", now=None, verbose=True,
             "expected_away_runs": round(
                 float(priced.loc[game_pk, "expected_away_runs"]), 4),
             "distribution_family": model.distribution_family,
-            "lead_minutes": int((commence - now).total_seconds() // 60),
+            "lead_minutes": lead_minutes,
             "odds_fetched_at": row["fetched_at"],
             "model_version": version,
             "model_revision": revision,
@@ -262,6 +279,9 @@ def build_card(lines, games, features, kind="glm", now=None, verbose=True,
             "model_kind": kind,
             "trained_through": trained_through,
             "market_offset_version": adjusted["offset_version"],
+            "movement_model_version": movement["version"],
+            "movement_target": movement["target"],
+            "movement_model_eligible": int(movement["eligible"]),
             "outcome_weight": adjusted["outcome_weight"],
             "movement_weight": adjusted["movement_weight"],
             "leader_weight": adjusted["leader_weight"],

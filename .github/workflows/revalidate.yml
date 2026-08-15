@@ -93,6 +93,18 @@ jobs:
         # improved outcomes or predicted later price movement.
         run: python market_offset.py
 
+      - name: Fit the confirmed 24-hour movement probe
+        # This is a close-movement forecast, not an outcome edge. It is fitted
+        # only from the candidate locked on 2022-23 and is eligible solely in
+        # the matching 23-25 hour entry window.
+        run: python movement_forecast.py
+
+      - name: Re-evaluate the frozen YRFI candidates
+        # Existing 2026 rows are counted but never scored by this report. New
+        # post-lock games are the forward evidence; the workflow cannot tune
+        # on them.
+        run: python first_inning_model_evaluation.py
+
       - name: Settle the paper ledger
         # Settle only. New wagers are screened by the capture workflow, which
         # is the only place that sees a live board inside the lock window.
@@ -140,4 +152,6 @@ jobs:
         run: |
           bash commit_data.sh "data: revalidate $(date -u +%Y-%m-%d)" \
             data docs validation_glm.json validation_gbm.json \
-            market_comparison.json market_offset.json forward_evidence.json
+            market_comparison.json market_offset.json forward_evidence.json \
+            movement_model.json first_inning_model_evaluation.json \
+            data/research/yrfi_model_rows.csv

@@ -9,6 +9,8 @@ it a bet or cherry-picking the best capture after the fact.
 
 import argparse
 import csv
+import os
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -25,6 +27,7 @@ SIGNAL_FIELDS = [
     "commence_time", "home_team", "away_team", "market", "point", "side",
     "predicted_clv", "price", "book", "book_updated_at", "market_books",
     "risk_bucket", "model_version", "market_offset_version",
+    "movement_model_version", "movement_target",
     "execution_status",
 ]
 
@@ -37,12 +40,15 @@ def screen(card, existing=None, now=None):
         signal = row.get("predicted_clv")
         if unset(signal) or abs(float(signal)) < MIN_CLV_SIGNAL:
             continue
-        if not int(row.get("lineups_confirmed", 0) or 0):
+        early_probe = bool(int(row.get("movement_model_eligible", 0) or 0)) \
+            and row.get("movement_target") == "24h_entry_to_20m_close"
+        if not early_probe and not int(row.get("lineups_confirmed", 0) or 0):
             continue
         if int(row.get("market_books", 0) or 0) < MIN_MARKET_BOOKS:
             continue
         lead = int(row.get("lead_minutes", 0) or 0)
-        if not MIN_LOCK_LEAD_MINUTES <= lead <= MAX_LOCK_LEAD_MINUTES:
+        if (not early_probe
+                and not MIN_LOCK_LEAD_MINUTES <= lead <= MAX_LOCK_LEAD_MINUTES):
             continue
         captured = pd.to_datetime(row.get("odds_fetched_at"), utc=True,
                                   errors="coerce")
@@ -58,7 +64,11 @@ def screen(card, existing=None, now=None):
                 > MAX_BOOK_QUOTE_AGE_MINUTES:
             continue
         bucket = risk_bucket(row)
-        identifier = f"clv|{row['game_pk']}|{bucket}"
+        target = (row.get("movement_target") if early_probe else "lock_window")
+        # Keep the legacy identifier stable so deploying the new probe cannot
+        # append duplicates of the lock-window observations already recorded.
+        identifier = (f"clv|{target}|{row['game_pk']}|{bucket}" if early_probe
+                      else f"clv|{row['game_pk']}|{bucket}")
         if identifier in existing:
             continue
         eligible.append({
@@ -82,7 +92,10 @@ def screen(card, existing=None, now=None):
             "risk_bucket": bucket,
             "model_version": row.get("model_version", ""),
             "market_offset_version": row.get("market_offset_version", ""),
-            "execution_status": "paper_quote",
+            "movement_model_version": row.get("movement_model_version", ""),
+            "movement_target": target,
+            "execution_status": ("paper_clv_probe" if early_probe
+                                 else "paper_quote"),
         })
     eligible.sort(key=lambda row: -row["predicted_clv"])
     selected, buckets = [], set()
@@ -101,6 +114,26 @@ def append(path, rows):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     write_header = not path.exists() or path.stat().st_size == 0
+    if not write_header:
+        with path.open(newline="", encoding="utf-8") as handle:
+            reader = csv.DictReader(handle)
+            existing_fields = reader.fieldnames or []
+            existing_rows = list(reader)
+        if existing_fields != SIGNAL_FIELDS:
+            # Append-only logs still need an explicit schema migration when a
+            # provenance column is added. Appending a wider row under the old
+            # header silently shifts columns and corrupts every future read.
+            with tempfile.NamedTemporaryFile(
+                    "w", newline="", encoding="utf-8", delete=False,
+                    dir=path.parent, prefix=f".{path.name}.") as handle:
+                writer = csv.DictWriter(handle, fieldnames=SIGNAL_FIELDS,
+                                        extrasaction="ignore")
+                writer.writeheader()
+                writer.writerows(existing_rows)
+                writer.writerows(rows)
+                temporary = handle.name
+            os.replace(temporary, path)
+            return
     with path.open("a", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=SIGNAL_FIELDS,
                                 extrasaction="ignore")
