@@ -1,0 +1,270 @@
+{
+  "version": "full-game-24h-close-probe-v1",
+  "repository_revision": "2d4886b5f094",
+  "source_protocol": "full-game-entry-close-v1",
+  "source_protocol_hash": "eeaa8fa0b399ff9c",
+  "target": "24h_entry_to_20m_close",
+  "entry_window_minutes": [
+    1380,
+    1500
+  ],
+  "minimum_books": 3,
+  "fit_years": [
+    2022,
+    2023
+  ],
+  "confirmation_year": 2024,
+  "fitted_through": "2023-10-01",
+  "promotion_status": "paper_clv_probe_only",
+  "bets_placed": 0,
+  "markets": {
+    "h2h": {
+      "features": [
+        "entry_logit",
+        "abs_entry_logit",
+        "leader_gap_logit",
+        "follower_gap_logit",
+        "leader_available",
+        "follower_available",
+        "entry_market_spread",
+        "entry_books",
+        "entry_lead_hours",
+        "point",
+        "month_sin",
+        "month_cos",
+        "model_gap_logit"
+      ],
+      "alpha": 100.0,
+      "training_rows": 2577,
+      "training_years": [
+        2022,
+        2023
+      ],
+      "scaler_mean": [
+        0.129414739062,
+        0.348613414491,
+        6.73612e-07,
+        -0.000257472509,
+        0.960031043849,
+        1.0,
+        0.020706082018,
+        10.357780364765,
+        24.065805199845,
+        0.0,
+        -0.201996440326,
+        -0.59800893843,
+        -0.029380751468
+      ],
+      "scaler_scale": [
+        0.403480470951,
+        0.240859611314,
+        0.021191659173,
+        0.014387872423,
+        0.195886290217,
+        1.0,
+        0.01639659954,
+        3.969036468274,
+        0.050862770513,
+        1.0,
+        0.686177004595,
+        0.361585212667,
+        0.213487484269
+      ],
+      "coefficients": [
+        0.010832027271,
+        -0.002194938896,
+        0.012760875307,
+        0.003912623505,
+        -0.003313502373,
+        0.0,
+        0.001360813061,
+        0.001512888193,
+        0.001010156516,
+        0.0,
+        0.005991646512,
+        0.002012790983,
+        0.014031705898
+      ],
+      "intercept": 0.008139864364,
+      "confirmation_2024": {
+        "rows": 1438,
+        "rmse_no_move_logit": 0.09796692,
+        "rmse_candidate_logit": 0.09557917,
+        "mse_improvement": 0.0004621409,
+        "relative_mse_reduction": 0.04815213,
+        "improvement_ci95_date_clustered": [
+          0.00025371,
+          0.00067073
+        ],
+        "direction_accuracy_nontrivial_moves": 0.592764,
+        "movement_correlation": 0.181413,
+        "mean_actual_move_logit": 0.01642433,
+        "mean_predicted_move_logit": 0.00571917
+      }
+    },
+    "spreads": {
+      "features": [
+        "entry_logit",
+        "abs_entry_logit",
+        "leader_gap_logit",
+        "follower_gap_logit",
+        "leader_available",
+        "follower_available",
+        "entry_market_spread",
+        "entry_books",
+        "entry_lead_hours",
+        "point",
+        "month_sin",
+        "month_cos",
+        "model_gap_logit"
+      ],
+      "alpha": 10.0,
+      "training_rows": 2187,
+      "training_years": [
+        2022,
+        2023
+      ],
+      "scaler_mean": [
+        -0.072989835294,
+        0.288610050563,
+        7.1544954e-05,
+        -1.3002728e-05,
+        0.643347050754,
+        0.999542752629,
+        0.020734293723,
+        8.167809785094,
+        24.066323731139,
+        -0.276406035665,
+        -0.203153230642,
+        -0.607536298246,
+        -0.037388956347
+      ],
+      "scaler_scale": [
+        0.325385598458,
+        0.167055507106,
+        0.024595401418,
+        0.011811248128,
+        0.47901108864,
+        0.021378454006,
+        0.00980310835,
+        3.631733694056,
+        0.029566621264,
+        1.474313298946,
+        0.67881247635,
+        0.358945724511,
+        0.23302855349
+      ],
+      "coefficients": [
+        0.008725208033,
+        -0.000271231442,
+        0.008137849251,
+        0.00300520144,
+        0.000383945794,
+        -0.000586891731,
+        0.000209862507,
+        0.000940252881,
+        0.003753748078,
+        -0.029742411253,
+        0.003583134481,
+        0.003147403934,
+        0.016352816297
+      ],
+      "intercept": 0.001720370774,
+      "confirmation_2024": {
+        "rows": 929,
+        "rmse_no_move_logit": 0.0930295,
+        "rmse_candidate_logit": 0.09000269,
+        "mse_improvement": 0.0005540029,
+        "relative_mse_reduction": 0.06401337,
+        "improvement_ci95_date_clustered": [
+          0.00023586,
+          0.00084623
+        ],
+        "direction_accuracy_nontrivial_moves": 0.601449,
+        "movement_correlation": 0.268008,
+        "mean_actual_move_logit": 0.01991007,
+        "mean_predicted_move_logit": -0.00094982
+      }
+    },
+    "totals": {
+      "features": [
+        "entry_logit",
+        "abs_entry_logit",
+        "leader_gap_logit",
+        "follower_gap_logit",
+        "leader_available",
+        "follower_available",
+        "entry_market_spread",
+        "entry_books",
+        "entry_lead_hours",
+        "point",
+        "month_sin",
+        "month_cos"
+      ],
+      "alpha": 0.1,
+      "training_rows": 1218,
+      "training_years": [
+        2022,
+        2023
+      ],
+      "scaler_mean": [
+        0.001400927922,
+        0.044730227732,
+        -0.000192728851,
+        0.000766223721,
+        0.875205254516,
+        1.0,
+        0.01656543556,
+        8.351395730706,
+        24.065024630542,
+        8.376026272578,
+        -0.233341736891,
+        -0.578832394637
+      ],
+      "scaler_scale": [
+        0.056497354095,
+        0.034541574165,
+        0.022663965596,
+        0.015813388281,
+        0.33048603145,
+        1.0,
+        0.009592624047,
+        3.385422558687,
+        0.027671680275,
+        0.935208048804,
+        0.688983145686,
+        0.368519901367
+      ],
+      "coefficients": [
+        -0.037929834662,
+        0.002163179609,
+        0.001018344945,
+        0.00800711474,
+        -0.001729870306,
+        0.0,
+        -0.000636272747,
+        0.001202434645,
+        0.001401075371,
+        0.001724581346,
+        0.004377669755,
+        0.004286248809
+      ],
+      "intercept": 0.000884117959,
+      "confirmation_2024": {
+        "rows": 611,
+        "rmse_no_move_logit": 0.07646185,
+        "rmse_candidate_logit": 0.06015105,
+        "mse_improvement": 0.0022282646,
+        "relative_mse_reduction": 0.38113357,
+        "improvement_ci95_date_clustered": [
+          0.00177292,
+          0.00269991
+        ],
+        "direction_accuracy_nontrivial_moves": 0.731373,
+        "movement_correlation": 0.613822,
+        "mean_actual_move_logit": -0.00813942,
+        "mean_predicted_move_logit": -0.00519176
+      }
+    }
+  }
+}

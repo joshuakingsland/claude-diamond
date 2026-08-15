@@ -1,0 +1,2021 @@
+{
+  "study": "MLB first-inning YRFI market-anchored model",
+  "status": "no_confirmed_yrfi_edge",
+  "repository_revision": "2d4886b5f094",
+  "protocol": {
+    "version": "yrfi-market-anchor-v1",
+    "market": "totals_1st_1_innings",
+    "point": 0.5,
+    "minimum_books": 2,
+    "training_year": 2023,
+    "candidate_selection_year": 2024,
+    "confirmation_year": 2025,
+    "excluded_year": 2026,
+    "prospective_forward_start": "2026-08-15",
+    "market_recalibration_features": [
+      "market_logit"
+    ],
+    "baseball_feature_families": {
+      "run_context": [
+        "market_logit",
+        "expected_home_runs_prior",
+        "expected_away_runs_prior",
+        "home_sp_rate",
+        "away_sp_rate",
+        "home_sp_starts",
+        "away_sp_starts",
+        "park_factor"
+      ],
+      "pitcher_contact": [
+        "market_logit",
+        "expected_home_runs_prior",
+        "expected_away_runs_prior",
+        "home_sp_rate",
+        "away_sp_rate",
+        "home_sp_starts",
+        "away_sp_starts",
+        "park_factor",
+        "home_sp_k_rate",
+        "away_sp_k_rate",
+        "home_sp_bb_rate",
+        "away_sp_bb_rate",
+        "home_sp_hr_rate",
+        "away_sp_hr_rate"
+      ],
+      "offense_and_pitcher": [
+        "market_logit",
+        "expected_home_runs_prior",
+        "expected_away_runs_prior",
+        "home_sp_rate",
+        "away_sp_rate",
+        "home_sp_starts",
+        "away_sp_starts",
+        "park_factor",
+        "home_sp_k_rate",
+        "away_sp_k_rate",
+        "home_sp_bb_rate",
+        "away_sp_bb_rate",
+        "home_sp_hr_rate",
+        "away_sp_hr_rate",
+        "home_off",
+        "away_off",
+        "home_def",
+        "away_def",
+        "home_recent_off",
+        "away_recent_off",
+        "home_recent_def",
+        "away_recent_def"
+      ],
+      "environment": [
+        "market_logit",
+        "expected_home_runs_prior",
+        "expected_away_runs_prior",
+        "home_sp_rate",
+        "away_sp_rate",
+        "home_sp_starts",
+        "away_sp_starts",
+        "park_factor",
+        "home_sp_k_rate",
+        "away_sp_k_rate",
+        "home_sp_bb_rate",
+        "away_sp_bb_rate",
+        "home_sp_hr_rate",
+        "away_sp_hr_rate",
+        "elevation_km",
+        "temp_c",
+        "air_density_index",
+        "wind_out_to_center_ms",
+        "precip_mm",
+        "roof_retractable",
+        "roof_dome"
+      ],
+      "full_pregame": [
+        "market_logit",
+        "expected_home_runs_prior",
+        "expected_away_runs_prior",
+        "home_sp_rate",
+        "away_sp_rate",
+        "home_sp_starts",
+        "away_sp_starts",
+        "park_factor",
+        "home_sp_k_rate",
+        "away_sp_k_rate",
+        "home_sp_bb_rate",
+        "away_sp_bb_rate",
+        "home_sp_hr_rate",
+        "away_sp_hr_rate",
+        "home_off",
+        "away_off",
+        "home_def",
+        "away_def",
+        "home_recent_off",
+        "away_recent_off",
+        "home_recent_def",
+        "away_recent_def",
+        "elevation_km",
+        "temp_c",
+        "air_density_index",
+        "wind_out_to_center_ms",
+        "precip_mm",
+        "roof_retractable",
+        "roof_dome"
+      ]
+    },
+    "logistic_c_values": [
+      0.01,
+      0.05,
+      0.2,
+      1.0
+    ],
+    "primary_metric": "log loss versus devigged market consensus",
+    "confirmation_gate": "date-clustered 95% upper bounds below zero versus both raw market and market-only recalibration",
+    "selection_uses_confirmation": false,
+    "excluded_2026_outcomes_evaluated": false,
+    "protocol_hash": "eb90d3d56422cce6"
+  },
+  "integrity": {
+    "raw_quote_events": 4147,
+    "multi_book_consensus_events": 3441,
+    "settled_regular_events": 4941,
+    "qualified_event_rows_before_game_deduplication": 3432,
+    "duplicate_provider_event_rows_collapsed": 13,
+    "qualified_unique_games": 3419,
+    "feature_join_misses": 0,
+    "feature_date_mismatches": 0,
+    "offered_audit_events": 4950,
+    "post_start_snapshot_violations": 0,
+    "rows_by_season": {
+      "2023": 524,
+      "2024": 1724,
+      "2025": 1043,
+      "2026": 128
+    }
+  },
+  "bets_placed": 0,
+  "excluded_2026": {
+    "status": "excluded_from_v1_not_a_pristine_holdout",
+    "eligible_rows": 128,
+    "outcomes_evaluated": false,
+    "prospective_forward_start": "2026-08-15"
+  },
+  "selection_2024": {
+    "rows": 1724,
+    "raw_market": {
+      "log_loss": 0.688452,
+      "brier": 0.247653,
+      "calibration_error": 0.02087,
+      "mean_probability": 0.48056,
+      "observed_yrfi_rate": 0.464037,
+      "calibration": [
+        {
+          "bin": "0.4-0.5",
+          "n": 1263,
+          "predicted": 0.4672,
+          "realised": 0.441,
+          "error": -0.0262
+        },
+        {
+          "bin": "0.5-0.6",
+          "n": 453,
+          "predicted": 0.5194,
+          "realised": 0.5254,
+          "error": 0.006
+        }
+      ]
+    },
+    "market_recalibration_candidates": [
+      {
+        "candidate": "market_recalibration",
+        "c": 0.01,
+        "features": [
+          "market_logit"
+        ],
+        "rows": 1724,
+        "log_loss": 0.687845,
+        "brier": 0.247341,
+        "calibration_error": 0.00426,
+        "mean_probability": 0.463413,
+        "observed_yrfi_rate": 0.464037,
+        "calibration": [
+          {
+            "bin": "0.3-0.4",
+            "n": 81,
+            "predicted": 0.3851,
+            "realised": 0.4321,
+            "error": 0.047
+          },
+          {
+            "bin": "0.4-0.5",
+            "n": 1340,
+            "predicted": 0.4544,
+            "realised": 0.453,
+            "error": -0.0014
+          },
+          {
+            "bin": "0.5-0.6",
+            "n": 301,
+            "predicted": 0.5238,
+            "realised": 0.5183,
+            "error": -0.0055
+          }
+        ],
+        "log_loss_delta_vs_market": -0.000607
+      },
+      {
+        "candidate": "market_recalibration",
+        "c": 0.05,
+        "features": [
+          "market_logit"
+        ],
+        "rows": 1724,
+        "log_loss": 0.689074,
+        "brier": 0.247896,
+        "calibration_error": 0.02086,
+        "mean_probability": 0.462341,
+        "observed_yrfi_rate": 0.464037,
+        "calibration": [
+          {
+            "bin": "0.3-0.4",
+            "n": 270,
+            "predicted": 0.3754,
+            "realised": 0.4444,
+            "error": 0.069
+          },
+          {
+            "bin": "0.4-0.5",
+            "n": 994,
+            "predicted": 0.4513,
+            "realised": 0.4416,
+            "error": -0.0096
+          },
+          {
+            "bin": "0.5-0.6",
+            "n": 411,
+            "predicted": 0.5308,
+            "realised": 0.5134,
+            "error": -0.0174
+          },
+          {
+            "bin": "0.6-0.7",
+            "n": 44,
+            "predicted": 0.6256,
+            "realised": 0.6136,
+            "error": -0.012
+          }
+        ],
+        "log_loss_delta_vs_market": 0.000621
+      },
+      {
+        "candidate": "market_recalibration",
+        "c": 0.2,
+        "features": [
+          "market_logit"
+        ],
+        "rows": 1724,
+        "log_loss": 0.689898,
+        "brier": 0.248268,
+        "calibration_error": 0.01723,
+        "mean_probability": 0.462047,
+        "observed_yrfi_rate": 0.464037,
+        "calibration": [
+          {
+            "bin": "0.3-0.4",
+            "n": 304,
+            "predicted": 0.3702,
+            "realised": 0.4178,
+            "error": 0.0475
+          },
+          {
+            "bin": "0.4-0.5",
+            "n": 945,
+            "predicted": 0.4512,
+            "realised": 0.4487,
+            "error": -0.0025
+          },
+          {
+            "bin": "0.5-0.6",
+            "n": 409,
+            "predicted": 0.5353,
+            "realised": 0.5061,
+            "error": -0.0292
+          },
+          {
+            "bin": "0.6-0.7",
+            "n": 55,
+            "predicted": 0.6323,
+            "realised": 0.6182,
+            "error": -0.0141
+          }
+        ],
+        "log_loss_delta_vs_market": 0.001446
+      },
+      {
+        "candidate": "market_recalibration",
+        "c": 1.0,
+        "features": [
+          "market_logit"
+        ],
+        "rows": 1724,
+        "log_loss": 0.690194,
+        "brier": 0.248401,
+        "calibration_error": 0.01927,
+        "mean_probability": 0.461934,
+        "observed_yrfi_rate": 0.464037,
+        "calibration": [
+          {
+            "bin": "0.3-0.4",
+            "n": 313,
+            "predicted": 0.3688,
+            "realised": 0.4185,
+            "error": 0.0497
+          },
+          {
+            "bin": "0.4-0.5",
+            "n": 919,
+            "predicted": 0.4505,
+            "realised": 0.444,
+            "error": -0.0065
+          },
+          {
+            "bin": "0.5-0.6",
+            "n": 415,
+            "predicted": 0.5349,
+            "realised": 0.5205,
+            "error": -0.0144
+          },
+          {
+            "bin": "0.6-0.7",
+            "n": 64,
+            "predicted": 0.6322,
+            "realised": 0.5469,
+            "error": -0.0853
+          }
+        ],
+        "log_loss_delta_vs_market": 0.001742
+      }
+    ],
+    "baseball_candidates": [
+      {
+        "candidate": "run_context",
+        "c": 0.01,
+        "features": [
+          "market_logit",
+          "expected_home_runs_prior",
+          "expected_away_runs_prior",
+          "home_sp_rate",
+          "away_sp_rate",
+          "home_sp_starts",
+          "away_sp_starts",
+          "park_factor"
+        ],
+        "rows": 1724,
+        "log_loss": 0.697735,
+        "brier": 0.25213,
+        "calibration_error": 0.03475,
+        "mean_probability": 0.459597,
+        "observed_yrfi_rate": 0.464037,
+        "calibration": [
+          {
+            "bin": "0.3-0.4",
+            "n": 333,
+            "predicted": 0.3687,
+            "realised": 0.4595,
+            "error": 0.0907
+          },
+          {
+            "bin": "0.4-0.5",
+            "n": 913,
+            "predicted": 0.4512,
+            "realised": 0.4535,
+            "error": 0.0023
+          },
+          {
+            "bin": "0.5-0.6",
+            "n": 447,
+            "predicted": 0.5362,
+            "realised": 0.4765,
+            "error": -0.0597
+          },
+          {
+            "bin": "0.6-0.7",
+            "n": 27,
+            "predicted": 0.6217,
+            "realised": 0.5926,
+            "error": -0.0291
+          }
+        ],
+        "log_loss_delta_vs_market": 0.009283
+      },
+      {
+        "candidate": "run_context",
+        "c": 0.05,
+        "features": [
+          "market_logit",
+          "expected_home_runs_prior",
+          "expected_away_runs_prior",
+          "home_sp_rate",
+          "away_sp_rate",
+          "home_sp_starts",
+          "away_sp_starts",
+          "park_factor"
+        ],
+        "rows": 1724,
+        "log_loss": 0.706901,
+        "brier": 0.256317,
+        "calibration_error": 0.06838,
+        "mean_probability": 0.460474,
+        "observed_yrfi_rate": 0.464037,
+        "calibration": [
+          {
+            "bin": "0.2-0.3",
+            "n": 62,
+            "predicted": 0.2747,
+            "realised": 0.5484,
+            "error": 0.2737
+          },
+          {
+            "bin": "0.3-0.4",
+            "n": 421,
+            "predicted": 0.3571,
+            "realised": 0.4442,
+            "error": 0.087
+          },
+          {
+            "bin": "0.4-0.5",
+            "n": 648,
+            "predicted": 0.4506,
+            "realised": 0.463,
+            "error": 0.0124
+          },
+          {
+            "bin": "0.5-0.6",
+            "n": 470,
+            "predicted": 0.545,
+            "realised": 0.4638,
+            "error": -0.0812
+          },
+          {
+            "bin": "0.6-0.7",
+            "n": 118,
+            "predicted": 0.6334,
+            "realised": 0.4831,
+            "error": -0.1504
+          }
+        ],
+        "log_loss_delta_vs_market": 0.018449
+      },
+      {
+        "candidate": "run_context",
+        "c": 0.2,
+        "features": [
+          "market_logit",
+          "expected_home_runs_prior",
+          "expected_away_runs_prior",
+          "home_sp_rate",
+          "away_sp_rate",
+          "home_sp_starts",
+          "away_sp_starts",
+          "park_factor"
+        ],
+        "rows": 1724,
+        "log_loss": 0.711227,
+        "brier": 0.258247,
+        "calibration_error": 0.0752,
+        "mean_probability": 0.4641,
+        "observed_yrfi_rate": 0.464037,
+        "calibration": [
+          {
+            "bin": "0.2-0.3",
+            "n": 94,
+            "predicted": 0.2725,
+            "realised": 0.5319,
+            "error": 0.2594
+          },
+          {
+            "bin": "0.3-0.4",
+            "n": 406,
+            "predicted": 0.3558,
+            "realised": 0.436,
+            "error": 0.0802
+          },
+          {
+            "bin": "0.4-0.5",
+            "n": 590,
+            "predicted": 0.4513,
+            "realised": 0.4644,
+            "error": 0.0131
+          },
+          {
+            "bin": "0.5-0.6",
+            "n": 447,
+            "predicted": 0.5466,
+            "realised": 0.4474,
+            "error": -0.0992
+          },
+          {
+            "bin": "0.6-0.7",
+            "n": 171,
+            "predicted": 0.6341,
+            "realised": 0.5205,
+            "error": -0.1136
+          }
+        ],
+        "log_loss_delta_vs_market": 0.022775
+      },
+      {
+        "candidate": "run_context",
+        "c": 1.0,
+        "features": [
+          "market_logit",
+          "expected_home_runs_prior",
+          "expected_away_runs_prior",
+          "home_sp_rate",
+          "away_sp_rate",
+          "home_sp_starts",
+          "away_sp_starts",
+          "park_factor"
+        ],
+        "rows": 1724,
+        "log_loss": 0.712805,
+        "brier": 0.258945,
+        "calibration_error": 0.07736,
+        "mean_probability": 0.465929,
+        "observed_yrfi_rate": 0.464037,
+        "calibration": [
+          {
+            "bin": "0.2-0.3",
+            "n": 101,
+            "predicted": 0.2706,
+            "realised": 0.5446,
+            "error": 0.274
+          },
+          {
+            "bin": "0.3-0.4",
+            "n": 402,
+            "predicted": 0.3552,
+            "realised": 0.4378,
+            "error": 0.0826
+          },
+          {
+            "bin": "0.4-0.5",
+            "n": 573,
+            "predicted": 0.4519,
+            "realised": 0.459,
+            "error": 0.0071
+          },
+          {
+            "bin": "0.5-0.6",
+            "n": 438,
+            "predicted": 0.5469,
+            "realised": 0.4498,
+            "error": -0.0971
+          },
+          {
+            "bin": "0.6-0.7",
+            "n": 191,
+            "predicted": 0.6358,
+            "realised": 0.5079,
+            "error": -0.1279
+          }
+        ],
+        "log_loss_delta_vs_market": 0.024353
+      },
+      {
+        "candidate": "pitcher_contact",
+        "c": 0.01,
+        "features": [
+          "market_logit",
+          "expected_home_runs_prior",
+          "expected_away_runs_prior",
+          "home_sp_rate",
+          "away_sp_rate",
+          "home_sp_starts",
+          "away_sp_starts",
+          "park_factor",
+          "home_sp_k_rate",
+          "away_sp_k_rate",
+          "home_sp_bb_rate",
+          "away_sp_bb_rate",
+          "home_sp_hr_rate",
+          "away_sp_hr_rate"
+        ],
+        "rows": 1724,
+        "log_loss": 0.698041,
+        "brier": 0.252285,
+        "calibration_error": 0.04066,
+        "mean_probability": 0.459678,
+        "observed_yrfi_rate": 0.464037,
+        "calibration": [
+          {
+            "bin": "0.3-0.4",
+            "n": 340,
+            "predicted": 0.3677,
+            "realised": 0.4647,
+            "error": 0.097
+          },
+          {
+            "bin": "0.4-0.5",
+            "n": 910,
+            "predicted": 0.4512,
+            "realised": 0.4571,
+            "error": 0.006
+          },
+          {
+            "bin": "0.5-0.6",
+            "n": 445,
+            "predicted": 0.5373,
+            "realised": 0.4697,
+            "error": -0.0677
+          },
+          {
+            "bin": "0.6-0.7",
+            "n": 28,
+            "predicted": 0.6249,
+            "realised": 0.5714,
+            "error": -0.0535
+          }
+        ],
+        "log_loss_delta_vs_market": 0.009589
+      },
+      {
+        "candidate": "pitcher_contact",
+        "c": 0.05,
+        "features": [
+          "market_logit",
+          "expected_home_runs_prior",
+          "expected_away_runs_prior",
+          "home_sp_rate",
+          "away_sp_rate",
+          "home_sp_starts",
+          "away_sp_starts",
+          "park_factor",
+          "home_sp_k_rate",
+          "away_sp_k_rate",
+          "home_sp_bb_rate",
+          "away_sp_bb_rate",
+          "home_sp_hr_rate",
+          "away_sp_hr_rate"
+        ],
+        "rows": 1724,
+        "log_loss": 0.708469,
+        "brier": 0.257045,
+        "calibration_error": 0.06622,
+        "mean_probability": 0.456134,
+        "observed_yrfi_rate": 0.464037,
+        "calibration": [
+          {
+            "bin": "0.2-0.3",
+            "n": 72,
+            "predicted": 0.2744,
+            "realised": 0.5556,
+            "error": 0.2812
+          },
+          {
+            "bin": "0.3-0.4",
+            "n": 444,
+            "predicted": 0.3555,
+            "realised": 0.4505,
+            "error": 0.095
+          },
+          {
+            "bin": "0.4-0.5",
+            "n": 645,
+            "predicted": 0.4501,
+            "realised": 0.4512,
+            "error": 0.0011
+          },
+          {
+            "bin": "0.5-0.6",
+            "n": 432,
+            "predicted": 0.544,
+            "realised": 0.4722,
+            "error": -0.0718
+          },
+          {
+            "bin": "0.6-0.7",
+            "n": 121,
+            "predicted": 0.631,
+            "realised": 0.4711,
+            "error": -0.1599
+          }
+        ],
+        "log_loss_delta_vs_market": 0.020017
+      },
+      {
+        "candidate": "pitcher_contact",
+        "c": 0.2,
+        "features": [
+          "market_logit",
+          "expected_home_runs_prior",
+          "expected_away_runs_prior",
+          "home_sp_rate",
+          "away_sp_rate",
+          "home_sp_starts",
+          "away_sp_starts",
+          "park_factor",
+          "home_sp_k_rate",
+          "away_sp_k_rate",
+          "home_sp_bb_rate",
+          "away_sp_bb_rate",
+          "home_sp_hr_rate",
+          "away_sp_hr_rate"
+        ],
+        "rows": 1724,
+        "log_loss": 0.713995,
+        "brier": 0.25949,
+        "calibration_error": 0.07619,
+        "mean_probability": 0.457548,
+        "observed_yrfi_rate": 0.464037,
+        "calibration": [
+          {
+            "bin": "0.2-0.3",
+            "n": 119,
+            "predicted": 0.2704,
+            "realised": 0.5126,
+            "error": 0.2422
+          },
+          {
+            "bin": "0.3-0.4",
+            "n": 433,
+            "predicted": 0.3546,
+            "realised": 0.4503,
+            "error": 0.0957
+          },
+          {
+            "bin": "0.4-0.5",
+            "n": 572,
+            "predicted": 0.4506,
+            "realised": 0.451,
+            "error": 0.0005
+          },
+          {
+            "bin": "0.5-0.6",
+            "n": 419,
+            "predicted": 0.5459,
+            "realised": 0.4582,
+            "error": -0.0877
+          },
+          {
+            "bin": "0.6-0.7",
+            "n": 161,
+            "predicted": 0.6369,
+            "realised": 0.4969,
+            "error": -0.14
+          }
+        ],
+        "log_loss_delta_vs_market": 0.025542
+      },
+      {
+        "candidate": "pitcher_contact",
+        "c": 1.0,
+        "features": [
+          "market_logit",
+          "expected_home_runs_prior",
+          "expected_away_runs_prior",
+          "home_sp_rate",
+          "away_sp_rate",
+          "home_sp_starts",
+          "away_sp_starts",
+          "park_factor",
+          "home_sp_k_rate",
+          "away_sp_k_rate",
+          "home_sp_bb_rate",
+          "away_sp_bb_rate",
+          "home_sp_hr_rate",
+          "away_sp_hr_rate"
+        ],
+        "rows": 1724,
+        "log_loss": 0.716171,
+        "brier": 0.260441,
+        "calibration_error": 0.07894,
+        "mean_probability": 0.458749,
+        "observed_yrfi_rate": 0.464037,
+        "calibration": [
+          {
+            "bin": "0.2-0.3",
+            "n": 131,
+            "predicted": 0.2685,
+            "realised": 0.4962,
+            "error": 0.2277
+          },
+          {
+            "bin": "0.3-0.4",
+            "n": 423,
+            "predicted": 0.3537,
+            "realised": 0.4515,
+            "error": 0.0979
+          },
+          {
+            "bin": "0.4-0.5",
+            "n": 550,
+            "predicted": 0.45,
+            "realised": 0.4509,
+            "error": 0.0009
+          },
+          {
+            "bin": "0.5-0.6",
+            "n": 419,
+            "predicted": 0.5461,
+            "realised": 0.4582,
+            "error": -0.0878
+          },
+          {
+            "bin": "0.6-0.7",
+            "n": 175,
+            "predicted": 0.6387,
+            "realised": 0.5029,
+            "error": -0.1358
+          },
+          {
+            "bin": "0.7-0.8",
+            "n": 24,
+            "predicted": 0.7351,
+            "realised": 0.5833,
+            "error": -0.1518
+          }
+        ],
+        "log_loss_delta_vs_market": 0.027719
+      },
+      {
+        "candidate": "offense_and_pitcher",
+        "c": 0.01,
+        "features": [
+          "market_logit",
+          "expected_home_runs_prior",
+          "expected_away_runs_prior",
+          "home_sp_rate",
+          "away_sp_rate",
+          "home_sp_starts",
+          "away_sp_starts",
+          "park_factor",
+          "home_sp_k_rate",
+          "away_sp_k_rate",
+          "home_sp_bb_rate",
+          "away_sp_bb_rate",
+          "home_sp_hr_rate",
+          "away_sp_hr_rate",
+          "home_off",
+          "away_off",
+          "home_def",
+          "away_def",
+          "home_recent_off",
+          "away_recent_off",
+          "home_recent_def",
+          "away_recent_def"
+        ],
+        "rows": 1724,
+        "log_loss": 0.70175,
+        "brier": 0.25409,
+        "calibration_error": 0.05273,
+        "mean_probability": 0.468483,
+        "observed_yrfi_rate": 0.464037,
+        "calibration": [
+          {
+            "bin": "0.3-0.4",
+            "n": 305,
+            "predicted": 0.3662,
+            "realised": 0.4984,
+            "error": 0.1322
+          },
+          {
+            "bin": "0.4-0.5",
+            "n": 828,
+            "predicted": 0.452,
+            "realised": 0.4493,
+            "error": -0.0028
+          },
+          {
+            "bin": "0.5-0.6",
+            "n": 528,
+            "predicted": 0.539,
+            "realised": 0.4602,
+            "error": -0.0787
+          },
+          {
+            "bin": "0.6-0.7",
+            "n": 57,
+            "predicted": 0.6211,
+            "realised": 0.5088,
+            "error": -0.1123
+          }
+        ],
+        "log_loss_delta_vs_market": 0.013297
+      },
+      {
+        "candidate": "offense_and_pitcher",
+        "c": 0.05,
+        "features": [
+          "market_logit",
+          "expected_home_runs_prior",
+          "expected_away_runs_prior",
+          "home_sp_rate",
+          "away_sp_rate",
+          "home_sp_starts",
+          "away_sp_starts",
+          "park_factor",
+          "home_sp_k_rate",
+          "away_sp_k_rate",
+          "home_sp_bb_rate",
+          "away_sp_bb_rate",
+          "home_sp_hr_rate",
+          "away_sp_hr_rate",
+          "home_off",
+          "away_off",
+          "home_def",
+          "away_def",
+          "home_recent_off",
+          "away_recent_off",
+          "home_recent_def",
+          "away_recent_def"
+        ],
+        "rows": 1724,
+        "log_loss": 0.715733,
+        "brier": 0.260392,
+        "calibration_error": 0.07635,
+        "mean_probability": 0.469577,
+        "observed_yrfi_rate": 0.464037,
+        "calibration": [
+          {
+            "bin": "0.2-0.3",
+            "n": 86,
+            "predicted": 0.2702,
+            "realised": 0.5116,
+            "error": 0.2414
+          },
+          {
+            "bin": "0.3-0.4",
+            "n": 380,
+            "predicted": 0.3557,
+            "realised": 0.4605,
+            "error": 0.1048
+          },
+          {
+            "bin": "0.4-0.5",
+            "n": 584,
+            "predicted": 0.4504,
+            "realised": 0.4435,
+            "error": -0.0069
+          },
+          {
+            "bin": "0.5-0.6",
+            "n": 465,
+            "predicted": 0.5457,
+            "realised": 0.4774,
+            "error": -0.0683
+          },
+          {
+            "bin": "0.6-0.7",
+            "n": 184,
+            "predicted": 0.6357,
+            "realised": 0.4674,
+            "error": -0.1683
+          },
+          {
+            "bin": "0.7-0.8",
+            "n": 24,
+            "predicted": 0.717,
+            "realised": 0.5417,
+            "error": -0.1753
+          }
+        ],
+        "log_loss_delta_vs_market": 0.027281
+      },
+      {
+        "candidate": "offense_and_pitcher",
+        "c": 0.2,
+        "features": [
+          "market_logit",
+          "expected_home_runs_prior",
+          "expected_away_runs_prior",
+          "home_sp_rate",
+          "away_sp_rate",
+          "home_sp_starts",
+          "away_sp_starts",
+          "park_factor",
+          "home_sp_k_rate",
+          "away_sp_k_rate",
+          "home_sp_bb_rate",
+          "away_sp_bb_rate",
+          "home_sp_hr_rate",
+          "away_sp_hr_rate",
+          "home_off",
+          "away_off",
+          "home_def",
+          "away_def",
+          "home_recent_off",
+          "away_recent_off",
+          "home_recent_def",
+          "away_recent_def"
+        ],
+        "rows": 1724,
+        "log_loss": 0.72233,
+        "brier": 0.263181,
+        "calibration_error": 0.08579,
+        "mean_probability": 0.468922,
+        "observed_yrfi_rate": 0.464037,
+        "calibration": [
+          {
+            "bin": "0.2-0.3",
+            "n": 139,
+            "predicted": 0.2664,
+            "realised": 0.482,
+            "error": 0.2156
+          },
+          {
+            "bin": "0.3-0.4",
+            "n": 380,
+            "predicted": 0.357,
+            "realised": 0.4553,
+            "error": 0.0983
+          },
+          {
+            "bin": "0.4-0.5",
+            "n": 511,
+            "predicted": 0.4507,
+            "realised": 0.4521,
+            "error": 0.0013
+          },
+          {
+            "bin": "0.5-0.6",
+            "n": 436,
+            "predicted": 0.5476,
+            "realised": 0.4725,
+            "error": -0.0751
+          },
+          {
+            "bin": "0.6-0.7",
+            "n": 215,
+            "predicted": 0.6411,
+            "realised": 0.4698,
+            "error": -0.1714
+          },
+          {
+            "bin": "0.7-0.8",
+            "n": 38,
+            "predicted": 0.7341,
+            "realised": 0.4737,
+            "error": -0.2605
+          }
+        ],
+        "log_loss_delta_vs_market": 0.033877
+      },
+      {
+        "candidate": "offense_and_pitcher",
+        "c": 1.0,
+        "features": [
+          "market_logit",
+          "expected_home_runs_prior",
+          "expected_away_runs_prior",
+          "home_sp_rate",
+          "away_sp_rate",
+          "home_sp_starts",
+          "away_sp_starts",
+          "park_factor",
+          "home_sp_k_rate",
+          "away_sp_k_rate",
+          "home_sp_bb_rate",
+          "away_sp_bb_rate",
+          "home_sp_hr_rate",
+          "away_sp_hr_rate",
+          "home_off",
+          "away_off",
+          "home_def",
+          "away_def",
+          "home_recent_off",
+          "away_recent_off",
+          "home_recent_def",
+          "away_recent_def"
+        ],
+        "rows": 1724,
+        "log_loss": 0.724394,
+        "brier": 0.264019,
+        "calibration_error": 0.08926,
+        "mean_probability": 0.468244,
+        "observed_yrfi_rate": 0.464037,
+        "calibration": [
+          {
+            "bin": "0.2-0.3",
+            "n": 156,
+            "predicted": 0.2667,
+            "realised": 0.4872,
+            "error": 0.2205
+          },
+          {
+            "bin": "0.3-0.4",
+            "n": 374,
+            "predicted": 0.3577,
+            "realised": 0.4412,
+            "error": 0.0835
+          },
+          {
+            "bin": "0.4-0.5",
+            "n": 495,
+            "predicted": 0.4504,
+            "realised": 0.4586,
+            "error": 0.0081
+          },
+          {
+            "bin": "0.5-0.6",
+            "n": 419,
+            "predicted": 0.548,
+            "realised": 0.4678,
+            "error": -0.0802
+          },
+          {
+            "bin": "0.6-0.7",
+            "n": 224,
+            "predicted": 0.6411,
+            "realised": 0.4777,
+            "error": -0.1635
+          },
+          {
+            "bin": "0.7-0.8",
+            "n": 45,
+            "predicted": 0.7342,
+            "realised": 0.4444,
+            "error": -0.2898
+          }
+        ],
+        "log_loss_delta_vs_market": 0.035942
+      },
+      {
+        "candidate": "environment",
+        "c": 0.01,
+        "features": [
+          "market_logit",
+          "expected_home_runs_prior",
+          "expected_away_runs_prior",
+          "home_sp_rate",
+          "away_sp_rate",
+          "home_sp_starts",
+          "away_sp_starts",
+          "park_factor",
+          "home_sp_k_rate",
+          "away_sp_k_rate",
+          "home_sp_bb_rate",
+          "away_sp_bb_rate",
+          "home_sp_hr_rate",
+          "away_sp_hr_rate",
+          "elevation_km",
+          "temp_c",
+          "air_density_index",
+          "wind_out_to_center_ms",
+          "precip_mm",
+          "roof_retractable",
+          "roof_dome"
+        ],
+        "rows": 1724,
+        "log_loss": 0.698897,
+        "brier": 0.252694,
+        "calibration_error": 0.04783,
+        "mean_probability": 0.465318,
+        "observed_yrfi_rate": 0.464037,
+        "calibration": [
+          {
+            "bin": "0.3-0.4",
+            "n": 323,
+            "predicted": 0.367,
+            "realised": 0.4613,
+            "error": 0.0943
+          },
+          {
+            "bin": "0.4-0.5",
+            "n": 860,
+            "predicted": 0.452,
+            "realised": 0.4628,
+            "error": 0.0108
+          },
+          {
+            "bin": "0.5-0.6",
+            "n": 476,
+            "predicted": 0.5371,
+            "realised": 0.4538,
+            "error": -0.0833
+          },
+          {
+            "bin": "0.6-0.7",
+            "n": 60,
+            "predicted": 0.6303,
+            "realised": 0.5833,
+            "error": -0.047
+          }
+        ],
+        "log_loss_delta_vs_market": 0.010444
+      },
+      {
+        "candidate": "environment",
+        "c": 0.05,
+        "features": [
+          "market_logit",
+          "expected_home_runs_prior",
+          "expected_away_runs_prior",
+          "home_sp_rate",
+          "away_sp_rate",
+          "home_sp_starts",
+          "away_sp_starts",
+          "park_factor",
+          "home_sp_k_rate",
+          "away_sp_k_rate",
+          "home_sp_bb_rate",
+          "away_sp_bb_rate",
+          "home_sp_hr_rate",
+          "away_sp_hr_rate",
+          "elevation_km",
+          "temp_c",
+          "air_density_index",
+          "wind_out_to_center_ms",
+          "precip_mm",
+          "roof_retractable",
+          "roof_dome"
+        ],
+        "rows": 1724,
+        "log_loss": 0.709635,
+        "brier": 0.257616,
+        "calibration_error": 0.07313,
+        "mean_probability": 0.463505,
+        "observed_yrfi_rate": 0.464037,
+        "calibration": [
+          {
+            "bin": "0.2-0.3",
+            "n": 74,
+            "predicted": 0.2747,
+            "realised": 0.5676,
+            "error": 0.2929
+          },
+          {
+            "bin": "0.3-0.4",
+            "n": 403,
+            "predicted": 0.3564,
+            "realised": 0.4342,
+            "error": 0.0778
+          },
+          {
+            "bin": "0.4-0.5",
+            "n": 621,
+            "predicted": 0.4503,
+            "realised": 0.4654,
+            "error": 0.015
+          },
+          {
+            "bin": "0.5-0.6",
+            "n": 470,
+            "predicted": 0.5439,
+            "realised": 0.4617,
+            "error": -0.0822
+          },
+          {
+            "bin": "0.6-0.7",
+            "n": 144,
+            "predicted": 0.6335,
+            "realised": 0.4653,
+            "error": -0.1682
+          }
+        ],
+        "log_loss_delta_vs_market": 0.021183
+      },
+      {
+        "candidate": "environment",
+        "c": 0.2,
+        "features": [
+          "market_logit",
+          "expected_home_runs_prior",
+          "expected_away_runs_prior",
+          "home_sp_rate",
+          "away_sp_rate",
+          "home_sp_starts",
+          "away_sp_starts",
+          "park_factor",
+          "home_sp_k_rate",
+          "away_sp_k_rate",
+          "home_sp_bb_rate",
+          "away_sp_bb_rate",
+          "home_sp_hr_rate",
+          "away_sp_hr_rate",
+          "elevation_km",
+          "temp_c",
+          "air_density_index",
+          "wind_out_to_center_ms",
+          "precip_mm",
+          "roof_retractable",
+          "roof_dome"
+        ],
+        "rows": 1724,
+        "log_loss": 0.716333,
+        "brier": 0.260612,
+        "calibration_error": 0.0813,
+        "mean_probability": 0.466602,
+        "observed_yrfi_rate": 0.464037,
+        "calibration": [
+          {
+            "bin": "0.2-0.3",
+            "n": 112,
+            "predicted": 0.2702,
+            "realised": 0.5,
+            "error": 0.2298
+          },
+          {
+            "bin": "0.3-0.4",
+            "n": 393,
+            "predicted": 0.3545,
+            "realised": 0.4606,
+            "error": 0.1061
+          },
+          {
+            "bin": "0.4-0.5",
+            "n": 547,
+            "predicted": 0.4499,
+            "realised": 0.4479,
+            "error": -0.002
+          },
+          {
+            "bin": "0.5-0.6",
+            "n": 450,
+            "predicted": 0.545,
+            "realised": 0.46,
+            "error": -0.085
+          },
+          {
+            "bin": "0.6-0.7",
+            "n": 197,
+            "predicted": 0.6381,
+            "realised": 0.4721,
+            "error": -0.166
+          },
+          {
+            "bin": "0.7-0.8",
+            "n": 24,
+            "predicted": 0.7335,
+            "realised": 0.7083,
+            "error": -0.0252
+          }
+        ],
+        "log_loss_delta_vs_market": 0.02788
+      },
+      {
+        "candidate": "environment",
+        "c": 1.0,
+        "features": [
+          "market_logit",
+          "expected_home_runs_prior",
+          "expected_away_runs_prior",
+          "home_sp_rate",
+          "away_sp_rate",
+          "home_sp_starts",
+          "away_sp_starts",
+          "park_factor",
+          "home_sp_k_rate",
+          "away_sp_k_rate",
+          "home_sp_bb_rate",
+          "away_sp_bb_rate",
+          "home_sp_hr_rate",
+          "away_sp_hr_rate",
+          "elevation_km",
+          "temp_c",
+          "air_density_index",
+          "wind_out_to_center_ms",
+          "precip_mm",
+          "roof_retractable",
+          "roof_dome"
+        ],
+        "rows": 1724,
+        "log_loss": 0.721731,
+        "brier": 0.263015,
+        "calibration_error": 0.09087,
+        "mean_probability": 0.469488,
+        "observed_yrfi_rate": 0.464037,
+        "calibration": [
+          {
+            "bin": "0.2-0.3",
+            "n": 122,
+            "predicted": 0.2655,
+            "realised": 0.5246,
+            "error": 0.2591
+          },
+          {
+            "bin": "0.3-0.4",
+            "n": 391,
+            "predicted": 0.3527,
+            "realised": 0.4578,
+            "error": 0.1051
+          },
+          {
+            "bin": "0.4-0.5",
+            "n": 502,
+            "predicted": 0.4491,
+            "realised": 0.4462,
+            "error": -0.0029
+          },
+          {
+            "bin": "0.5-0.6",
+            "n": 449,
+            "predicted": 0.5461,
+            "realised": 0.4588,
+            "error": -0.0873
+          },
+          {
+            "bin": "0.6-0.7",
+            "n": 216,
+            "predicted": 0.6426,
+            "realised": 0.4676,
+            "error": -0.175
+          },
+          {
+            "bin": "0.7-0.8",
+            "n": 38,
+            "predicted": 0.7359,
+            "realised": 0.6053,
+            "error": -0.1306
+          }
+        ],
+        "log_loss_delta_vs_market": 0.033279
+      },
+      {
+        "candidate": "full_pregame",
+        "c": 0.01,
+        "features": [
+          "market_logit",
+          "expected_home_runs_prior",
+          "expected_away_runs_prior",
+          "home_sp_rate",
+          "away_sp_rate",
+          "home_sp_starts",
+          "away_sp_starts",
+          "park_factor",
+          "home_sp_k_rate",
+          "away_sp_k_rate",
+          "home_sp_bb_rate",
+          "away_sp_bb_rate",
+          "home_sp_hr_rate",
+          "away_sp_hr_rate",
+          "home_off",
+          "away_off",
+          "home_def",
+          "away_def",
+          "home_recent_off",
+          "away_recent_off",
+          "home_recent_def",
+          "away_recent_def",
+          "elevation_km",
+          "temp_c",
+          "air_density_index",
+          "wind_out_to_center_ms",
+          "precip_mm",
+          "roof_retractable",
+          "roof_dome"
+        ],
+        "rows": 1724,
+        "log_loss": 0.702983,
+        "brier": 0.254677,
+        "calibration_error": 0.04885,
+        "mean_probability": 0.47568,
+        "observed_yrfi_rate": 0.464037,
+        "calibration": [
+          {
+            "bin": "0.3-0.4",
+            "n": 284,
+            "predicted": 0.3653,
+            "realised": 0.4718,
+            "error": 0.1065
+          },
+          {
+            "bin": "0.4-0.5",
+            "n": 777,
+            "predicted": 0.4524,
+            "realised": 0.4479,
+            "error": -0.0045
+          },
+          {
+            "bin": "0.5-0.6",
+            "n": 565,
+            "predicted": 0.5408,
+            "realised": 0.4726,
+            "error": -0.0682
+          },
+          {
+            "bin": "0.6-0.7",
+            "n": 90,
+            "predicted": 0.6283,
+            "realised": 0.5,
+            "error": -0.1283
+          }
+        ],
+        "log_loss_delta_vs_market": 0.014531
+      },
+      {
+        "candidate": "full_pregame",
+        "c": 0.05,
+        "features": [
+          "market_logit",
+          "expected_home_runs_prior",
+          "expected_away_runs_prior",
+          "home_sp_rate",
+          "away_sp_rate",
+          "home_sp_starts",
+          "away_sp_starts",
+          "park_factor",
+          "home_sp_k_rate",
+          "away_sp_k_rate",
+          "home_sp_bb_rate",
+          "away_sp_bb_rate",
+          "home_sp_hr_rate",
+          "away_sp_hr_rate",
+          "home_off",
+          "away_off",
+          "home_def",
+          "away_def",
+          "home_recent_off",
+          "away_recent_off",
+          "home_recent_def",
+          "away_recent_def",
+          "elevation_km",
+          "temp_c",
+          "air_density_index",
+          "wind_out_to_center_ms",
+          "precip_mm",
+          "roof_retractable",
+          "roof_dome"
+        ],
+        "rows": 1724,
+        "log_loss": 0.718442,
+        "brier": 0.261651,
+        "calibration_error": 0.0874,
+        "mean_probability": 0.480343,
+        "observed_yrfi_rate": 0.464037,
+        "calibration": [
+          {
+            "bin": "0.2-0.3",
+            "n": 80,
+            "predicted": 0.2693,
+            "realised": 0.575,
+            "error": 0.3057
+          },
+          {
+            "bin": "0.3-0.4",
+            "n": 337,
+            "predicted": 0.355,
+            "realised": 0.4629,
+            "error": 0.1079
+          },
+          {
+            "bin": "0.4-0.5",
+            "n": 568,
+            "predicted": 0.4518,
+            "realised": 0.4454,
+            "error": -0.0064
+          },
+          {
+            "bin": "0.5-0.6",
+            "n": 479,
+            "predicted": 0.5462,
+            "realised": 0.4551,
+            "error": -0.0911
+          },
+          {
+            "bin": "0.6-0.7",
+            "n": 228,
+            "predicted": 0.6399,
+            "realised": 0.4956,
+            "error": -0.1443
+          },
+          {
+            "bin": "0.7-0.8",
+            "n": 31,
+            "predicted": 0.7288,
+            "realised": 0.4194,
+            "error": -0.3094
+          }
+        ],
+        "log_loss_delta_vs_market": 0.029989
+      },
+      {
+        "candidate": "full_pregame",
+        "c": 0.2,
+        "features": [
+          "market_logit",
+          "expected_home_runs_prior",
+          "expected_away_runs_prior",
+          "home_sp_rate",
+          "away_sp_rate",
+          "home_sp_starts",
+          "away_sp_starts",
+          "park_factor",
+          "home_sp_k_rate",
+          "away_sp_k_rate",
+          "home_sp_bb_rate",
+          "away_sp_bb_rate",
+          "home_sp_hr_rate",
+          "away_sp_hr_rate",
+          "home_off",
+          "away_off",
+          "home_def",
+          "away_def",
+          "home_recent_off",
+          "away_recent_off",
+          "home_recent_def",
+          "away_recent_def",
+          "elevation_km",
+          "temp_c",
+          "air_density_index",
+          "wind_out_to_center_ms",
+          "precip_mm",
+          "roof_retractable",
+          "roof_dome"
+        ],
+        "rows": 1724,
+        "log_loss": 0.726468,
+        "brier": 0.265069,
+        "calibration_error": 0.09854,
+        "mean_probability": 0.481913,
+        "observed_yrfi_rate": 0.464037,
+        "calibration": [
+          {
+            "bin": "0.2-0.3",
+            "n": 122,
+            "predicted": 0.2663,
+            "realised": 0.5246,
+            "error": 0.2583
+          },
+          {
+            "bin": "0.3-0.4",
+            "n": 333,
+            "predicted": 0.3549,
+            "realised": 0.4535,
+            "error": 0.0986
+          },
+          {
+            "bin": "0.4-0.5",
+            "n": 508,
+            "predicted": 0.4525,
+            "realised": 0.4587,
+            "error": 0.0062
+          },
+          {
+            "bin": "0.5-0.6",
+            "n": 441,
+            "predicted": 0.5472,
+            "realised": 0.4444,
+            "error": -0.1028
+          },
+          {
+            "bin": "0.6-0.7",
+            "n": 248,
+            "predicted": 0.6427,
+            "realised": 0.496,
+            "error": -0.1467
+          },
+          {
+            "bin": "0.7-0.8",
+            "n": 64,
+            "predicted": 0.7326,
+            "realised": 0.4219,
+            "error": -0.3107
+          }
+        ],
+        "log_loss_delta_vs_market": 0.038015
+      },
+      {
+        "candidate": "full_pregame",
+        "c": 1.0,
+        "features": [
+          "market_logit",
+          "expected_home_runs_prior",
+          "expected_away_runs_prior",
+          "home_sp_rate",
+          "away_sp_rate",
+          "home_sp_starts",
+          "away_sp_starts",
+          "park_factor",
+          "home_sp_k_rate",
+          "away_sp_k_rate",
+          "home_sp_bb_rate",
+          "away_sp_bb_rate",
+          "home_sp_hr_rate",
+          "away_sp_hr_rate",
+          "home_off",
+          "away_off",
+          "home_def",
+          "away_def",
+          "home_recent_off",
+          "away_recent_off",
+          "home_recent_def",
+          "away_recent_def",
+          "elevation_km",
+          "temp_c",
+          "air_density_index",
+          "wind_out_to_center_ms",
+          "precip_mm",
+          "roof_retractable",
+          "roof_dome"
+        ],
+        "rows": 1724,
+        "log_loss": 0.731047,
+        "brier": 0.266972,
+        "calibration_error": 0.10635,
+        "mean_probability": 0.481974,
+        "observed_yrfi_rate": 0.464037,
+        "calibration": [
+          {
+            "bin": "0.2-0.3",
+            "n": 139,
+            "predicted": 0.265,
+            "realised": 0.5324,
+            "error": 0.2673
+          },
+          {
+            "bin": "0.3-0.4",
+            "n": 336,
+            "predicted": 0.3552,
+            "realised": 0.4435,
+            "error": 0.0882
+          },
+          {
+            "bin": "0.4-0.5",
+            "n": 480,
+            "predicted": 0.4529,
+            "realised": 0.4646,
+            "error": 0.0117
+          },
+          {
+            "bin": "0.5-0.6",
+            "n": 419,
+            "predicted": 0.5475,
+            "realised": 0.4224,
+            "error": -0.1251
+          },
+          {
+            "bin": "0.6-0.7",
+            "n": 253,
+            "predicted": 0.6437,
+            "realised": 0.5178,
+            "error": -0.1259
+          },
+          {
+            "bin": "0.7-0.8",
+            "n": 80,
+            "predicted": 0.7357,
+            "realised": 0.425,
+            "error": -0.3107
+          }
+        ],
+        "log_loss_delta_vs_market": 0.042594
+      }
+    ],
+    "selected_market_recalibration": {
+      "candidate": "market_recalibration",
+      "c": 0.01,
+      "features": [
+        "market_logit"
+      ],
+      "rows": 1724,
+      "log_loss": 0.687845,
+      "brier": 0.247341,
+      "calibration_error": 0.00426,
+      "mean_probability": 0.463413,
+      "observed_yrfi_rate": 0.464037,
+      "calibration": [
+        {
+          "bin": "0.3-0.4",
+          "n": 81,
+          "predicted": 0.3851,
+          "realised": 0.4321,
+          "error": 0.047
+        },
+        {
+          "bin": "0.4-0.5",
+          "n": 1340,
+          "predicted": 0.4544,
+          "realised": 0.453,
+          "error": -0.0014
+        },
+        {
+          "bin": "0.5-0.6",
+          "n": 301,
+          "predicted": 0.5238,
+          "realised": 0.5183,
+          "error": -0.0055
+        }
+      ],
+      "log_loss_delta_vs_market": -0.000607
+    },
+    "selected_baseball_candidate": {
+      "candidate": "run_context",
+      "c": 0.01,
+      "features": [
+        "market_logit",
+        "expected_home_runs_prior",
+        "expected_away_runs_prior",
+        "home_sp_rate",
+        "away_sp_rate",
+        "home_sp_starts",
+        "away_sp_starts",
+        "park_factor"
+      ],
+      "rows": 1724,
+      "log_loss": 0.697735,
+      "brier": 0.25213,
+      "calibration_error": 0.03475,
+      "mean_probability": 0.459597,
+      "observed_yrfi_rate": 0.464037,
+      "calibration": [
+        {
+          "bin": "0.3-0.4",
+          "n": 333,
+          "predicted": 0.3687,
+          "realised": 0.4595,
+          "error": 0.0907
+        },
+        {
+          "bin": "0.4-0.5",
+          "n": 913,
+          "predicted": 0.4512,
+          "realised": 0.4535,
+          "error": 0.0023
+        },
+        {
+          "bin": "0.5-0.6",
+          "n": 447,
+          "predicted": 0.5362,
+          "realised": 0.4765,
+          "error": -0.0597
+        },
+        {
+          "bin": "0.6-0.7",
+          "n": 27,
+          "predicted": 0.6217,
+          "realised": 0.5926,
+          "error": -0.0291
+        }
+      ],
+      "log_loss_delta_vs_market": 0.009283
+    }
+  },
+  "confirmation_2025": {
+    "rows": 1043,
+    "raw_market": {
+      "log_loss": 0.685819,
+      "brier": 0.246363,
+      "calibration_error": 0.00606,
+      "mean_probability": 0.48974,
+      "observed_yrfi_rate": 0.493768,
+      "calibration": [
+        {
+          "bin": "0.4-0.5",
+          "n": 629,
+          "predicted": 0.4705,
+          "realised": 0.4706,
+          "error": 0.0
+        },
+        {
+          "bin": "0.5-0.6",
+          "n": 400,
+          "predicted": 0.5219,
+          "realised": 0.5375,
+          "error": 0.0156
+        }
+      ]
+    },
+    "market_recalibration": {
+      "log_loss": 0.685408,
+      "brier": 0.246177,
+      "calibration_error": 0.02683,
+      "mean_probability": 0.475398,
+      "observed_yrfi_rate": 0.493768,
+      "calibration": [
+        {
+          "bin": "0.3-0.4",
+          "n": 49,
+          "predicted": 0.3763,
+          "realised": 0.2857,
+          "error": -0.0906
+        },
+        {
+          "bin": "0.4-0.5",
+          "n": 720,
+          "predicted": 0.4623,
+          "realised": 0.4819,
+          "error": 0.0196
+        },
+        {
+          "bin": "0.5-0.6",
+          "n": 271,
+          "predicted": 0.5264,
+          "realised": 0.5609,
+          "error": 0.0345
+        }
+      ],
+      "comparison": {
+        "benchmark": "raw_market",
+        "log_loss_delta_candidate_minus_benchmark": -0.000411,
+        "delta_ci95_date_clustered": [
+          -0.002296,
+          0.001494
+        ],
+        "candidate_better_interval_excludes_zero": false
+      },
+      "selected_c": 0.01,
+      "coefficients": [
+        {
+          "feature": "market_logit",
+          "standardized_logit_coefficient": 0.156365
+        }
+      ]
+    },
+    "baseball_candidate": {
+      "family": "run_context",
+      "selected_c": 0.01,
+      "features": [
+        "market_logit",
+        "expected_home_runs_prior",
+        "expected_away_runs_prior",
+        "home_sp_rate",
+        "away_sp_rate",
+        "home_sp_starts",
+        "away_sp_starts",
+        "park_factor"
+      ],
+      "log_loss": 0.687373,
+      "brier": 0.247138,
+      "calibration_error": 0.01834,
+      "mean_probability": 0.473233,
+      "observed_yrfi_rate": 0.493768,
+      "calibration": [
+        {
+          "bin": "0.3-0.4",
+          "n": 85,
+          "predicted": 0.3791,
+          "realised": 0.3882,
+          "error": 0.0092
+        },
+        {
+          "bin": "0.4-0.5",
+          "n": 672,
+          "predicted": 0.4579,
+          "realised": 0.4673,
+          "error": 0.0094
+        },
+        {
+          "bin": "0.5-0.6",
+          "n": 274,
+          "predicted": 0.5336,
+          "realised": 0.5766,
+          "error": 0.0431
+        }
+      ],
+      "comparison_vs_market": {
+        "benchmark": "raw_market",
+        "log_loss_delta_candidate_minus_benchmark": 0.001554,
+        "delta_ci95_date_clustered": [
+          -0.002186,
+          0.005454
+        ],
+        "candidate_better_interval_excludes_zero": false
+      },
+      "comparison_vs_market_recalibration": {
+        "benchmark": "market_recalibration",
+        "log_loss_delta_candidate_minus_benchmark": 0.001965,
+        "delta_ci95_date_clustered": [
+          -0.001273,
+          0.005204
+        ],
+        "candidate_better_interval_excludes_zero": false
+      },
+      "coefficients": [
+        {
+          "feature": "market_logit",
+          "standardized_logit_coefficient": 0.169154
+        },
+        {
+          "feature": "away_sp_rate",
+          "standardized_logit_coefficient": -0.069312
+        },
+        {
+          "feature": "home_sp_starts",
+          "standardized_logit_coefficient": -0.050634
+        },
+        {
+          "feature": "home_sp_rate",
+          "standardized_logit_coefficient": -0.043798
+        },
+        {
+          "feature": "expected_away_runs_prior",
+          "standardized_logit_coefficient": 0.039576
+        },
+        {
+          "feature": "away_sp_starts",
+          "standardized_logit_coefficient": 0.033268
+        },
+        {
+          "feature": "expected_home_runs_prior",
+          "standardized_logit_coefficient": 0.013326
+        },
+        {
+          "feature": "park_factor",
+          "standardized_logit_coefficient": -0.012201
+        }
+      ]
+    },
+    "confirmed_market_recalibration": false,
+    "confirmed_incremental_baseball_signal": false
+  },
+  "promotion_status": "paper_only; requires post-lock forward confirmation, executable price testing, and positive CLV before any review"
+}
