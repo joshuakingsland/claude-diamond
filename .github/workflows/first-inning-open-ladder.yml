@@ -1,0 +1,106 @@
+name: research first-inning opening prices
+
+# This workflow is manual and dry-run by default.  A real run reuses the 5,000
+# already-discovered event IDs, buys only the frozen pregame ladder, and never
+# writes to the pick feed or paper ledger.
+on:
+  workflow_dispatch:
+    inputs:
+      max_calls:
+        description: "Hard ceiling for this run (10 credits per event snapshot)"
+        required: true
+        default: "1000"
+      calls_per_checkpoint:
+        description: "Paid calls committed before the next batch"
+        required: true
+        default: "100"
+      lead_minutes:
+        description: "Frozen opening ladder; do not tune after collection starts"
+        required: true
+        default: "1440,720,360,180,60"
+      seasons:
+        description: "2023,2024 development first; 2025 stays code-gated"
+        required: true
+        default: "2023,2024"
+      dry_run:
+        description: "Estimate spend without requesting historical odds"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+# Share the lock with the other paid first-inning collectors.  The completed
+# close archive should not be running again, but this prevents accidental paid
+# overlap if somebody launches it.
+concurrency:
+  group: first-inning-study
+  cancel-in-progress: false
+
+jobs:
+  opening-ladder:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+
+      - name: Estimate or collect the frozen opening ladder
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+        run: |
+          set -euo pipefail
+          total="${{ inputs.max_calls }}"
+          checkpoint="${{ inputs.calls_per_checkpoint }}"
+          leads="${{ inputs.lead_minutes }}"
+          seasons="${{ inputs.seasons }}"
+          if [ "$total" -lt 1 ] || [ "$checkpoint" -lt 1 ]; then
+            echo "max_calls and calls_per_checkpoint must be positive" >&2
+            exit 2
+          fi
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            python first_inning_open_odds.py \
+              --max-calls "$total" --lead-minutes "$leads" \
+              --seasons "$seasons" --dry-run
+            exit 0
+          fi
+
+          remaining="$total"
+          batch=1
+          while [ "$remaining" -gt 0 ]; do
+            this_batch="$checkpoint"
+            if [ "$this_batch" -gt "$remaining" ]; then
+              this_batch="$remaining"
+            fi
+            python first_inning_open_odds.py \
+              --max-calls "$this_batch" --lead-minutes "$leads" \
+              --seasons "$seasons"
+            python first_inning_open_evaluation.py --draws 500
+            bash commit_data.sh \
+              "data: first-inning opening ladder checkpoint ${batch}" \
+              data/first_inning_open_audit.csv \
+              data/first_inning_open_quotes.csv \
+              data/research/yrfi_open_rows.csv \
+              first_inning_open_evaluation.json
+            remaining=$((remaining - this_batch))
+            batch=$((batch + 1))
+          done
+
+      - name: Preserve any paid rows after an unexpected failure
+        if: ${{ always() && !inputs.dry_run }}
+        run: |
+          python first_inning_open_evaluation.py --draws 500 || true
+          bash commit_data.sh \
+            "data: preserve first-inning opening ladder checkpoint" \
+            data/first_inning_open_audit.csv \
+            data/first_inning_open_quotes.csv \
+            data/research/yrfi_open_rows.csv \
+            first_inning_open_evaluation.json

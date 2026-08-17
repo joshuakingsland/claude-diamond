@@ -115,6 +115,8 @@ first_inning_odds.py  capped historical YRFI/NRFI market-coverage audit
 first_inning_results.py  exact first-inning result labels from MLB linescores
 first_inning_report.py  market-only data-integrity report; not a prediction model
 first_inning_model_evaluation.py  frozen 2023/2024/2025 market-anchored YRFI test
+first_inning_open_odds.py  resumable, fixed-ladder YRFI/NRFI opening archive
+first_inning_open_evaluation.py  frozen open-to-close movement and CLV test
 market.py     joins prices to predictions; asks whether the model beats them
 market_offset.py  constrained market-logit residual and price-movement fit
 forward_evidence.py  accepted fills, independent games, sharp-close CLV gate
@@ -267,6 +269,7 @@ wagering gates to manufacture a sample.
 | `first-inning-audit.yml` | manual | One-market, one-region historical YRFI/NRFI coverage audit; dry run by default |
 | `first-inning-study.yml` | manual | Stratified, capped historical first-inning sample plus official outcome labels; dry run by default |
 | `first-inning-labels.yml` | manual | Free refresh of StatsAPI labels and the market-only baseline; no odds request |
+| `first-inning-open-ladder.yml` | manual | Reuses the settled cohort to collect a frozen opening-price ladder; dry run by default and no betting |
 | `automated-full-game-early-backfill.yml` | daily, manual | Capped 24-hour snapshots and sealed entry-to-close evaluation; no betting |
 | `continue-full-game-early-backfill.yml` | successful early batch | Launches one non-overlapping successor until provider coverage is complete; stops on failure |
 | `revalidate.yml` | weekly, manual | Builds predictions once, then market comparison, offset fit, forward evidence and final reports in provenance-safe order |
@@ -321,6 +324,33 @@ joins each offered event to the exact first-inning MLB linescore and writes a
 market-only Brier/log-loss baseline. It does **not** build a first-inning
 model, treat a historical starting lineup as a pregame snapshot, or display a
 YRFI/NRFI pick. Those would be later, separately validated stages.
+
+The completed 5,000-attempt close study still found no confirmed YRFI edge, so
+the public website intentionally has no first-inning pick feed. The next frozen
+question is whether the earliest broadly available quote predicts its own
+ten-minute close. `YRFI_OPEN_RESEARCH_PLAN.md` fixes the protocol before any
+new data is purchased: reuse the same event IDs and sample 1,440, 720, 360,
+180, and 60 minutes before first pitch. Only settled, multi-book-close games
+can enter the analysis. That makes the 2023/2024 development stage 11,240
+event-odds calls (about 112,400 credits). It stops there if selection fails;
+only a locked candidate unlocks the 5,215-call 2025 confirmation. Maximum
+useful spend is therefore about 164,550 credits, with no new event discovery
+spend and no retrospective spend on excluded 2026 outcomes.
+
+Estimate a batch without spending credits:
+
+```bash
+python first_inning_open_odds.py --max-calls 1000 --seasons 2023,2024 --dry-run
+```
+
+The matching `first-inning-open-ladder.yml` workflow is manual, shares the
+paid first-inning concurrency lock, checkpoints every 100 calls by default,
+and cannot write a pick or a wager. A real run must be explicitly launched
+with `dry_run` unchecked. `first_inning_open_evaluation.py` keeps 2025 sealed
+until development is complete and a candidate is locked; the paid collector
+enforces the same gate. It measures predictable close movement and best-price
+closing-line value first, and treats historical win/loss ROI as secondary
+evidence.
 
 ### The two days the page was empty
 
