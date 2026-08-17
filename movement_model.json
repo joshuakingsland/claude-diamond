@@ -1,6 +1,6 @@
 {
   "version": "full-game-24h-close-probe-v1",
-  "repository_revision": "2d4886b5f094",
+  "repository_revision": "9c700905f8d2",
   "source_protocol": "full-game-entry-close-v1",
   "source_protocol_hash": "eeaa8fa0b399ff9c",
   "target": "24h_entry_to_20m_close",
