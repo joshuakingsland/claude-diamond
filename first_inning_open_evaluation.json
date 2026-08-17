@@ -214,21 +214,21 @@
     "2023": {
       "closing_events": 524,
       "expected_open_attempts": 2620,
-      "open_attempts": 2300,
-      "open_offered": 2020,
-      "open_no_offer": 193,
-      "open_failed": 87,
-      "missing_event_rungs": 320,
+      "open_attempts": 2350,
+      "open_offered": 2063,
+      "open_no_offer": 194,
+      "open_failed": 93,
+      "missing_event_rungs": 270,
       "complete": false
     },
     "2024": {
       "closing_events": 1724,
       "expected_open_attempts": 8620,
-      "open_attempts": 2300,
-      "open_offered": 1880,
+      "open_attempts": 2350,
+      "open_offered": 1920,
       "open_no_offer": 237,
-      "open_failed": 183,
-      "missing_event_rungs": 6320,
+      "open_failed": 193,
+      "missing_event_rungs": 6270,
       "complete": false
     },
     "2025": {
@@ -253,13 +253,13 @@
     }
   },
   "integrity": {
-    "raw_open_quote_events": 920,
-    "offered_open_audit_rows": 3900,
-    "qualified_open_snapshots": 3208,
-    "qualified_open_events": 904,
+    "raw_open_quote_events": 940,
+    "offered_open_audit_rows": 3983,
+    "qualified_open_snapshots": 3281,
+    "qualified_open_events": 923,
     "post_start_open_snapshot_violations": 0,
     "unexpected_open_lead_rows": 0,
-    "open_close_joined_events": 904,
+    "open_close_joined_events": 923,
     "close_feature_integrity": {
       "raw_quote_events": 4147,
       "multi_book_consensus_events": 3441,
@@ -279,8 +279,8 @@
       }
     },
     "qualified_rows_by_season": {
-      "2023": 446,
-      "2024": 458
+      "2023": 455,
+      "2024": 468
     }
   },
   "bets_placed": 0,
