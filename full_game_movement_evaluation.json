@@ -1,6 +1,6 @@
 {
   "study": "MLB 24-hour entry to 20-minute close movement",
-  "repository_revision": "ffdf063b2b2f",
+  "repository_revision": "66c7c2c9c32e",
   "protocol": {
     "version": "full-game-entry-close-v1",
     "entry_snapshot": "24 hours before scheduled first pitch",
@@ -397,17 +397,17 @@
       "confirmation_2024": {
         "rows": 1438,
         "rmse_no_move_logit": 0.09796692,
-        "rmse_candidate_logit": 0.09557917,
-        "mse_improvement": 0.0004621409,
-        "relative_mse_reduction": 0.04815213,
+        "rmse_candidate_logit": 0.09557899,
+        "mse_improvement": 0.0004621748,
+        "relative_mse_reduction": 0.04815566,
         "improvement_ci95_date_clustered": [
-          0.00025371,
-          0.00067073
+          0.00025375,
+          0.00067081
         ],
         "direction_accuracy_nontrivial_moves": 0.592764,
-        "movement_correlation": 0.181413,
+        "movement_correlation": 0.181404,
         "mean_actual_move_logit": 0.01642433,
-        "mean_predicted_move_logit": 0.00571917
+        "mean_predicted_move_logit": 0.00572211
       },
       "confirmation_signal": true,
       "status": "confirmed research signal; paper CLV only"
@@ -722,17 +722,17 @@
       "confirmation_2024": {
         "rows": 929,
         "rmse_no_move_logit": 0.0930295,
-        "rmse_candidate_logit": 0.09000269,
-        "mse_improvement": 0.0005540029,
-        "relative_mse_reduction": 0.06401337,
+        "rmse_candidate_logit": 0.09000225,
+        "mse_improvement": 0.0005540829,
+        "relative_mse_reduction": 0.06402261,
         "improvement_ci95_date_clustered": [
-          0.00023586,
-          0.00084623
+          0.000236,
+          0.00084628
         ],
         "direction_accuracy_nontrivial_moves": 0.601449,
-        "movement_correlation": 0.268008,
+        "movement_correlation": 0.267999,
         "mean_actual_move_logit": 0.01991007,
-        "mean_predicted_move_logit": -0.00094982
+        "mean_predicted_move_logit": -0.00094698
       },
       "confirmation_signal": true,
       "status": "confirmed research signal; paper CLV only"
