@@ -2,3 +2,8 @@
 __pycache__/
 *.pyc
 *.tmp
+
+# Statcast aggregates are large and regenerable from Baseball Savant, which is
+# free and keyless. Committing them would add tens of megabytes to a repository
+# whose whole game table is 3MB, and `statcast.py` is resumable by date.
+data/statcast_games.csv
