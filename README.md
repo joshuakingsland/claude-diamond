@@ -28,7 +28,7 @@ actually being tested.
 | --- | --- |
 | Does the model predict baseball? | **Yes.** Calibration, log loss, Brier against 13,857 completed games |
 | Does the standalone model beat a price? | **No.** On the coherent main-line comparison the close wins all three markets with date-clustered intervals excluding zero |
-| Is there a credible route to an edge? | **A price-movement route, not an outcome edge.** The frozen 24-hour-to-close study confirmed all three markets; totals reached 73.1% direction accuracy and 38.1% relative MSE reduction in 2024. It is now a paper CLV probe only |
+| Is there a credible route to an edge? | **Unproven, and smaller than it first looked.** The 24-hour movement signal survives on the moneyline and run line, worth **0.4-0.6 probability points of CLV** against 2.31 points of vig per side. The headline totals figure was 78% an artifact. Live CLV is currently **-0.52 points** at a 0% fill rate |
 | Should anyone stake money? | **No.** The promotion gate requires 500 independent games, 95% accepted fills, and positive sharp-close CLV; there is no real-money path in this code |
 
 A well-calibrated model that loses money is the *normal* outcome in a liquid

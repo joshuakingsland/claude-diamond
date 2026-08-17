@@ -28,7 +28,26 @@ from models import reprice_requests
 from provenance import repository_revision
 
 
-PROTOCOL_VERSION = "full-game-entry-close-v1"
+# v2 supersedes v1. v1 offered only two candidate families, both carrying the
+# raw entry price, and on totals it selected a fit dominated by `entry_logit`
+# at -0.038 -- the largest coefficient anywhere in the three markets. That is
+# mean reversion on the entry price, and for totals the entry price is nearly
+# all noise: sd(entry_logit) is 0.057 against sd(move) 0.072, so the movement
+# is larger than the entire spread of entry prices. A total's two-way price
+# sits near even money because the book moves the LINE, not the price.
+#
+# move = close - entry, so noise in `entry` reappears in `move` with a negative
+# sign whether or not the market reverts. Removing the two raw entry-price
+# terms drops the 2024 totals reduction from 38.1% to 9.0% while leaving the
+# moneyline and run line untouched, which is what distinguishes an artifact
+# from a signal. Both families are now offered and the selection is reported
+# either way.
+#
+# It also matters that `entry_prob` is a MEDIAN across seven or eight books.
+# A median is a statistic, not an offer. A single book posting an off-market
+# total would be a real dislocation worth taking; sampling noise in a
+# cross-book median is not something anyone can bet.
+PROTOCOL_VERSION = "full-game-entry-close-v2"
 TRAIN_YEAR = 2022
 SELECTION_YEAR = 2023
 CONFIRMATION_YEAR = 2024
@@ -43,9 +62,18 @@ MICRO_FEATURES = (
     "month_sin", "month_cos",
 )
 HYBRID_FEATURES = MICRO_FEATURES + ("model_gap_logit",)
+# The raw entry price and its magnitude. Excluded from the families below so a
+# candidate cannot earn its score by predicting the reversion of noise in the
+# very quantity the target is measured against.
+ENTRY_PRICE_FEATURES = ("entry_logit", "abs_entry_logit")
+STRUCTURE_FEATURES = tuple(f for f in MICRO_FEATURES
+                           if f not in ENTRY_PRICE_FEATURES)
+STRUCTURE_PLUS_MODEL = STRUCTURE_FEATURES + ("model_gap_logit",)
 CANDIDATE_FEATURES = {
     "microstructure": MICRO_FEATURES,
     "microstructure_plus_model": HYBRID_FEATURES,
+    "structure_no_entry_price": STRUCTURE_FEATURES,
+    "structure_no_entry_price_plus_model": STRUCTURE_PLUS_MODEL,
 }
 ROW_COLUMNS = list(dict.fromkeys([
     "event_id", "game_pk", "official_date", "season", "market", "point",
@@ -195,8 +223,17 @@ def movement_metrics(frame, predicted, draws=3000):
                  if meaningful.any() else None)
     correlation = (float(np.corrcoef(actual, predicted)[0, 1])
                    if np.std(actual) > 0 and np.std(predicted) > 0 else None)
+    # Betting the predicted side, how far does the price move in your favour?
+    # Reported because a relative MSE reduction is easy to read as a return and
+    # is nothing like one: 4.8% of squared error is 0.45 probability points of
+    # price improvement, against roughly 2.3 points of vig per side.
+    signed = np.where(predicted >= 0, actual, -actual)
+    clv_logit = float(signed.mean())
+    clv_points = 100.0 * (1.0 / (1.0 + np.exp(-clv_logit)) - 0.5)
     return {
         "rows": int(len(frame)),
+        "implied_clv_logit": round(clv_logit, 8),
+        "implied_clv_probability_points": round(clv_points, 4),
         "rmse_no_move_logit": round(float(np.sqrt(baseline_error.mean())), 8),
         "rmse_candidate_logit": round(float(np.sqrt(candidate_error.mean())), 8),
         "mse_improvement": round(float(improvement.mean()), 10),
@@ -243,6 +280,19 @@ def evaluate_market(rows, coverage, market, draws=3000):
             })
     chosen = min(candidates,
                  key=lambda item: item["selection_2023"]["rmse_candidate_logit"])
+    # The same selection restricted to families without the raw entry price,
+    # reported alongside rather than instead: if the two disagree, the gap is
+    # the size of the reversion-on-noise effect and the reader should see it.
+    without = [item for item in candidates
+               if item["feature_family"].startswith("structure_no_entry_price")]
+    if without:
+        clean = min(without,
+                    key=lambda item: item["selection_2023"]["rmse_candidate_logit"])
+        result["entry_price_free_selection"] = {
+            "selected": clean["candidate"],
+            "selected_features": clean["features"],
+            "selected_alpha": clean["alpha"],
+        }
     result["candidate_selection"] = {
         "fit_year": TRAIN_YEAR,
         "selection_year": SELECTION_YEAR,
