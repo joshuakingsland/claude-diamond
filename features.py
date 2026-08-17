@@ -289,6 +289,66 @@ class UmpireState:
             self.strikeout_games += 1
 
 
+# Batted balls carried by the league prior before a pitcher has a record of
+# his own. Expected outcomes stabilise far faster than results -- that is the
+# whole reason for using them -- so this prior is much lighter than the 200
+# batters faced that `PitcherComponents` needs.
+PRIOR_BATTED_BALLS = 60.0
+# League anchors, used only until a player has a record. Measured from the
+# 2021-2026 aggregate rather than looked up.
+LEAGUE_XWOBA = 0.310
+LEAGUE_WHIFF_RATE = 0.245
+LEAGUE_BARREL_RATE = 0.075
+
+
+class StatcastState:
+    """A player's expected outcomes, accumulated from earlier games only.
+
+    The point of expected statistics is that they say what happened rather
+    than what was recorded. `estimated_woba_using_speedangle` scores a batted
+    ball by its exit velocity and launch angle, so the fielders, the park and
+    the luck fall out, and what is left stabilises in dozens of batted balls
+    where runs allowed takes a season.
+
+    That matters here specifically because `PitcherState` is a proxy built
+    from *team* runs allowed in games this pitcher started -- it includes the
+    bullpen that followed him and the defence behind him. This is the same
+    quantity with those removed.
+
+    Sums in, rates out, shrunk toward the league. The caller folds a game in
+    only after the row for it has been emitted, so nothing here can see its
+    own outcome.
+    """
+
+    def __init__(self):
+        self.xwoba = 0.0
+        self.xwoba_denom = 0.0
+        self.whiffs = 0.0
+        self.swings = 0.0
+        self.barrels = 0.0
+        self.batted = 0.0
+
+    def expected_woba(self):
+        return ((self.xwoba + LEAGUE_XWOBA * PRIOR_BATTED_BALLS)
+                / (self.xwoba_denom + PRIOR_BATTED_BALLS))
+
+    def whiff_rate(self):
+        return ((self.whiffs + LEAGUE_WHIFF_RATE * PRIOR_BATTED_BALLS)
+                / (self.swings + PRIOR_BATTED_BALLS))
+
+    def barrel_rate(self):
+        return ((self.barrels + LEAGUE_BARREL_RATE * PRIOR_BATTED_BALLS)
+                / (self.batted + PRIOR_BATTED_BALLS))
+
+    def fold(self, row):
+        self.xwoba += _number(row.get("xwoba_sum"))
+        self.xwoba_denom += _number(row.get("xwoba_denom"))
+        self.whiffs += _number(row.get("whiffs"))
+        self.swings += _number(row.get("swings"))
+        self.barrels += _number(row.get("barrels"))
+        self.batted += _number(row.get("batted_balls"))
+
+
 class LeagueRates:
     """Running league averages, so a prior is measured rather than assumed."""
 
@@ -402,7 +462,8 @@ def _rest_days(previous, current):
     return int(np.clip(delta, 0, 10))
 
 
-def build(games, parks, weather=None, pitching=None, umpires=None):
+def build(games, parks, weather=None, pitching=None, umpires=None,
+          statcast=None):
     """Return a feature frame aligned to ``games``, in chronological order.
 
     ``games`` must contain final results; unfinished games are kept so the
@@ -424,6 +485,19 @@ def build(games, parks, weather=None, pitching=None, umpires=None):
     if len(weather):
         for row in weather.to_dict("records"):
             weather_by_game[id_key(row["game_pk"])] = row
+
+    # Keyed by (game, player) for starters and by (game, side) for teams, so
+    # the walk can look up either without scanning.
+    statcast_pitcher, statcast_team = {}, {}
+    if statcast is not None and len(statcast):
+        for row in statcast.to_dict("records"):
+            game = id_key(row.get("game_pk"))
+            if row.get("role") == "pitcher":
+                statcast_pitcher[(game, id_key(row.get("player_id")))] = row
+            elif "is_home" in row:
+                side = "home" if _number(row.get("is_home")) else "away"
+                bucket = statcast_team.setdefault((game, side), [])
+                bucket.append(row)
 
     umpire_by_game = {}
     if umpires is not None and len(umpires):
@@ -455,6 +529,8 @@ def build(games, parks, weather=None, pitching=None, umpires=None):
     bullpens = defaultdict(BullpenState)
     league = LeagueRates()
     officials = defaultdict(UmpireState)
+    starter_shape = defaultdict(StatcastState)
+    team_shape = defaultdict(StatcastState)
     park_states = defaultdict(ParkState)
     league_runs, league_games = 0.0, 0
 
@@ -538,6 +614,23 @@ def build(games, parks, weather=None, pitching=None, umpires=None):
             "away_bp_workload": away_pen.workload(date),
             "park_factor": park_factor,
             "elevation_km": (park.get("elevation_m") or 0.0) / 1000.0,
+            # Expected outcomes for the two starters and the two lineups, from
+            # Statcast. These are the same quantities `home_sp_rate` and
+            # `home_off` reach for, with the fielders, the park and the luck
+            # taken out -- a batted ball is scored by how hard and at what
+            # angle it left the bat rather than by whether it found grass.
+            "home_sp_xwoba": starter_shape[
+                id_key(game.get("home_sp_id"))].expected_woba(),
+            "away_sp_xwoba": starter_shape[
+                id_key(game.get("away_sp_id"))].expected_woba(),
+            "home_sp_whiff": starter_shape[
+                id_key(game.get("home_sp_id"))].whiff_rate(),
+            "away_sp_whiff": starter_shape[
+                id_key(game.get("away_sp_id"))].whiff_rate(),
+            "home_off_xwoba": team_shape[home_id].expected_woba(),
+            "away_off_xwoba": team_shape[away_id].expected_woba(),
+            "home_off_barrel": team_shape[home_id].barrel_rate(),
+            "away_off_barrel": team_shape[away_id].barrel_rate(),
             # The plate umpire, as a run and strikeout environment, expressed
             # as a deviation from the league at that moment. The raw rate is
             # dominated by the league trend rather than by the umpire —
@@ -616,6 +709,20 @@ def build(games, parks, weather=None, pitching=None, umpires=None):
                       sum(_number(line.get("strike_outs")) for line in lines)
                       if lines else None)
 
+        # Folded here with everything else, after this game's row is already
+        # written, so a starter's own outing cannot inform the game he threw
+        # it in.
+        for side, starter in (("home", game.get("home_sp_id")),
+                              ("away", game.get("away_sp_id"))):
+            entry = statcast_pitcher.get(
+                (id_key(game["game_pk"]), id_key(starter)))
+            if entry is not None:
+                starter_shape[id_key(starter)].fold(entry)
+        for side, team in (("home", home_id), ("away", away_id)):
+            for entry in statcast_team.get(
+                    (id_key(game["game_pk"]), side), ()):
+                team_shape[team].fold(entry)
+
         park_states[venue].runs += home_score + away_score
         park_states[venue].games += 1
         league_runs += home_score + away_score
@@ -637,7 +744,8 @@ def _float(value):
 def load_inputs(games_path="data/games.csv", weather_path="data/weather.csv",
                 parks_path="data/parks.json",
                 pitching_path="data/pitching.csv",
-                umpires_path="data/umpires.csv"):
+                umpires_path="data/umpires.csv",
+                statcast_path="data/statcast_games.csv"):
     import json
     from pathlib import Path
 
@@ -649,7 +757,9 @@ def load_inputs(games_path="data/games.csv", weather_path="data/weather.csv",
                 else pd.DataFrame())
     umpires = (pd.read_csv(umpires_path) if Path(umpires_path).exists()
                else pd.DataFrame())
-    return games, parks, weather, pitching, umpires
+    statcast = (pd.read_csv(statcast_path) if Path(statcast_path).exists()
+                else pd.DataFrame())
+    return games, parks, weather, pitching, umpires, statcast
 
 
 def main():
@@ -660,12 +770,13 @@ def main():
     parser.add_argument("--weather", default="data/weather.csv")
     parser.add_argument("--pitching", default="data/pitching.csv")
     parser.add_argument("--umpires", default="data/umpires.csv")
+    parser.add_argument("--statcast", default="data/statcast_games.csv")
     parser.add_argument("--out", default="data/features.csv")
     args = parser.parse_args()
-    games, parks, weather, pitching, umpires = load_inputs(
+    games, parks, weather, pitching, umpires, statcast = load_inputs(
         args.games, args.weather, pitching_path=args.pitching,
-        umpires_path=args.umpires)
-    frame = build(games, parks, weather, pitching, umpires)
+        umpires_path=args.umpires, statcast_path=args.statcast)
+    frame = build(games, parks, weather, pitching, umpires, statcast)
     frame.to_csv(args.out, index=False)
     print(f"wrote {len(frame)} feature rows and {len(FEATURE_COLUMNS)} "
           f"columns to {args.out}")

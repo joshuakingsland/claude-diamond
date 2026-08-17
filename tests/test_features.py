@@ -264,3 +264,109 @@ class UmpireLookaheadTests(unittest.TestCase):
         games = _games(n=120)
         frame = build(games, PARKS, None, None, _umpires(games))
         self.assertLess(abs(float(frame.ump_run_rate.mean())), 1.0)
+
+
+def _statcast(games, xwoba_by_game=None):
+    """Statcast aggregates for the same games, both roles and both sides."""
+    rows = []
+    for index, game in enumerate(games.to_dict("records")):
+        value = (xwoba_by_game or {}).get(game["game_pk"], 0.30)
+        for role, is_home in (("pitcher", 1), ("pitcher", 0),
+                              ("batter", 1), ("batter", 0)):
+            player = (game["home_sp_id"] if role == "pitcher" and is_home
+                      else game["away_sp_id"] if role == "pitcher"
+                      else 9000 + is_home)
+            rows.append({
+                "game_pk": game["game_pk"], "game_date": game["official_date"],
+                "player_id": player, "role": role, "is_home": is_home,
+                "pitches": 90, "batters_faced": 24, "swings": 40,
+                "whiffs": 10, "called_strikes": 15, "in_zone": 45,
+                "batted_balls": 20, "barrels": 2,
+                "xwoba_sum": value * 24, "xwoba_denom": 24,
+                "woba_sum": 7.0, "woba_denom": 24,
+                "launch_speed_sum": 1800.0, "launch_speed_count": 20,
+                "release_speed_sum": 8300.0, "release_speed_count": 90,
+                "spin_rate_sum": 207000.0, "spin_rate_count": 90,
+                "delta_run_exp_sum": 0.1,
+            })
+    return pd.DataFrame(rows)
+
+
+class StatcastFeatureTests(unittest.TestCase):
+    """Expected outcomes must obey the same point-in-time rule as everything."""
+
+    def test_the_columns_are_built(self):
+        games = _games()
+        frame = build(games, PARKS, None, None, None, _statcast(games))
+        for column in ("home_sp_xwoba", "away_sp_xwoba", "home_sp_whiff",
+                       "home_off_xwoba", "away_off_barrel"):
+            self.assertIn(column, frame.columns)
+
+    def test_without_statcast_the_columns_fall_back_to_the_league(self):
+        # A card priced before the aggregate has caught up must see an average
+        # pitcher rather than a wrong one.
+        games = _games()
+        frame = build(games, PARKS, None, None, None, None)
+        self.assertAlmostEqual(frame["home_sp_xwoba"].std(), 0.0, places=9)
+        self.assertAlmostEqual(frame["home_sp_xwoba"].iloc[0], 0.310, places=6)
+
+    def test_a_games_own_statcast_cannot_reach_its_own_row(self):
+        # The rule the whole file exists for. Rewrite one game's expected
+        # outcomes and every row up to and including it must be unchanged.
+        games = _games()
+        base_cast = _statcast(games)
+        target_index = 30
+        target = games["game_pk"].iloc[target_index]
+        tampered = _statcast(games, xwoba_by_game={target: 0.95})
+
+        base = build(games, PARKS, None, None, None, base_cast)
+        after = build(games, PARKS, None, None, None, tampered)
+        upto = base["game_pk"] <= target
+        pd.testing.assert_series_equal(base[upto].home_sp_xwoba,
+                                       after[upto].home_sp_xwoba)
+        # ... and later rows must move, or the test would pass on a builder
+        # that ignores statcast entirely.
+        self.assertFalse(base[~upto].home_sp_xwoba
+                         .equals(after[~upto].home_sp_xwoba))
+
+    def test_a_better_pitcher_reads_as_a_lower_expected_woba(self):
+        games = _games()
+        good = games["home_sp_id"].iloc[0]
+        cast = _statcast(games)
+        cast.loc[(cast.player_id == good) & (cast.role == "pitcher"),
+                 "xwoba_sum"] = 0.15 * 24
+        frame = build(games, PARKS, None, None, None, cast)
+        rows = frame[games["home_sp_id"].to_numpy() == good]
+        self.assertLess(rows["home_sp_xwoba"].iloc[-1], 0.30)
+
+    def test_team_batting_follows_the_team_not_the_side(self):
+        """One good offence must read as good whichever dugout it is in.
+
+        `home_off_xwoba` is the *home team's* accumulated batting, not the
+        quality of home batting in general -- a team is home in some games and
+        away in others. The first version of this test flagged every home-side
+        row and expected the home column to rise, which is incoherent: it
+        raised every team equally.
+        """
+        games = _games()
+        strong = 108
+        cast = _statcast(games)
+        # Attribute the loud offence to one team, in whichever dugout it sat.
+        home_games = set(games.loc[games.home_team_id == strong, "game_pk"])
+        away_games = set(games.loc[games.away_team_id == strong, "game_pk"])
+        batter = cast.role == "batter"
+        cast.loc[batter & cast.game_pk.isin(home_games) & (cast.is_home == 1),
+                 "xwoba_sum"] = 0.45 * 24
+        cast.loc[batter & cast.game_pk.isin(away_games) & (cast.is_home == 0),
+                 "xwoba_sum"] = 0.45 * 24
+        frame = build(games, PARKS, None, None, None, cast)
+
+        merged = frame.merge(games[["game_pk", "home_team_id",
+                                    "away_team_id"]], on="game_pk")
+        tail = merged.tail(12)
+        as_home = tail.loc[tail.home_team_id == strong, "home_off_xwoba"]
+        as_away = tail.loc[tail.away_team_id == strong, "away_off_xwoba"]
+        others = pd.concat([
+            tail.loc[tail.home_team_id != strong, "home_off_xwoba"],
+            tail.loc[tail.away_team_id != strong, "away_off_xwoba"]])
+        self.assertGreater(pd.concat([as_home, as_away]).mean(), others.mean())

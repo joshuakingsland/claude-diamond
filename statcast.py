@@ -57,7 +57,7 @@ GAME_TYPE = "R"
 BARREL_CODE = 6
 
 PITCHER_FIELDS = [
-    "game_pk", "game_date", "player_id", "role",
+    "game_pk", "game_date", "player_id", "role", "is_home",
     "pitches", "batters_faced", "swings", "whiffs", "called_strikes",
     "in_zone", "batted_balls", "barrels",
     "xwoba_sum", "xwoba_denom", "woba_sum", "woba_denom",
@@ -134,6 +134,14 @@ def aggregate(pitches):
     frame["is_barrel"] = angle.eq(BARREL_CODE).astype(float)
     # A plate appearance ends on a row carrying an event.
     frame["is_pa"] = frame["events"].notna().astype(float)
+    # Which side the player is on, from the half-inning. The home team pitches
+    # in the top and bats in the bottom. Without this a batter row cannot be
+    # attributed to a team at all, which is what the first version of this
+    # file got wrong -- it aggregated batters and then had no way to say whose
+    # they were.
+    top = frame["inning_topbot"].astype(str).str.lower().str.startswith("top")
+    frame["pitcher_is_home"] = top.astype(float)
+    frame["batter_is_home"] = (~top).astype(float)
 
     numeric = {}
     for column in ("estimated_woba_using_speedangle", "woba_value",
@@ -164,6 +172,7 @@ def aggregate(pitches):
             continue
         grouped = block.groupby(["game_pk", "game_date", key], dropna=False)
         summed = grouped.agg(
+            is_home=(f"{role}_is_home", "max"),
             pitches=("is_swing", "size"),
             batters_faced=("is_pa", "sum"),
             swings=("is_swing", "sum"),

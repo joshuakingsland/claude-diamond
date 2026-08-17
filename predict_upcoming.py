@@ -323,8 +323,8 @@ def main(argv=None):
         Path(args.out).write_text(",".join(CARD_FIELDS) + "\n", encoding="utf-8")
         return
 
-    games, parks, weather, pitching, umpires = load_inputs(args.games,
-                                                            args.weather)
+    (games, parks, weather, pitching, umpires,
+     statcast) = load_inputs(args.games, args.weather)
     snapshot_path = Path(args.schedule_snapshots)
     snapshots = (pd.read_csv(snapshot_path) if snapshot_path.exists()
                  else pd.DataFrame())
@@ -351,7 +351,7 @@ def main(argv=None):
     combined = pd.concat([weather, forecast], ignore_index=True)
     combined = combined.drop_duplicates(subset="game_pk", keep="first")
 
-    features = build(games, parks, combined, pitching, umpires)
+    features = build(games, parks, combined, pitching, umpires, statcast)
     card, summary = build_card(lines, games, features, kind=args.kind,
                                confirmed_lineup_games=lineups)
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
