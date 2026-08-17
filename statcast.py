@@ -115,6 +115,17 @@ def aggregate(pitches):
     if not len(pitches):
         return pd.DataFrame(columns=PITCHER_FIELDS)
 
+    missing = [column for column in ("description", "inning_topbot")
+               if column not in pitches.columns]
+    if missing:
+        # Fail closed and say which field. Without inning_topbot a batter row
+        # cannot be attributed to a team, and silently defaulting it would
+        # give every batter to the away side -- a wrong answer that looks like
+        # data. If Savant ever renames the field the ingest should stop, not
+        # quietly mislabel 400,000 rows.
+        raise KeyError(
+            f"statcast feed is missing {missing}; cannot attribute rows")
+
     frame = pitches.copy()
     description = frame["description"].astype(str)
     # Savant spells a swing several ways; the miss variants are the whiffs.

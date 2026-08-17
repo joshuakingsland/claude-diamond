@@ -10,25 +10,25 @@ def _pitches():
     """Four pitches in one game: a called strike, a whiff, a barrel, a walk."""
     return pd.DataFrame([
         {"game_pk": 1, "game_date": "2026-05-01", "pitcher": 100, "batter": 200,
-         "description": "called_strike", "events": None, "zone": 5,
+         "inning_topbot": "Top", "description": "called_strike", "events": None, "zone": 5,
          "bb_type": None, "launch_speed_angle": None, "launch_speed": None,
          "estimated_woba_using_speedangle": None, "woba_value": None,
          "woba_denom": None, "release_speed": 94.0,
          "release_spin_rate": 2400.0, "delta_run_exp": -0.04},
         {"game_pk": 1, "game_date": "2026-05-01", "pitcher": 100, "batter": 200,
-         "description": "swinging_strike", "events": "strikeout", "zone": 14,
+         "inning_topbot": "Top", "description": "swinging_strike", "events": "strikeout", "zone": 14,
          "bb_type": None, "launch_speed_angle": None, "launch_speed": None,
          "estimated_woba_using_speedangle": 0.0, "woba_value": 0.0,
          "woba_denom": 1.0, "release_speed": 95.0,
          "release_spin_rate": 2500.0, "delta_run_exp": -0.2},
         {"game_pk": 1, "game_date": "2026-05-01", "pitcher": 100, "batter": 201,
-         "description": "hit_into_play", "events": "home_run", "zone": 5,
+         "inning_topbot": "Top", "description": "hit_into_play", "events": "home_run", "zone": 5,
          "bb_type": "fly_ball", "launch_speed_angle": BARREL_CODE,
          "launch_speed": 108.0, "estimated_woba_using_speedangle": 1.85,
          "woba_value": 2.0, "woba_denom": 1.0, "release_speed": 92.0,
          "release_spin_rate": 2200.0, "delta_run_exp": 1.4},
         {"game_pk": 1, "game_date": "2026-05-01", "pitcher": 100, "batter": 202,
-         "description": "ball", "events": "walk", "zone": 13,
+         "inning_topbot": "Top", "description": "ball", "events": "walk", "zone": 13,
          "bb_type": None, "launch_speed_angle": None, "launch_speed": None,
          "estimated_woba_using_speedangle": 0.69, "woba_value": 0.69,
          "woba_denom": 1.0, "release_speed": 93.0,
@@ -98,6 +98,25 @@ class AggregateTests(unittest.TestCase):
         # 669373.0 never matches 669373.
         self.assertEqual(self.rows.player_id.dtype.kind, "i")
         self.assertEqual(self.rows.game_pk.dtype.kind, "i")
+
+
+class SideAttributionTests(unittest.TestCase):
+    """A batter row with no side is a row with no team."""
+
+    def test_the_home_team_pitches_in_the_top_and_bats_in_the_bottom(self):
+        rows = aggregate(_pitches())
+        pitcher = rows[rows.role == "pitcher"].iloc[0]
+        batter = rows[rows.role == "batter"].iloc[0]
+        self.assertEqual(pitcher.is_home, 1.0)
+        self.assertEqual(batter.is_home, 0.0)
+
+    def test_a_feed_without_the_half_inning_stops_rather_than_guesses(self):
+        # Defaulting would hand every batter to the away side: a wrong answer
+        # that looks exactly like data.
+        frame = _pitches().drop(columns=["inning_topbot"])
+        with self.assertRaises(KeyError) as caught:
+            aggregate(frame)
+        self.assertIn("inning_topbot", str(caught.exception))
 
 
 class SeasonDayTests(unittest.TestCase):
