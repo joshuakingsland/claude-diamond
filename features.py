@@ -449,6 +449,28 @@ FEATURE_COLUMNS = [
     # and more data cannot rescue it. The columns stay in the table because
     # they are cheap and inspectable; re-enabling them is adding two strings,
     # and the reason not to is written down rather than forgotten.
+    # The eight Statcast columns are built and written, deliberately not
+    # listed here -- the same disposition as ump_run_rate and ump_k_rate, and
+    # for the same reason: measured, and the measurement said no.
+    #
+    # Walk-forward over 11,589 games, against an identical baseline. Starter
+    # columns alone: moneyline -0.00001 and run line -0.00001, both spanning
+    # zero, and the total +0.00038 with an interval of [+0.00010, +0.00065] --
+    # worse, excluding zero. All eight together: the same nothing on two
+    # markets and +0.00029 on the total. Six comparisons, none helped.
+    #
+    # The GLM says why. Every one of the eight sits an order of magnitude
+    # below the established features -- the largest is away_off_barrel at
+    # +0.0115 against home_off at +0.0657 and away_def at +0.0506 -- and two
+    # come back with the wrong sign: away_sp_xwoba at -0.0064, when a worse
+    # opposing starter must raise home scoring, and home_off_xwoba at -0.0026.
+    # That is what a collinear duplicate looks like after shrinkage. Expected
+    # wOBA is a better-measured version of what home_off and away_def already
+    # carry, and "better measured" buys nothing once the noisier original is
+    # in the model and has had 14,000 games to settle.
+    #
+    # Kept in the table because they cost one join and are the only columns
+    # here that know batters exist; re-enabling them is adding eight strings.
     "temp_c", "air_density_index", "wind_out_to_center_ms",
     "wind_left_to_right_ms", "precip_mm", "roof_retractable", "roof_dome",
     "expected_home_runs_prior", "expected_away_runs_prior",

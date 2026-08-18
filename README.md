@@ -125,6 +125,7 @@ extremes.py   does a large disagreement pay? no, and here is why it looks like i
 devig.py      four ways to strip the margin, and whether the benchmark book is right
 stationarity.py  does the run environment drift enough to reweight the seasons?
 mean_calibration.py  the predicted means are over-spread; correcting them makes pricing worse
+statcast.py   Baseball Savant pitch data, aggregated per player-game
 umpires.py    home-plate umpire assignments, one per game
 umpire_effect.py  permutation tests for an umpire main effect
 leverage.py   win expectancy, for leverage-weighting bullpen workload
@@ -907,6 +908,65 @@ noise in one game**.
 So the model is unchanged. The honest statement is not that seasons are
 interchangeable — they visibly are not — but that the drift is small next to
 game noise and far smaller than the cost of throwing data away.
+
+### Statcast: expected outcomes, and the seventh null
+
+Bought nothing, and the way it failed is the most informative version of this
+result so far.
+
+`statcast.py` ingests Baseball Savant — free, keyless, and referenced nowhere
+in this repository until now — aggregating pitches on the way in to 404,785
+player-game rows across 14,017 of 14,020 completed games. The case for it was
+specific. `PitcherState` is a proxy built from *team* runs allowed in games a
+pitcher started, carrying the bullpen that followed him and the defence behind
+him; expected wOBA is the same quantity with those removed, scoring a batted
+ball by how hard and at what angle it left the bat rather than by whether it
+found grass. That is why it settles in dozens of batted balls where runs
+allowed takes a season. The team columns were also the first thing in this
+model to know batters exist at all.
+
+The raw correlations were even mildly encouraging: starter expected wOBA
+predicts opposing runs at +0.106 against +0.098 for the existing runs-allowed
+proxy. Team batting was already worse — +0.042 against +0.076 for team runs.
+
+Walk-forward over 11,589 games, identical baseline, eight new columns:
+
+| Variant | Market | Baseline | With | Δ | 90% interval |
+| --- | --- | ---: | ---: | ---: | --- |
+| Starters only | Moneyline | 0.67984 | 0.67983 | −0.00001 | [−0.00002, +0.00001] |
+| Starters only | Run line | 0.63918 | 0.63917 | −0.00001 | [−0.00007, +0.00005] |
+| Starters only | **Total** | 0.68780 | 0.68817 | **+0.00038** | **[+0.00010, +0.00065]** |
+| All eight | Moneyline | 0.67984 | 0.67983 | −0.00001 | [−0.00004, +0.00003] |
+| All eight | Run line | 0.63918 | 0.63917 | −0.00001 | [−0.00011, +0.00009] |
+| All eight | Total | 0.68780 | 0.68809 | +0.00029 | [−0.00015, +0.00072] |
+
+Six comparisons, **none helped**, and the one interval excluding zero points
+the wrong way.
+
+**Why, and this is the part worth keeping.** The GLM shrinks all eight to an
+order of magnitude below the established features — the largest is
+`away_off_barrel` at +0.0115 against `home_off` at +0.0657 and `away_def` at
++0.0506 — and two come back with the *wrong sign*: `away_sp_xwoba` at −0.0064,
+when a worse opposing starter must raise home scoring, and `home_off_xwoba` at
+−0.0026. Wrong signs at negligible magnitude are what a collinear duplicate
+looks like after shrinkage.
+
+So the lesson is not "expected statistics are no good." It is that being
+*better measured* buys nothing once the noisier original is already in the
+model and has had 14,000 games to settle. `home_off` and `away_def` are crude
+and slow, and across six seasons they have converged on the same information
+xwOBA delivers faster. Speed of stabilisation is worth something in April and
+almost nothing in a walk-forward that trains on whole prior seasons.
+
+That reframes what a genuinely new input would have to be. Not a cleaner
+measurement of team quality — that is saturated — but something the scoreboard
+cannot eventually reveal, which points at the lineup actually posted tonight
+rather than the team's season-long profile.
+
+The columns stay in `data/features.csv`, unlisted in `FEATURE_COLUMNS`, exactly
+as the umpire features do. The tally is now three wrong assumptions removed
+that paid, **seven** information sources that did nothing, and three correctly
+identified defects that should be left alone.
 
 ### A real defect that must not be fixed
 
