@@ -136,9 +136,29 @@ def poll_once(key, now=None, verbose=True):
 def run(key, minutes=180, every_seconds=90, quotes_dir="data/market_quotes",
         lines_path="data/lines_upcoming.csv",
         credit_log="data/credit_log.csv", max_credits=None,
-        min_credits=0, verbose=True, sleep=time.sleep):
-    """Poll on a fixed cadence, appending every poll to the quote log."""
+        min_credits=0, verbose=True, sleep=time.sleep, alert=False,
+        alert_threshold=None, send_mail=False):
+    """Poll on a fixed cadence, appending every poll to the quote log.
+
+    With ``alert`` set, each poll is also screened for line-shopping
+    opportunities. This cadence is the only one that catches them: measured on
+    these very captures, three quarters of qualifying prices are gone by the
+    next poll and none of the largest survive fifteen minutes, so the hourly
+    path sees a few percent of what passes through. The book panel is fixed
+    once here, before the first poll, because deriving it from a single
+    capture would let it grow on thin nights and invent alerts.
+    """
     shape = plan(minutes, every_seconds)
+    panel, screen = None, None
+    if alert:
+        from alerts import DEFAULT_THRESHOLD, fixed_panel, scan
+        screen = scan
+        alert_threshold = (DEFAULT_THRESHOLD if alert_threshold is None
+                           else alert_threshold)
+        panel = fixed_panel(str(Path(quotes_dir) / "*.csv"))
+        if verbose:
+            print(f"alerting on {100 * alert_threshold:g}pt deviations "
+                  f"against a fixed panel of {len(panel)} books")
     if verbose:
         print(f"burst plan: {shape['polls']} polls every "
               f"{shape['interval_seconds']}s over {shape['minutes']} min, "
@@ -168,6 +188,16 @@ def run(key, minutes=180, every_seconds=90, quotes_dir="data/market_quotes",
                      / f"quotes_{result['stamp'][:7]}.csv")
             append_quotes(shard, result["quotes"])
             written += len(result["quotes"])
+            # After the write, so a detection always has its quote on disk
+            # behind it. `scan` swallows its own errors for the same reason
+            # the refreshes in odds.yml are best-effort: the capture is the
+            # thing that cannot be bought back later.
+            if screen is not None:
+                for hit in screen(result["quotes"], panel,
+                                  threshold=alert_threshold,
+                                  send_mail=send_mail):
+                    print(f"  ALERT {hit['selection']} {hit['price']} at "
+                          f"{hit['book_key']} ({hit['deviation_points']}pt)")
         # The board file is a snapshot of one moment, so the last poll wins
         # rather than the first: a burst ends nearest first pitch, which is
         # the picture the card should be priced from.
@@ -226,6 +256,12 @@ def main(argv=None):
     parser.add_argument("--lines", default="data/lines_upcoming.csv")
     parser.add_argument("--credit-log", default="data/credit_log.csv")
     parser.add_argument("--require-key", action="store_true")
+    parser.add_argument("--alert", action="store_true",
+                        help="screen every poll for line-shopping alerts")
+    parser.add_argument("--alert-threshold", type=float, default=None,
+                        help="deviation from consensus that raises an alert")
+    parser.add_argument("--send", action="store_true",
+                        help="mail alerts, if SMTP settings are present")
     parser.add_argument("--dry-run", action="store_true",
                         help="print the plan and its cost, fetch nothing")
     args = parser.parse_args(argv)
@@ -247,7 +283,8 @@ def main(argv=None):
     return run(key, minutes=args.minutes, every_seconds=args.every,
                quotes_dir=args.quotes_dir, lines_path=args.lines,
                credit_log=args.credit_log, max_credits=args.max_credits,
-               min_credits=args.min_credits)
+               min_credits=args.min_credits, alert=args.alert,
+               alert_threshold=args.alert_threshold, send_mail=args.send)
 
 
 if __name__ == "__main__":

@@ -7,8 +7,10 @@ confident, well-formatted recommendation for the opposite side of the bet.
 """
 
 import unittest
+from datetime import datetime, timedelta, timezone
 
-from model_card import build_board, build_verdict, market_label, side_label
+from model_card import (SHOP_SURVIVAL, build_board, build_shop,
+                        build_verdict, market_label, side_label)
 
 HOME, AWAY = "Kansas City Royals", "Minnesota Twins"
 
@@ -185,6 +187,52 @@ class VerdictTests(unittest.TestCase):
             "games": 100, "delta": -0.01,
             "delta_ci90_date_clustered": [-0.02, -0.002], "verdict": "model better"}}}
         self.assertTrue(build_verdict(clear)[0]["beaten"])
+
+
+class ShopPanelTests(unittest.TestCase):
+    """The panel is the only time-critical thing on a page written hourly."""
+
+    def _alert(self, minutes_ago, deviation="1.50"):
+        when = datetime.now(timezone.utc) - timedelta(minutes=minutes_ago)
+        return {"selection": "Chicago Cubs ML", "book_key": "betrivers",
+                "price": "-110", "market": "h2h",
+                "deviation_points": deviation, "books": "11",
+                "fetched_at": when.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "commence_time": (when + timedelta(minutes=90)).strftime(
+                    "%Y-%m-%dT%H:%M:%SZ")}
+
+    def test_an_alert_older_than_a_day_falls_off(self):
+        rows = build_shop([self._alert(30), self._alert(60 * 25)])
+        self.assertEqual(len(rows), 1)
+
+    def test_newest_first_so_the_page_leads_with_the_live_one(self):
+        rows = build_shop([self._alert(120), self._alert(2)])
+        self.assertGreater(rows[0]["captured"], rows[1]["captured"])
+
+    def test_the_price_is_a_number_not_the_logged_string(self):
+        # The page prints a leading plus by sign. A string would compare by
+        # coercion and a change in how the log is written could flip it.
+        row = build_shop([self._alert(5)])[0]
+        self.assertIsInstance(row["price"], float)
+        self.assertEqual(row["price"], -110.0)
+
+    def test_no_freshness_verdict_is_baked_in_at_render_time(self):
+        # The page is written hourly and read whenever, so every judgement
+        # about whether a price is still up belongs to the reader's clock.
+        row = build_shop([self._alert(1)])[0]
+        self.assertNotIn("live", row)
+        self.assertNotIn("verdict", row)
+        self.assertIn("captured", row)
+
+    def test_the_survival_curve_never_climbs(self):
+        shares = [step["live"] for step in SHOP_SURVIVAL]
+        self.assertEqual(shares, sorted(shares, reverse=True))
+        self.assertEqual(shares[0], 1.0)
+
+    def test_an_unparseable_stamp_is_dropped_rather_than_shown_as_now(self):
+        broken = self._alert(5)
+        broken["fetched_at"] = "not a date"
+        self.assertEqual(build_shop([broken]), [])
 
 
 if __name__ == "__main__":

@@ -99,6 +99,16 @@ jobs:
 
       - name: Price the card
         if: steps.season.outputs.active == 'true'
+        env:
+          # Optional, unlike ODDS_API_KEY. With none of these set, alerts.py
+          # still detects and still writes the log; it just does not mail. A
+          # fork with no mail secrets stays green.
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_FROM: ${{ secrets.SMTP_FROM }}
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
         # Runs on every capture rather than on its own schedule. The lock
         # window, the edge rule and the day cap are all enforced inside
         # ledger.py, and a wager is written once and never revised, so running
@@ -143,6 +153,14 @@ jobs:
           python signal_ledger.py
           python ledger.py
           python forward_evidence.py
+          # Runs directly after the capture so the quote it reads is seconds
+          # old, not an hour. That distinction is the whole point: only 3% of
+          # these prices survive an hour, but the alert is raised against the
+          # snapshot that was just taken, so what reaches the inbox is roughly
+          # two minutes stale rather than sixty. Best-effort, because a mail
+          # server being down must not stop the page being written -- the
+          # alert is already in data/shop_alerts.csv by then either way.
+          python alerts.py --send || echo "alerting failed; detections are in the log"
           python model_card.py
 
       - name: Commit new quotes

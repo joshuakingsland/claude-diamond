@@ -18,6 +18,7 @@ Everything on the page comes from files already in the repository:
     validation_glm.json             does the model predict baseball
     data/credit_log.csv             what the capture has spent
     forward_evidence.json           whether the CLV probe can be promoted
+    data/shop_alerts.csv            live line-shopping alerts, append-only
 
 Nothing is recomputed here. If a number on the page disagrees with the repo,
 the page is stale, not right — which is why the header carries the timestamp
@@ -304,6 +305,75 @@ def build_settled(ledger):
     return rows
 
 
+# Measured on the burst captures, where consecutive polls sit ~90 seconds
+# apart. The page prints these rather than a reassuring word, because the
+# honest answer to "should I click through?" depends entirely on the clock.
+# Every share is an observed one — at capture, at the next poll (~90 seconds),
+# and at five, fifteen and sixty minutes. The bucket edges are the only
+# judgement, and the decay inside the first two minutes is steep enough that
+# rounding it up to "still live" would be the page's biggest lie.
+SHOP_SURVIVAL = [
+    {"after": 0, "live": 1.00, "verdict": "go now"},
+    {"after": 1, "live": 0.25, "verdict": "go now"},
+    {"after": 5, "live": 0.21, "verdict": "probably gone"},
+    {"after": 15, "live": 0.15, "verdict": "long shot"},
+    {"after": 60, "live": 0.03, "verdict": "gone"},
+]
+# Older than this and an alert is history, not a signal. It stays on the page
+# as a record of cadence, greyed out.
+SHOP_WINDOW_HOURS = 24
+
+
+def build_shop(alerts, now=None):
+    """Line-shopping alerts, newest first, with everything the page needs.
+
+    The page is regenerated hourly but read at an arbitrary moment, so no
+    freshness judgement is baked in here. Each row carries its capture stamp
+    and the browser does the arithmetic: an alert that was live when this file
+    was written is very likely dead by the time anyone loads it, and a static
+    page that said "LIVE" would be lying most of the time.
+    """
+    now = now or datetime.now(timezone.utc)
+    cutoff = now.timestamp() - SHOP_WINDOW_HOURS * 3600
+    rows = []
+    for alert in alerts:
+        captured = _stamp(alert.get("fetched_at"))
+        commence = _stamp(alert.get("commence_time"))
+        if captured is None or captured.timestamp() < cutoff:
+            continue
+        deviation = _float(alert.get("deviation_points"))
+        if deviation is None:
+            continue
+        rows.append({
+            "selection": alert.get("selection", ""),
+            "book": alert.get("book_key", ""),
+            # A number, not the logged string: the page decides on the sign
+            # whether to print a leading plus, and "-110" > 0 is only false in
+            # JavaScript by coercion luck.
+            "price": _float(alert.get("price"), 0.0),
+            "market": MARKET_LABELS.get(alert.get("market"),
+                                        alert.get("market", "")),
+            "deviation": deviation,
+            "books": int(_float(alert.get("books"), 0)),
+            "captured": captured.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "commence": (commence.strftime("%Y-%m-%dT%H:%M:%SZ")
+                         if commence else ""),
+        })
+    rows.sort(key=lambda row: (row["captured"], row["deviation"]), reverse=True)
+    return rows
+
+
+def _stamp(text):
+    if not text or str(text).strip() in ("", "nan"):
+        return None
+    try:
+        return datetime.strptime(str(text).strip(),
+                                 "%Y-%m-%dT%H:%M:%SZ").replace(
+                                     tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
 def build_verdict(comparison):
     """The market comparison, which is the finding the page exists to report."""
     rows = []
@@ -402,6 +472,34 @@ TEMPLATE = """<!DOCTYPE html>
   .freshness{margin-top:18px;padding:10px 12px;border-left:3px solid var(--faint);
     color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:11px}
   .freshness.current{border-color:var(--gold)}
+  /* The shop panel. It is the only part of this page that is time-critical,
+     so it sits above the verdict and states its own age rather than being
+     styled to look urgent. */
+  .shopbox{margin-top:30px;border:1px solid var(--close);border-radius:6px;padding:18px 20px}
+  .shopbox h2{font-family:'Anton',sans-serif;font-size:20px;letter-spacing:.06em;
+    text-transform:uppercase;font-weight:400;color:var(--close)}
+  .shopbox p{color:var(--muted);font-size:13.5px;margin-top:8px;max-width:76ch}
+  .shopnone{color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:12.5px;
+    margin-top:14px;padding:12px;border:1px dashed var(--line);border-radius:4px}
+  .shop{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+  .shoprow{display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:center;
+    padding:11px 13px;border:1px solid var(--line);border-radius:4px;background:var(--surface)}
+  .shoprow.fresh{border-color:var(--close)}
+  .shoprow.cold{opacity:.45}
+  .shopsel{font-weight:600;font-size:15px}
+  .shopmeta{color:var(--faint);font-family:'IBM Plex Mono',monospace;font-size:11px;
+    margin-top:3px}
+  .shopprice{font-family:'IBM Plex Mono',monospace;font-size:19px;font-weight:600;
+    color:var(--gold);text-align:right}
+  .shopbook{color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:11px;
+    text-align:right;margin-top:2px}
+  .shopage{text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;
+    min-width:118px;color:var(--muted)}
+  .shopage b{display:block;font-size:13px;color:var(--text)}
+  .shoprow.fresh .shopage b{color:var(--close)}
+  .shoprow.cold .shopage b{color:var(--muted)}
+  @media(max-width:600px){.shoprow{grid-template-columns:1fr auto}.shopage{grid-column:1/-1;
+    text-align:left;min-width:0}}
   .verdictbox{margin-top:30px;border:1px solid var(--warn);border-radius:6px;padding:18px 20px}
   .verdictbox h2{font-family:'Anton',sans-serif;font-size:20px;letter-spacing:.06em;
     text-transform:uppercase;font-weight:400;color:var(--warn)}
@@ -473,6 +571,17 @@ TEMPLATE = """<!DOCTYPE html>
   <div class="freshness current">Board captured <b>__CAPTURED__</b> | results through <b>__RESULTS__</b></div>
 </header>
 
+<div class="shopbox">
+  <h2>Shop alerts <span id="shopclock" style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:0;text-transform:none"></span></h2>
+  <p>A book sitting well off the de-vigged consensus of the other ten. This is the only
+  measured edge here and <b>it is not the model</b> — it is the market disagreeing with itself,
+  worth <b>+0.31 to +0.49 probability points against Pinnacle's close</b> over 70 observations.
+  These prices die fast: three quarters are gone within 90 seconds, and the bigger the
+  mispricing the shorter it lives. The clock beside each one is the honest answer to whether
+  it is worth clicking through.</p>
+  <div id="shop"></div>
+</div>
+
 <div class="verdictbox">
   <h2>The model does not beat the price</h2>
   <p>Measured over __PRICED__ priced game-markets from __EVENTS__ captured events. Delta is model
@@ -510,6 +619,58 @@ TEMPLATE = """<!DOCTYPE html>
 </div>
 <script>
 const BOARD=__BOARD__, SETTLED=__SETTLED__, VERDICT=__VERDICT__, CHIPS=__CHIPS__;
+const SHOP=__SHOP__, SURVIVAL=__SURVIVAL__;
+
+/* The page is written hourly and read whenever. Every freshness judgement is
+   made here, against the reader's clock, rather than baked in at render time —
+   otherwise a page generated at 19:00 would still be shouting "live" at 23:00.
+   The survival curve is measured, not guessed: see line_shopping.py. */
+function odds(minutes){
+  let row=SURVIVAL[0];
+  for(const s of SURVIVAL){ if(minutes>=s.after) row=s; }
+  return row;
+}
+function ago(minutes){
+  if(minutes<1) return 'just now';
+  if(minutes<60) return Math.round(minutes)+' min ago';
+  const h=minutes/60;
+  if(h<24) return h.toFixed(h<10?1:0)+' h ago';
+  return Math.round(h/24)+' d ago';
+}
+function paintShop(){
+  const box=document.getElementById('shop');
+  const now=Date.now();
+  if(!SHOP.length){
+    box.innerHTML='<div class="shopnone">No book is far enough off consensus right now. '
+      +'This is the normal state: the rule fires a few times a day at most, and only '
+      +'inside the 20&ndash;240 minute window before first pitch.</div>';
+    document.getElementById('shopclock').textContent='';
+    return;
+  }
+  box.innerHTML=SHOP.map(s=>{
+    const mins=(now-Date.parse(s.captured))/60000;
+    const o=odds(mins);
+    /* Under two minutes is the only state worth hurrying for. Past fifteen the
+       row stays on the page as a record of cadence, not as a call to act. */
+    const cls=mins<2?'fresh':(mins>15?'cold':'');
+    const pct=Math.round(o.live*100);
+    const first=s.commence?Math.round((Date.parse(s.commence)-now)/60000):null;
+    const timing=(first!==null&&first>0)?first+' min to first pitch'
+      :(first!==null?'started':'');
+    return `<div class="shoprow ${cls}">
+      <div><div class="shopsel">${s.selection}</div>
+        <div class="shopmeta">${s.market} &middot; ${s.deviation.toFixed(2)}pt off the consensus of ${s.books} books${timing?' &middot; '+timing:''}</div></div>
+      <div><div class="shopprice">${s.price>0?'+':''}${s.price}</div>
+        <div class="shopbook">${s.book}</div></div>
+      <div class="shopage"><b>${o.verdict}</b>${ago(mins)} &middot; ~${pct}% still up</div>
+    </div>`;
+  }).join('');
+  const newest=(now-Date.parse(SHOP[0].captured))/60000;
+  document.getElementById('shopclock').textContent='last capture '+ago(newest);
+}
+paintShop();
+/* Re-tick so a page left open does not keep insisting a dead price is fresh. */
+setInterval(paintShop,15000);
 const pct=v=>v.toFixed(1)+'%';
 const money=v=>v==null?'--':(v>0?'+':'')+v.toFixed(0);
 // The gauge spans the honest range of a baseball win probability rather than
@@ -571,8 +732,9 @@ document.getElementById('nsettled').textContent=SETTLED.length+' historical entr
 
 
 def render(card, ledger, rejections, comparison, validation, credits,
-           signals=None, evidence=None):
+           signals=None, evidence=None, alerts=None):
     board = build_board(card, ledger, rejections, signals)
+    shop = build_shop(alerts or [])
     settled = build_settled(ledger)
     verdict = build_verdict(comparison)
     chips = build_chips(validation, comparison, ledger, credits, board,
@@ -601,6 +763,8 @@ def render(card, ledger, rejections, comparison, validation, credits,
         ("__SETTLED__", json.dumps(settled)),
         ("__VERDICT__", json.dumps(verdict)),
         ("__CHIPS__", json.dumps(chips)),
+        ("__SHOP__", json.dumps(shop)),
+        ("__SURVIVAL__", json.dumps(SHOP_SURVIVAL)),
     ):
         html = html.replace(token, value)
     return html
@@ -616,13 +780,14 @@ def main(argv=None):
     parser.add_argument("--credits", default="data/credit_log.csv")
     parser.add_argument("--signals", default="data/clv_signals.csv")
     parser.add_argument("--evidence", default="forward_evidence.json")
+    parser.add_argument("--alerts", default="data/shop_alerts.csv")
     parser.add_argument("--out", default="docs/index.html")
     args = parser.parse_args(argv)
 
     html = render(
         _rows(args.card), _rows(args.ledger), _rows(args.rejections),
         _json(args.comparison), _json(args.validation), _rows(args.credits),
-        _rows(args.signals), _json(args.evidence),
+        _rows(args.signals), _json(args.evidence), _rows(args.alerts),
     )
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)

@@ -124,6 +124,7 @@ signal_ledger.py  append-only, non-wager forward probe of predicted movement
 extremes.py   does a large disagreement pay? no, and here is why it looks like it does
 devig.py      four ways to strip the margin, and whether the benchmark book is right
 line_shopping.py  does the best price beat the close? the one arm that says yes
+alerts.py     live shop alerts, an append-only log, and an honest expiry clock
 stationarity.py  does the run environment drift enough to reweight the seasons?
 mean_calibration.py  the predicted means are over-spread; correcting them makes pricing worse
 statcast.py   Baseball Savant pitch data, aggregated per player-game
@@ -145,6 +146,14 @@ report. Nothing is recomputed, so if a number on the page disagrees with the
 repo the page is stale rather than right, which is why the header carries the
 timestamp of the data rather than of the render. It regenerates on every
 capture.
+
+The one exception to "nothing is recomputed" is the shop panel at the top, and
+it is an exception on purpose. Those alerts decay in about ninety seconds while
+the page is written hourly, so no freshness judgement is baked in at render
+time: each row carries its capture stamp and the measured survival curve, and
+the browser computes the age against the reader's own clock, re-ticking every
+fifteen seconds. A static page that stamped a row "live" would be wrong within
+two minutes of being written and would stay wrong for an hour.
 
 The layout deliberately mirrors the sibling UFC project's page so the two read
 the same way. The content does not, because the results are not the same:
@@ -266,7 +275,8 @@ wagering gates to manufacture a sample.
 | Workflow | Trigger | What it does |
 | --- | --- | --- |
 | `tests.yml` | push, PR | Unit tests, plus a check that odds capture exits clean with no key |
-| `odds.yml` | hourly 15:00-03:00 UTC in season | Refreshes inputs and starter snapshots; captures the main board, prices, screens, and refreshes forward evidence |
+| `odds.yml` | hourly 15:00-03:00 UTC in season | Refreshes inputs and starter snapshots; captures the main board, prices, screens, alerts on shop opportunities, and refreshes forward evidence |
+| `odds-burst.yml` | daily 21:50 UTC in season, manual | 90-second polling across the evening card, screening each poll for shop alerts; this is the only cadence that catches them |
 | `backfill-odds.yml` | manual | Capped historical capture; dry run by default |
 | `first-inning-audit.yml` | manual | One-market, one-region historical YRFI/NRFI coverage audit; dry run by default |
 | `first-inning-study.yml` | manual | Stratified, capped historical first-inning sample plus official outcome labels; dry run by default |
@@ -1043,6 +1053,62 @@ The tally, restated. Three wrong assumptions removed that paid, seven
 information sources that did nothing, three correctly identified defects that
 should be left alone — and one edge that was never in the run distribution at
 all. If there is money here it is in execution, not in modelling baseball.
+
+### Telling you when to bet, and why email is the wrong instrument
+
+An edge that exists is not the same as an edge you can be told about in time.
+Before building any alerting, the question worth answering is how long a
+qualifying price actually stays on the screen. Measured on the burst captures,
+where consecutive polls sit about 90 seconds apart:
+
+| Deviation | Gone by the next poll | Alive at 5 min | Alive at 15 min | Alive at 1 h |
+| ---: | ---: | ---: | ---: | ---: |
+| 0.25 pt | 75% | 19% | 15% | 3% |
+| 0.50 pt | 67% | 21% | 15% | 3% |
+| 1.00 pt | 70% | 10% | **0%** | 0% |
+
+Median lifetime is under one poll. **The bigger the mispricing the faster it
+dies**, which is the opposite of convenient: the prices worth the most are the
+ones with no chance of surviving a round trip through a mailbox.
+
+That table is a design constraint, not a caveat, and it kills the obvious
+version of what was asked for. A page that says LIVE cannot be right, because
+it is written hourly and read whenever. An email that says "bet this" is
+usually describing something that no longer exists. So:
+
+**The page does the arithmetic in the reader's browser.** `model_card.py` emits
+each alert with its capture stamp and the measured survival curve, and the page
+computes the age against your clock, re-ticking every fifteen seconds. An alert
+reads "go now · 1 min ago · ~25% still up" or "gone · 5.0 h ago · ~3% still up".
+Nothing is styled to look urgent that is not; a row past fifteen minutes fades
+and stays only as a record of cadence. Every share on that curve is observed —
+the only judgement is where the buckets break.
+
+**Latency, not sampling interval, is what an alert has to beat.** The 3%
+one-hour figure is often misread as "hourly alerting is 3% useful". It is not:
+the alert fires against the snapshot just taken, so what reaches the inbox is
+about two minutes stale, not sixty. Expect roughly **one in five** to still be
+takeable. What the hourly path loses is not freshness but *coverage* — it only
+ever sees the opportunities that happen to exist at the top of the hour.
+
+**Coverage needs a poller, so the alerting lives in the burst.**
+`odds_burst.py --alert` screens every 90-second poll in flight, which is the
+only cadence matched to a 90-second half-life. The book panel is fixed once
+before the first poll: inside a single capture every book has 100% coverage, so
+a panel derived there would grow on thin nights and invent alerts — the same
+min-of-N trap the study is built to avoid.
+
+**A stale alert costs nothing but attention.** The price is either on the screen
+or it is not; there is no losing bet in a missed one. That asymmetry is why the
+honest response is to send anyway and label the odds, rather than suppress
+anything unlikely to survive.
+
+`data/shop_alerts.csv` is append-only and never revised. It is the forward test:
+the study looked backwards over 13 dates, and this is the record that will
+eventually say whether the rule holds forwards on prices flagged live. Nothing
+in it is a wager, and mail settings are optional throughout — with no SMTP
+secrets the detector still runs and still logs, exactly as a fork with no odds
+key still runs.
 
 ### A real defect that must not be fixed
 

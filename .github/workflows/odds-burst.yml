@@ -87,6 +87,14 @@ jobs:
         if: steps.season.outputs.active == 'true'
         env:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          # Optional. Without them the burst still screens and still logs
+          # every detection; it just does not mail.
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_FROM: ${{ secrets.SMTP_FROM }}
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
         # The credit floor is deliberately higher than the hourly capture's.
         # A burst spends in one job what the hourly path spends in a week, so
         # it should stand down earlier and leave the routine capture running.
@@ -95,7 +103,8 @@ jobs:
             --minutes "${{ inputs.minutes || '180' }}" \
             --every "${{ inputs.every || '90' }}" \
             --max-credits "${{ inputs.max_credits || '1500' }}" \
-            --min-credits 2000
+            --min-credits 2000 \
+            --alert --send
 
       - name: Commit the burst
         # always(), for the reason the hourly capture uses it: the quotes are
