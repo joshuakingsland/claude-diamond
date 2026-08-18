@@ -1,0 +1,446 @@
+{
+  "threshold": 0.01,
+  "panel_books": [
+    "betmgm",
+    "betonlineag",
+    "betrivers",
+    "betus",
+    "bovada",
+    "draftkings",
+    "fanatics",
+    "fanduel",
+    "lowvig",
+    "mybookieag",
+    "williamhill_us"
+  ],
+  "panel_size": 11,
+  "captures": 284,
+  "quote_rows": 261890,
+  "closes_available": 834,
+  "best_price_overround": 1.0186,
+  "median_price_overround": 1.0357,
+  "unconditional": {
+    "picks": 950,
+    "dates": 14,
+    "mean_clv_probability_points": -0.9976,
+    "ci90_date_clustered_points": [
+      -1.0214,
+      -0.9706
+    ],
+    "share_beating_close": 0.1421,
+    "mean_edge_at_entry_points": -0.9976,
+    "median_lead_minutes": 202.8,
+    "profitable": false,
+    "decay_points": 0.0,
+    "share_of_edge_retained": 1.0,
+    "mean_best_overround": 1.02,
+    "by_market": {
+      "h2h": {
+        "picks": 308,
+        "mean_clv_points": -0.5249,
+        "share_beating_close": 0.2143
+      },
+      "spreads": {
+        "picks": 328,
+        "mean_clv_points": -1.1123,
+        "share_beating_close": 0.128
+      },
+      "totals": {
+        "picks": 314,
+        "mean_clv_points": -1.3415,
+        "share_beating_close": 0.086
+      }
+    },
+    "by_book": {
+      "lowvig": 252,
+      "fanduel": 186,
+      "draftkings": 123,
+      "betrivers": 111,
+      "williamhill_us": 83,
+      "bovada": 69,
+      "mybookieag": 56,
+      "betonlineag": 25,
+      "betus": 23,
+      "fanatics": 11,
+      "betmgm": 11
+    }
+  },
+  "threshold_sweep": {
+    "0.0025": {
+      "picks": 70,
+      "dates": 13,
+      "mean_clv_probability_points": 0.4369,
+      "ci90_date_clustered_points": [
+        0.2558,
+        0.5694
+      ],
+      "share_beating_close": 0.8,
+      "mean_edge_at_entry_points": 0.5816,
+      "median_lead_minutes": 147.5,
+      "profitable": true,
+      "decay_points": 0.1447,
+      "share_of_edge_retained": 0.7511,
+      "mean_best_overround": 1.0052,
+      "by_market": {
+        "h2h": {
+          "picks": 38,
+          "mean_clv_points": 0.3279,
+          "share_beating_close": 0.7632
+        },
+        "spreads": {
+          "picks": 24,
+          "mean_clv_points": 0.6151,
+          "share_beating_close": 0.875
+        },
+        "totals": {
+          "picks": 8,
+          "mean_clv_points": 0.42,
+          "share_beating_close": 0.75
+        }
+      },
+      "by_book": {
+        "betrivers": 34,
+        "draftkings": 12,
+        "williamhill_us": 10,
+        "fanduel": 7,
+        "lowvig": 3,
+        "bovada": 2,
+        "betus": 2
+      }
+    },
+    "0.005": {
+      "picks": 35,
+      "dates": 9,
+      "mean_clv_probability_points": 0.6632,
+      "ci90_date_clustered_points": [
+        0.4312,
+        0.833
+      ],
+      "share_beating_close": 0.8857,
+      "mean_edge_at_entry_points": 0.9017,
+      "median_lead_minutes": 146.5,
+      "profitable": true,
+      "decay_points": 0.2385,
+      "share_of_edge_retained": 0.7355,
+      "mean_best_overround": 1.0022,
+      "by_market": {
+        "h2h": {
+          "picks": 19,
+          "mean_clv_points": 0.5318,
+          "share_beating_close": 0.8947
+        },
+        "spreads": {
+          "picks": 12,
+          "mean_clv_points": 0.8973,
+          "share_beating_close": 0.9167
+        },
+        "totals": {
+          "picks": 4,
+          "mean_clv_points": 0.5851,
+          "share_beating_close": 0.75
+        }
+      },
+      "by_book": {
+        "betrivers": 17,
+        "draftkings": 7,
+        "williamhill_us": 6,
+        "bovada": 2,
+        "lowvig": 2,
+        "betus": 1
+      }
+    },
+    "0.01": {
+      "picks": 11,
+      "dates": 6,
+      "mean_clv_probability_points": 1.1467,
+      "ci90_date_clustered_points": [
+        0.8815,
+        1.4893
+      ],
+      "share_beating_close": 1.0,
+      "mean_edge_at_entry_points": 1.397,
+      "median_lead_minutes": 138.5,
+      "profitable": true,
+      "decay_points": 0.2503,
+      "share_of_edge_retained": 0.8209,
+      "mean_best_overround": 0.997,
+      "by_market": {
+        "h2h": {
+          "picks": 5,
+          "mean_clv_points": 0.7265,
+          "share_beating_close": 1.0
+        },
+        "spreads": {
+          "picks": 5,
+          "mean_clv_points": 1.5796,
+          "share_beating_close": 1.0
+        },
+        "totals": {
+          "picks": 1,
+          "mean_clv_points": 1.0834,
+          "share_beating_close": 1.0
+        }
+      },
+      "by_book": {
+        "betrivers": 9,
+        "williamhill_us": 2
+      }
+    },
+    "0.02": {
+      "picks": 1,
+      "dates": 1,
+      "mean_clv_probability_points": 2.3088,
+      "ci90_date_clustered_points": [
+        2.3088,
+        2.3088
+      ],
+      "share_beating_close": 1.0,
+      "mean_edge_at_entry_points": 2.3088,
+      "median_lead_minutes": 138.5,
+      "profitable": true,
+      "decay_points": 0.0,
+      "share_of_edge_retained": 1.0,
+      "mean_best_overround": 0.9836,
+      "by_market": {
+        "spreads": {
+          "picks": 1,
+          "mean_clv_points": 2.3088,
+          "share_beating_close": 1.0
+        }
+      },
+      "by_book": {
+        "betrivers": 1
+      }
+    }
+  },
+  "threshold_sweep_vs_sharp": {
+    "0.0025": {
+      "picks": 70,
+      "dates": 13,
+      "mean_clv_probability_points": 0.312,
+      "ci90_date_clustered_points": [
+        0.0718,
+        0.4861
+      ],
+      "share_beating_close": 0.7,
+      "mean_edge_at_entry_points": 0.5816,
+      "median_lead_minutes": 147.5,
+      "profitable": true,
+      "decay_points": 0.2697,
+      "share_of_edge_retained": 0.5364,
+      "mean_best_overround": 1.0052,
+      "by_market": {
+        "h2h": {
+          "picks": 38,
+          "mean_clv_points": 0.3219,
+          "share_beating_close": 0.7368
+        },
+        "spreads": {
+          "picks": 24,
+          "mean_clv_points": 0.4702,
+          "share_beating_close": 0.7083
+        },
+        "totals": {
+          "picks": 8,
+          "mean_clv_points": -0.2099,
+          "share_beating_close": 0.5
+        }
+      },
+      "by_book": {
+        "betrivers": 34,
+        "draftkings": 12,
+        "williamhill_us": 10,
+        "fanduel": 7,
+        "lowvig": 3,
+        "bovada": 2,
+        "betus": 2
+      }
+    },
+    "0.005": {
+      "picks": 35,
+      "dates": 9,
+      "mean_clv_probability_points": 0.4857,
+      "ci90_date_clustered_points": [
+        0.1944,
+        0.733
+      ],
+      "share_beating_close": 0.6857,
+      "mean_edge_at_entry_points": 0.9017,
+      "median_lead_minutes": 146.5,
+      "profitable": true,
+      "decay_points": 0.416,
+      "share_of_edge_retained": 0.5387,
+      "mean_best_overround": 1.0022,
+      "by_market": {
+        "h2h": {
+          "picks": 19,
+          "mean_clv_points": 0.5579,
+          "share_beating_close": 0.7895
+        },
+        "spreads": {
+          "picks": 12,
+          "mean_clv_points": 0.5013,
+          "share_beating_close": 0.5833
+        },
+        "totals": {
+          "picks": 4,
+          "mean_clv_points": 0.0959,
+          "share_beating_close": 0.5
+        }
+      },
+      "by_book": {
+        "betrivers": 17,
+        "draftkings": 7,
+        "williamhill_us": 6,
+        "bovada": 2,
+        "lowvig": 2,
+        "betus": 1
+      }
+    },
+    "0.01": {
+      "picks": 11,
+      "dates": 6,
+      "mean_clv_probability_points": 0.8629,
+      "ci90_date_clustered_points": [
+        0.4167,
+        1.2781
+      ],
+      "share_beating_close": 0.8182,
+      "mean_edge_at_entry_points": 1.397,
+      "median_lead_minutes": 138.5,
+      "profitable": true,
+      "decay_points": 0.5341,
+      "share_of_edge_retained": 0.6177,
+      "mean_best_overround": 0.997,
+      "by_market": {
+        "h2h": {
+          "picks": 5,
+          "mean_clv_points": 0.6672,
+          "share_beating_close": 0.8
+        },
+        "spreads": {
+          "picks": 5,
+          "mean_clv_points": 1.0019,
+          "share_beating_close": 0.8
+        },
+        "totals": {
+          "picks": 1,
+          "mean_clv_points": 1.1462,
+          "share_beating_close": 1.0
+        }
+      },
+      "by_book": {
+        "betrivers": 9,
+        "williamhill_us": 2
+      }
+    },
+    "0.02": {
+      "picks": 1,
+      "dates": 1,
+      "mean_clv_probability_points": 2.2845,
+      "ci90_date_clustered_points": [
+        2.2845,
+        2.2845
+      ],
+      "share_beating_close": 1.0,
+      "mean_edge_at_entry_points": 2.3088,
+      "median_lead_minutes": 138.5,
+      "profitable": true,
+      "decay_points": 0.0243,
+      "share_of_edge_retained": 0.9895,
+      "mean_best_overround": 0.9836,
+      "by_market": {
+        "spreads": {
+          "picks": 1,
+          "mean_clv_points": 2.2845,
+          "share_beating_close": 1.0
+        }
+      },
+      "by_book": {
+        "betrivers": 1
+      }
+    }
+  },
+  "leave_one_book_out": {
+    "betmgm": {
+      "bets": 70,
+      "mean_clv_points": 0.417
+    },
+    "betonlineag": {
+      "bets": 74,
+      "mean_clv_points": 0.4422
+    },
+    "betrivers": {
+      "bets": 41,
+      "mean_clv_points": 0.2701
+    },
+    "betus": {
+      "bets": 67,
+      "mean_clv_points": 0.4538
+    },
+    "bovada": {
+      "bets": 66,
+      "mean_clv_points": 0.5083
+    },
+    "draftkings": {
+      "bets": 66,
+      "mean_clv_points": 0.441
+    },
+    "fanatics": {
+      "bets": 66,
+      "mean_clv_points": 0.449
+    },
+    "fanduel": {
+      "bets": 68,
+      "mean_clv_points": 0.447
+    },
+    "lowvig": {
+      "bets": 72,
+      "mean_clv_points": 0.4518
+    },
+    "mybookieag": {
+      "bets": 73,
+      "mean_clv_points": 0.419
+    },
+    "williamhill_us": {
+      "bets": 65,
+      "mean_clv_points": 0.4204
+    }
+  },
+  "leave_one_out_threshold": 0.0025,
+  "picks": 11,
+  "dates": 6,
+  "mean_clv_probability_points": 1.1467,
+  "ci90_date_clustered_points": [
+    0.8815,
+    1.4893
+  ],
+  "share_beating_close": 1.0,
+  "mean_edge_at_entry_points": 1.397,
+  "median_lead_minutes": 138.5,
+  "profitable": true,
+  "decay_points": 0.2503,
+  "share_of_edge_retained": 0.8209,
+  "mean_best_overround": 0.997,
+  "by_market": {
+    "h2h": {
+      "picks": 5,
+      "mean_clv_points": 0.7265,
+      "share_beating_close": 1.0
+    },
+    "spreads": {
+      "picks": 5,
+      "mean_clv_points": 1.5796,
+      "share_beating_close": 1.0
+    },
+    "totals": {
+      "picks": 1,
+      "mean_clv_points": 1.0834,
+      "share_beating_close": 1.0
+    }
+  },
+  "by_book": {
+    "betrivers": 9,
+    "williamhill_us": 2
+  }
+}
