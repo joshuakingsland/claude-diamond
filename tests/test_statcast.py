@@ -134,3 +134,74 @@ class SeasonDayTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ResumeTests(unittest.TestCase):
+    """A bounded run must reach today, not spin on the same off day."""
+
+    def setUp(self):
+        import tempfile
+        self.directory = tempfile.mkdtemp()
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.directory, ignore_errors=True)
+
+    def test_a_settled_off_day_is_never_refetched(self):
+        from statcast import existing_days, record_empty
+        record_empty(self.directory, "2021-03-01")
+        self.assertIn("2021-03-01", existing_days(self.directory))
+
+    def test_the_marker_file_is_not_read_as_data(self):
+        # no_games.csv lives in the same directory as the shards; counting it
+        # as a shard would put a game_date column with no rows into the frame.
+        from csv_collection import read_csv_collection
+        from statcast import record_empty
+        record_empty(self.directory, "2021-03-01")
+        frame = read_csv_collection(self.directory)
+        self.assertNotIn("player_id", frame.columns)
+
+    def test_a_bounded_run_advances_instead_of_spinning(self):
+        """The bug this exists for.
+
+        417 dates in 2021-2026 have no games. Left pending, a run capped at
+        three dates refetched 2021-03-01 every time and never reached today.
+        """
+        import statcast
+        calls = []
+
+        def empty_fetch(day, game_type=statcast.GAME_TYPE):
+            calls.append(day)
+            return pd.DataFrame()
+
+        original = statcast.fetch_day
+        statcast.fetch_day = empty_fetch
+        try:
+            import datetime as _dt
+            today = _dt.date(2021, 6, 1)
+            for _ in range(3):
+                statcast.run([2021], self.directory, limit=3, pause=0,
+                             verbose=False, today=today)
+        finally:
+            statcast.fetch_day = original
+        # Nine distinct dates attempted across three capped runs, not three
+        # dates attempted three times.
+        self.assertEqual(len(calls), 9)
+        self.assertEqual(len(set(calls)), 9)
+
+    def test_a_recent_empty_date_stays_pending(self):
+        # Savant lags about a day, so an empty answer for yesterday means
+        # "not published", not "no games".
+        import statcast
+        import datetime as _dt
+        original = statcast.fetch_day
+        statcast.fetch_day = lambda day, game_type=None: pd.DataFrame()
+        try:
+            today = _dt.date(2021, 6, 1)
+            statcast.run([2021], self.directory, limit=200, pause=0,
+                         verbose=False, today=today)
+        finally:
+            statcast.fetch_day = original
+        settled = statcast.settled_empty(self.directory)
+        self.assertIn("2021-03-01", settled)
+        self.assertNotIn("2021-06-01", settled)

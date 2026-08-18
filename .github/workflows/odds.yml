@@ -111,13 +111,16 @@ jobs:
         # up to seven days stale -- and a game that had not been ingested had
         # no feature row and simply fell off the board.
         #
-        # Boxscores and umpires ran in no workflow at all and were only ever
-        # filled by hand. That degrades quietly rather than loudly: a starter
+        # Boxscores, umpires and statcast ran in no workflow at all and were
+        # only ever filled by hand. That degrades quietly rather than loudly: a starter
         # whose recent outings were never ingested keeps his old rating and
         # then falls back to a league prior, so the model goes on pricing with
         # no error anywhere. All three ingesters are resumable and skip what
         # they already hold, so the steady state is roughly fifteen games a
-        # day. The limit bounds a cold start instead of the job timeout doing
+        # day. Statcast takes a --limit of three DATES rather than games: a
+        # date is one Savant request covering the whole slate, and three a run
+        # across seventeen runs a day keeps it ahead of the schedule while
+        # bounding a cold start. The limit bounds a cold start instead of the job timeout doing
         # it, and weather is allowed to fail because it is the one that
         # depends on a third party being up.
         run: |
@@ -129,6 +132,7 @@ jobs:
           python results.py --seasons "$(date -u +%Y)" || echo "results refresh failed; using the table on disk"
           python boxscores.py --limit 120 || echo "boxscores incomplete; resumes next run"
           python umpires.py --limit 120 || echo "umpires incomplete; resumes next run"
+          python statcast.py --seasons "$(date -u +%Y)" --limit 3 --pause 0.4 || echo "statcast incomplete; resumes next run"
           python weather.py --refresh-source || echo "weather incomplete; resumes next run"
           python schedule_snapshots.py || echo "starter snapshot failed; using the last capture"
           python lineup_snapshots.py || echo "lineup snapshot failed; card remains ineligible"

@@ -24,10 +24,22 @@ this game" — so the pitches are summed per game and per player and discarded.
 The cost is that a new question about pitch sequencing means refetching, and
 that is the right trade at this size.
 
-Resumable by date. A date already present is skipped, so the ingest can be run
-repeatedly and stopped at any point. Fail closed: a date that errors is counted
-and skipped rather than written empty, because an empty day is
-indistinguishable from a quiet one once it is on disk.
+Sharded by season, using the same `csv_collection` helpers as the full-game
+odds archive. One 55MB file would be a fresh 55MB blob in git on every append,
+which is roughly 20GB a year of history for 50KB a day of new rows. Split by
+season, only the current shard changes and finished seasons are written once.
+
+Resumable by date, and a date that genuinely had no games is *settled* rather
+than left pending. That distinction is not cosmetic. Savant lags about a day,
+so a date fetched too early legitimately returns nothing and must be retried;
+but 417 dates in this window have no games at all -- pre-season, the All-Star
+break -- and leaving those pending forever meant a bounded run would refetch
+2021-03-01 every time and never reach today. Dates older than the lag are
+recorded in a small sidecar as settled-empty; recent ones stay pending.
+
+Fail closed on an error: a date that raises is counted and skipped, never
+written as settled, because a failed fetch and an off day must not become the
+same thing on disk.
 
     python statcast.py --seasons 2021-2026     # everything, hours
     python statcast.py --seasons 2026 --limit 5 # a taste
@@ -45,6 +57,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from csv_collection import csv_parts, read_csv_collection, yearly_part
+
 SAVANT_CSV = "https://baseballsavant.mlb.com/statcast_search/csv"
 
 # Regular season only, matching `results.py`. Spring training and the
@@ -55,6 +69,11 @@ GAME_TYPE = "R"
 # A barrel is Statcast's own label for the exit-velocity/launch-angle
 # combination that produces extra bases, encoded as 6 in launch_speed_angle.
 BARREL_CODE = 6
+
+# How far back Savant is reliably complete. A date newer than this that comes
+# back empty is treated as "not published yet" and retried; an older one is
+# settled as a genuine off day.
+SAVANT_LAG_DAYS = 3
 
 PITCHER_FIELDS = [
     "game_pk", "game_date", "player_id", "role", "is_home",
@@ -226,12 +245,40 @@ def season_days(season, today=None):
         day += timedelta(days=1)
 
 
-def existing_days(path):
-    path = Path(path)
-    if not path.exists() or path.stat().st_size == 0:
+def _settled_path(path):
+    return Path(path) / "no_games.csv"
+
+
+def settled_empty(path):
+    """Dates confirmed to have had no games, so they are never refetched."""
+    marker = _settled_path(path)
+    if not marker.exists() or marker.stat().st_size == 0:
         return set()
-    with path.open(newline="", encoding="utf-8") as handle:
+    with marker.open(newline="", encoding="utf-8") as handle:
         return {row["game_date"] for row in csv.DictReader(handle)}
+
+
+def record_empty(path, day):
+    """Settle a date as having had no games."""
+    marker = _settled_path(path)
+    marker.parent.mkdir(parents=True, exist_ok=True)
+    header = not marker.exists() or marker.stat().st_size == 0
+    with marker.open("a", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=["game_date"])
+        if header:
+            writer.writeheader()
+        writer.writerow({"game_date": day})
+
+
+def existing_days(path):
+    """Dates already handled: aggregated, or settled as having no games."""
+    seen = set()
+    for part in csv_parts(path):
+        if part.name == "no_games.csv" or part.stat().st_size == 0:
+            continue
+        with part.open(newline="", encoding="utf-8") as handle:
+            seen.update(row["game_date"] for row in csv.DictReader(handle))
+    return seen | settled_empty(path)
 
 
 def run(seasons, out_path, limit=None, pause=1.0, verbose=True, today=None):
@@ -244,42 +291,48 @@ def run(seasons, out_path, limit=None, pause=1.0, verbose=True, today=None):
     if verbose:
         print(f"{len(done)} dates already aggregated; {len(pending)} pending")
 
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    write_header = not out_path.exists() or out_path.stat().st_size == 0
-    written, empty, failed = 0, 0, 0
-    with out_path.open("a", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=PITCHER_FIELDS,
-                                extrasaction="ignore")
-        if write_header:
-            writer.writeheader()
-        for day in pending:
-            try:
-                pitches = fetch_day(day)
-            except Exception:  # noqa: BLE001 - counted, run continues
-                failed += 1
-                continue
-            if not len(pitches):
-                # A real off day. Recorded as nothing rather than as a row, so
-                # resume treats it as pending and retries -- cheap, and the
-                # alternative is a silent hole that looks aggregated.
-                empty += 1
-                continue
-            rows = aggregate(pitches)
+    cutoff = ((today or datetime.now(timezone.utc).date())
+              - timedelta(days=SAVANT_LAG_DAYS)).isoformat()
+    written, empty, failed, settled = 0, 0, 0, 0
+    for day in pending:
+        try:
+            pitches = fetch_day(day)
+        except Exception:  # noqa: BLE001 - counted, run continues
+            failed += 1
+            continue
+        if not len(pitches):
+            # Nothing came back. Either the date is genuinely gameless, or
+            # Savant has not published it yet -- and those need opposite
+            # treatment. Settle the old ones so a bounded run can move past
+            # them; leave the recent ones pending so they fill in.
+            empty += 1
+            if day < cutoff:
+                record_empty(out_path, day)
+                settled += 1
+            continue
+        rows = aggregate(pitches)
+        # Opened and closed per date rather than held across the run. A full
+        # ingest is hours long and this container restarts; the cost is one
+        # open per six-second fetch, and it caps what a restart loses at a
+        # single date.
+        shard = yearly_part(out_path, day, prefix="statcast")
+        shard.parent.mkdir(parents=True, exist_ok=True)
+        header = not shard.exists() or shard.stat().st_size == 0
+        with shard.open("a", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=PITCHER_FIELDS,
+                                    extrasaction="ignore")
+            if header:
+                writer.writeheader()
             writer.writerows(rows.to_dict("records"))
-            # Flushed every date, not every twentieth. A full ingest is hours
-            # long and this container restarts; the flush costs nothing next
-            # to a six-second fetch, and it caps what a restart loses at one
-            # date instead of twenty.
-            handle.flush()
-            written += 1
-            if verbose and written % 20 == 0:
-                print(f"  {written} dates, {empty} with no games, "
-                      f"{failed} failed")
-            if pause:
-                time.sleep(pause)
+        written += 1
+        if verbose and written % 20 == 0:
+            print(f"  {written} dates, {empty} with no games, "
+                  f"{failed} failed")
+        if pause:
+            time.sleep(pause)
     if verbose:
-        print(f"aggregated {written} dates, {empty} with no games, "
-              f"{failed} failed")
+        print(f"aggregated {written} dates, {empty} with no games "
+              f"({settled} settled), {failed} failed")
     return written
 
 
@@ -288,7 +341,7 @@ def main():
     parser.add_argument("--seasons", default=None,
                         help="inclusive range, e.g. 2021-2026; defaults to "
                              "every season through the current one")
-    parser.add_argument("--out", default="data/statcast_games.csv")
+    parser.add_argument("--out", default="data/statcast")
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--pause", type=float, default=1.0)
     args = parser.parse_args()

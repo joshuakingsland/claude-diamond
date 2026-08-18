@@ -767,7 +767,7 @@ def load_inputs(games_path="data/games.csv", weather_path="data/weather.csv",
                 parks_path="data/parks.json",
                 pitching_path="data/pitching.csv",
                 umpires_path="data/umpires.csv",
-                statcast_path="data/statcast_games.csv"):
+                statcast_path="data/statcast"):
     import json
     from pathlib import Path
 
@@ -779,8 +779,9 @@ def load_inputs(games_path="data/games.csv", weather_path="data/weather.csv",
                 else pd.DataFrame())
     umpires = (pd.read_csv(umpires_path) if Path(umpires_path).exists()
                else pd.DataFrame())
-    statcast = (pd.read_csv(statcast_path) if Path(statcast_path).exists()
-                else pd.DataFrame())
+    from csv_collection import read_csv_collection
+
+    statcast = read_csv_collection(statcast_path)
     return games, parks, weather, pitching, umpires, statcast
 
 
@@ -792,7 +793,7 @@ def main():
     parser.add_argument("--weather", default="data/weather.csv")
     parser.add_argument("--pitching", default="data/pitching.csv")
     parser.add_argument("--umpires", default="data/umpires.csv")
-    parser.add_argument("--statcast", default="data/statcast_games.csv")
+    parser.add_argument("--statcast", default="data/statcast")
     parser.add_argument("--out", default="data/features.csv")
     args = parser.parse_args()
     games, parks, weather, pitching, umpires, statcast = load_inputs(
