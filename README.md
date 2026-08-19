@@ -1205,6 +1205,44 @@ A third, smaller one: `alert_evidence.json` was tracked and rewritten hourly but
 was in no workflow's commit list, so the copy in the repository would have
 frozen while the page showed live values.
 
+### The day the capture stopped, and why
+
+Doubling the burst schedule cost 5.5 hours of capture the next day, and the
+cause was one line written for a smaller system.
+
+Quotes were sharded by **month**, which was right at seventeen captures a day.
+Two bursts take the log to about **94 MB a day** — 952 rows a capture, 228 bytes
+a row, 457 captures — so `quotes_2026-08.csv` reached **138 MB** and GitHub's
+pre-receive hook refused the push outright at its 100 MB limit. The burst had
+already polled for 5h33m and spent about 1,300 credits. Then `commit_data.sh`,
+doing exactly what it was written to do, retried the merge four times against a
+remote that was never going to accept it.
+
+The lesson is not "shard smaller". It is that the failure surfaced **at the
+remote, after the data was paid for**, and a capture cannot be re-bought at the
+live price. So there are two changes, and the second matters more:
+
+- `csv_collection.dated_part` shards by day and rolls to `.p2`, `.p3` past
+  40 MB. The name stays a pure function of the timestamp and what is on disk,
+  so two runs appending in the same second still land in the same file and
+  `merge_data.py` can union them.
+- `commit_data.sh` refuses to commit any file at or above 95 MB, naming it. It
+  should never fire. It exists because the previous unforeseen growth was only
+  discovered by the remote.
+
+**Then the cleanup caused its own bug.** The already-doomed burst was cancelled,
+but its `always()` commit step ran on the code it had checked out, and pushed
+the monthly file back beside the new daily shards. Every quote in the repository
+existed twice. Nothing failed: `panel_books` still returned eleven books, both
+studies still ran, and every count they reported was double. Silent, plausible
+and wrong — the worst shape a defect takes here.
+
+`csv_collection.read_quote_shards` now de-duplicates on `snapshot_id`, so the
+shard layout is an implementation detail rather than something every reader must
+independently get right. The 13,723 rows that only the monthly file held were
+folded into the daily shard first, so the cancellation cost seventeen minutes
+rather than the five hours that were otherwise guaranteed to be lost.
+
 ### A real defect that must not be fixed
 
 The means are over-spread, and unambiguously so. Regress observed runs on
