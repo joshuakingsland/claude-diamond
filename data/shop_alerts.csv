@@ -9,3 +9,4 @@ alerted_at,fetched_at,event_id,commence_time,home_team,away_team,market,point,si
 2026-08-19T21:36:13Z,2026-08-19T21:35:30Z,3072a6e1e725ce3eaeb47ad41548628f,2026-08-19T23:41:00Z,Kansas City Royals,Athletics,h2h,,home,Kansas City Royals ML,bovada,-162,1.180,0.630119,0.618321,11,125.5,0.005
 2026-08-19T21:36:13Z,2026-08-19T21:35:30Z,fa53df0ea33f6bbfb66e7e6198f715dd,2026-08-20T00:10:00Z,Houston Astros,Los Angeles Angels,h2h,,away,Los Angeles Angels ML,williamhill_us,143,0.548,0.417007,0.411523,11,154.5,0.005
 2026-08-19T21:36:13Z,2026-08-19T21:35:30Z,18f51290a26a4a37315eaba858f736c8,2026-08-19T22:40:00Z,Cincinnati Reds,St. Louis Cardinals,h2h,,away,St. Louis Cardinals ML,betrivers,128,0.503,0.443623,0.438596,11,64.5,0.005
+2026-08-19T22:55:28Z,2026-08-19T22:54:56Z,118d9a25ad5e9070a57cf4cb0b5d0314,2026-08-19T23:40:00Z,Milwaukee Brewers,Seattle Mariners,h2h,,away,Seattle Mariners ML,betrivers,114,0.507,0.472358,0.467290,11,45.1,0.005

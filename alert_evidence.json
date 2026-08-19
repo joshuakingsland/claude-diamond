@@ -1,39 +1,39 @@
 {
-  "repository_revision": "32eeb78d76fd",
-  "alerts_logged": 10,
-  "alerts_awaiting_first_pitch": 5,
+  "repository_revision": "ef48aea143ff",
+  "alerts_logged": 11,
+  "alerts_awaiting_first_pitch": 4,
   "against_panel_median": {
-    "alerts": 5,
-    "dates": 1,
-    "mean_clv_probability_points": 0.1655,
+    "alerts": 7,
+    "dates": 2,
+    "mean_clv_probability_points": 0.1865,
     "ci90_date_clustered_points": null,
     "interval_note": "fewer than 3 dates; no interval is computable from this",
-    "share_beating_close": 0.8,
-    "mean_deviation_at_alert_points": 0.619,
+    "share_beating_close": 0.8571,
+    "mean_deviation_at_alert_points": 0.6197,
     "by_book": {
-      "betrivers": 2,
+      "betrivers": 4,
       "williamhill_us": 2,
       "fanduel": 1
     }
   },
   "against_sharp_close": {
-    "alerts": 5,
-    "dates": 1,
-    "mean_clv_probability_points": 0.1299,
+    "alerts": 7,
+    "dates": 2,
+    "mean_clv_probability_points": 0.2408,
     "ci90_date_clustered_points": null,
     "interval_note": "fewer than 3 dates; no interval is computable from this",
-    "share_beating_close": 0.6,
-    "mean_deviation_at_alert_points": 0.619,
+    "share_beating_close": 0.7143,
+    "mean_deviation_at_alert_points": 0.6197,
     "by_book": {
-      "betrivers": 2,
+      "betrivers": 4,
       "williamhill_us": 2,
       "fanduel": 1
     }
   },
   "forward_status": "research_only",
   "forward_failures": [
-    "5 scored alerts < 70",
-    "1 dates < 13",
+    "7 scored alerts < 70",
+    "2 dates < 13",
     "positive CLV against the sharp close is not established forwards"
   ],
   "stake_recommendation": "none"
