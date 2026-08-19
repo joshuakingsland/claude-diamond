@@ -11,10 +11,15 @@ name: odds burst
 # beyond starting it once.
 #
 # Cost. Each poll bills `regions x markets` credits exactly as the hourly
-# capture does — six today — so the default three hours at ninety seconds is
-# about 720 credits. `odds_burst.py` prints the estimate before spending and
+# capture does — six today — so 5.5 hours at ninety seconds is about 1,320
+# credits per burst. `odds_burst.py` prints the estimate before spending and
 # refuses a burst above `--max-credits`, so a mistyped interval cannot drain
 # the quota.
+#
+# Every poll is also screened for line-shopping alerts in flight. That is the
+# only cadence that catches them: three quarters of qualifying prices are gone
+# by the next poll, and the hourly path sees a few percent of what passes
+# through.
 #
 # The rows land in the same monthly quote shards as `odds.py`, with the same
 # schema and the same de-vig. Nothing downstream needs to know a burst
@@ -23,16 +28,34 @@ name: odds burst
 
 on:
   schedule:
-    # 21:50 UTC, ahead of the evening slate: most first pitches land between
-    # 23:00 and 02:00 UTC, so three hours from here covers the bulk of the card
-    # while every game is still pre-game.
-    - cron: "50 21 * * *"
+    # Two bursts, back to back, covering 14:00-01:00 UTC.
+    #
+    # The original single 21:50 burst was aimed at "the evening slate", which
+    # turned out to be the wrong target. Counting how many games sit inside
+    # their own 20-240 minute lock window at each minute of the day, the demand
+    # curve is bimodal — a matinee block peaking around 16:00 UTC and the main
+    # block peaking 20:00-23:00 — and three hours from 21:50 covered only
+    # **28% of lock-window game-minutes**, with a third of games getting no
+    # burst coverage at all. Since three quarters of shop opportunities die
+    # within one 90-second poll, an uncovered window is not a delayed
+    # detection, it is a missed one.
+    #
+    # 14:00 and 19:30 for 5.5 hours each covers **96%**. The pair was chosen by
+    # searching the demand curve rather than by reasoning about when games
+    # "usually" start.
+    #
+    # Cost is not the constraint here. Each burst is about 1,320 credits, so
+    # the pair runs ~2,640 a day and ~554,000 across a season, against a
+    # balance near four million. The binding limit is GitHub's six-hour job
+    # ceiling, which is why the window is 5.5 hours and not longer.
+    - cron: "0 14 * * *"
+    - cron: "30 19 * * *"
   workflow_dispatch:
     inputs:
       minutes:
         description: "How long to keep polling"
         required: false
-        default: "180"
+        default: "330"
       every:
         description: "Seconds between polls (floor 45)"
         required: false
@@ -100,7 +123,7 @@ jobs:
         # it should stand down earlier and leave the routine capture running.
         run: |
           python odds_burst.py --require-key \
-            --minutes "${{ inputs.minutes || '180' }}" \
+            --minutes "${{ inputs.minutes || '330' }}" \
             --every "${{ inputs.every || '90' }}" \
             --max-credits "${{ inputs.max_credits || '1500' }}" \
             --min-credits 2000 \

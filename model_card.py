@@ -363,6 +363,35 @@ def build_shop(alerts, now=None):
     return rows
 
 
+def build_shop_record(evidence):
+    """One line on how the alerts that already fired have actually done.
+
+    The panel above shows what the rule is saying now; this says whether it
+    has been right. Scored against Pinnacle rather than the panel median,
+    because the median is built from the same quotes each alert deviated from
+    and would flatter the record.
+    """
+    if not evidence:
+        return "No alerts have fired yet."
+    block = evidence.get("against_sharp_close") or {}
+    scored = block.get("alerts", 0)
+    logged = evidence.get("alerts_logged", 0)
+    if not scored:
+        return (f"{logged} alert{'s' if logged != 1 else ''} logged, none "
+                f"scored yet — a game has to start before it has a close.")
+    bounds = block.get("ci90_date_clustered_points")
+    clv = block.get("mean_clv_probability_points", 0.0)
+    beat = 100 * block.get("share_beating_close", 0.0)
+    span = (f", 90% CI [{bounds[0]:+.2f}, {bounds[1]:+.2f}]" if bounds
+            else ", too few dates for an interval")
+    return (f"Forward record: {scored} of {logged} alerts scored over "
+            f"{block.get('dates', 0)} date"
+            f"{'s' if block.get('dates', 0) != 1 else ''} — "
+            f"{clv:+.2f} points against Pinnacle's close{span}, beating it "
+            f"{beat:.0f}% of the time. Status: "
+            f"{evidence.get('forward_status', 'research_only').replace('_', ' ')}.")
+
+
 def _stamp(text):
     if not text or str(text).strip() in ("", "nan"):
         return None
@@ -496,6 +525,8 @@ TEMPLATE = """<!DOCTYPE html>
   .shopage{text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;
     min-width:118px;color:var(--muted)}
   .shopage b{display:block;font-size:13px;color:var(--text)}
+  .shoprecord{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);
+    color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:11.5px}
   .shoprow.fresh .shopage b{color:var(--close)}
   .shoprow.cold .shopage b{color:var(--muted)}
   @media(max-width:600px){.shoprow{grid-template-columns:1fr auto}.shopage{grid-column:1/-1;
@@ -580,6 +611,7 @@ TEMPLATE = """<!DOCTYPE html>
   mispricing the shorter it lives. The clock beside each one is the honest answer to whether
   it is worth clicking through.</p>
   <div id="shop"></div>
+  <div class="shoprecord">__SHOPRECORD__</div>
 </div>
 
 <div class="verdictbox">
@@ -732,9 +764,10 @@ document.getElementById('nsettled').textContent=SETTLED.length+' historical entr
 
 
 def render(card, ledger, rejections, comparison, validation, credits,
-           signals=None, evidence=None, alerts=None):
+           signals=None, evidence=None, alerts=None, alert_evidence=None):
     board = build_board(card, ledger, rejections, signals)
     shop = build_shop(alerts or [])
+    shop_record = build_shop_record(alert_evidence)
     settled = build_settled(ledger)
     verdict = build_verdict(comparison)
     chips = build_chips(validation, comparison, ledger, credits, board,
@@ -765,6 +798,7 @@ def render(card, ledger, rejections, comparison, validation, credits,
         ("__CHIPS__", json.dumps(chips)),
         ("__SHOP__", json.dumps(shop)),
         ("__SURVIVAL__", json.dumps(SHOP_SURVIVAL)),
+        ("__SHOPRECORD__", shop_record),
     ):
         html = html.replace(token, value)
     return html
@@ -781,6 +815,7 @@ def main(argv=None):
     parser.add_argument("--signals", default="data/clv_signals.csv")
     parser.add_argument("--evidence", default="forward_evidence.json")
     parser.add_argument("--alerts", default="data/shop_alerts.csv")
+    parser.add_argument("--alert-evidence", default="alert_evidence.json")
     parser.add_argument("--out", default="docs/index.html")
     args = parser.parse_args(argv)
 
@@ -788,6 +823,7 @@ def main(argv=None):
         _rows(args.card), _rows(args.ledger), _rows(args.rejections),
         _json(args.comparison), _json(args.validation), _rows(args.credits),
         _rows(args.signals), _json(args.evidence), _rows(args.alerts),
+        _json(args.alert_evidence),
     )
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)

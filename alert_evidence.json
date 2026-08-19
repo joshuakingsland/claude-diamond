@@ -1,0 +1,40 @@
+{
+  "repository_revision": "5dfeb871d87a-wipbb9ef8c8",
+  "alerts_logged": 5,
+  "alerts_awaiting_first_pitch": 0,
+  "against_panel_median": {
+    "alerts": 5,
+    "dates": 1,
+    "mean_clv_probability_points": 0.1655,
+    "ci90_date_clustered_points": null,
+    "interval_note": "fewer than 3 dates; no interval is computable from this",
+    "share_beating_close": 0.8,
+    "mean_deviation_at_alert_points": 0.619,
+    "by_book": {
+      "betrivers": 2,
+      "williamhill_us": 2,
+      "fanduel": 1
+    }
+  },
+  "against_sharp_close": {
+    "alerts": 5,
+    "dates": 1,
+    "mean_clv_probability_points": 0.1299,
+    "ci90_date_clustered_points": null,
+    "interval_note": "fewer than 3 dates; no interval is computable from this",
+    "share_beating_close": 0.6,
+    "mean_deviation_at_alert_points": 0.619,
+    "by_book": {
+      "betrivers": 2,
+      "williamhill_us": 2,
+      "fanduel": 1
+    }
+  },
+  "forward_status": "research_only",
+  "forward_failures": [
+    "5 scored alerts < 70",
+    "1 dates < 13",
+    "positive CLV against the sharp close is not established forwards"
+  ],
+  "stake_recommendation": "none"
+}

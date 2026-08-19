@@ -125,6 +125,7 @@ extremes.py   does a large disagreement pay? no, and here is why it looks like i
 devig.py      four ways to strip the margin, and whether the benchmark book is right
 line_shopping.py  does the best price beat the close? the one arm that says yes
 alerts.py     live shop alerts, an append-only log, and an honest expiry clock
+alert_evidence.py  scores the alerts that actually fired; cannot be re-selected
 stationarity.py  does the run environment drift enough to reweight the seasons?
 mean_calibration.py  the predicted means are over-spread; correcting them makes pricing worse
 statcast.py   Baseball Savant pitch data, aggregated per player-game
@@ -1109,6 +1110,49 @@ eventually say whether the rule holds forwards on prices flagged live. Nothing
 in it is a wager, and mail settings are optional throughout — with no SMTP
 secrets the detector still runs and still logs, exactly as a fork with no odds
 key still runs.
+
+### The burst was pointed at the wrong hours
+
+The alerting is only as good as the hours it is awake for, and the original
+burst schedule — one three-hour window from 21:50 UTC, chosen because "most
+first pitches land between 23:00 and 02:00" — turned out to be aimed badly.
+
+The right thing to count is not first pitches but **lock-window game-minutes**:
+how many games sit inside their own 20–240 minute betting window at each minute
+of the day. That curve is bimodal, with a matinee block peaking near 16:00 UTC
+and the main block running 19:00–23:00. Against it, the old schedule covered
+**28%**, and a third of all games got no burst coverage whatsoever. Given that
+three quarters of opportunities die within one poll, an uncovered window is not
+a late detection. It is a missed one.
+
+Two 5.5-hour bursts at 14:00 and 19:30 cover **96%**. The pair was found by
+searching the demand curve rather than by reasoning about when games "usually"
+start — the same mistake, made twice, would have been easy. Cost is not the
+binding constraint at ~2,640 credits a day against a balance near four million;
+GitHub's six-hour job ceiling is, which is why each window is 5.5 hours.
+
+### Scoring the alerts that actually fired
+
+`alert_evidence.py` scores `data/shop_alerts.csv` against the close. It exists
+because every study in this repository that ever looked good looked good
+*backwards*, and most stopped looking good the moment something independent was
+asked of them. The alerts are the independent version: the rule, threshold and
+panel were fixed when each row was written, so there is no report in which a
+better rule is tried on the same alerts. A disappointing number can only be
+reported, never tuned away.
+
+The gate is deliberately hard. It requires 70 scored alerts over 13 dates — the
+same weight the backward study carried — **and** a positive interval against
+Pinnacle, never against the panel median, which is built from the very quotes
+each alert deviated from and would flatter the record.
+
+Writing it turned up a trap worth naming. The first version computed a
+date-clustered bootstrap regardless of how many dates existed, and on the first
+real day it returned a 90% interval of `[+0.130, +0.130]` — resampling a single
+date gives the same mean every draw, so the interval collapses onto the point
+estimate and any positivity test on it passes automatically. That is precisely
+the kind of number that reads as evidence and is not. Below three dates the
+function now returns no interval at all and says why.
 
 ### A real defect that must not be fixed
 

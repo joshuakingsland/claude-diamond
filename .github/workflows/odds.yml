@@ -161,6 +161,11 @@ jobs:
           # server being down must not stop the page being written -- the
           # alert is already in data/shop_alerts.csv by then either way.
           python alerts.py --send || echo "alerting failed; detections are in the log"
+          # Scores the alerts that already fired against their closes. Cheap,
+          # keyless, and the only number here that was not chosen after the
+          # fact -- the alerts cannot be re-selected, so a disappointing
+          # result can only be reported, never tuned away.
+          python alert_evidence.py || echo "alert scoring failed; log is intact"
           python model_card.py
 
       - name: Commit new quotes

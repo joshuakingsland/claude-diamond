@@ -10,7 +10,8 @@ import unittest
 from datetime import datetime, timedelta, timezone
 
 from model_card import (SHOP_SURVIVAL, build_board, build_shop,
-                        build_verdict, market_label, side_label)
+                        build_shop_record, build_verdict,
+                        market_label, side_label)
 
 HOME, AWAY = "Kansas City Royals", "Minnesota Twins"
 
@@ -233,6 +234,44 @@ class ShopPanelTests(unittest.TestCase):
         broken = self._alert(5)
         broken["fetched_at"] = "not a date"
         self.assertEqual(build_shop([broken]), [])
+
+
+class ShopRecordTests(unittest.TestCase):
+    """The line saying whether the alerts have actually been right."""
+
+    def test_no_evidence_file_says_so_plainly(self):
+        self.assertIn("No alerts have fired", build_shop_record({}))
+
+    def test_logged_but_unscored_explains_why(self):
+        line = build_shop_record({"alerts_logged": 3,
+                                  "against_sharp_close": {"alerts": 0}})
+        self.assertIn("3 alerts logged", line)
+        self.assertIn("none scored", line)
+
+    def test_the_record_is_read_off_the_sharp_close_not_the_panel(self):
+        # The panel median is built from the quotes each alert deviated from,
+        # so a record read off it would flatter itself.
+        line = build_shop_record({
+            "alerts_logged": 9, "forward_status": "research_only",
+            "against_panel_median": {"alerts": 9, "dates": 4,
+                                     "mean_clv_probability_points": 9.99,
+                                     "share_beating_close": 1.0},
+            "against_sharp_close": {"alerts": 9, "dates": 4,
+                                    "mean_clv_probability_points": 0.31,
+                                    "ci90_date_clustered_points": [0.07, 0.49],
+                                    "share_beating_close": 0.6}})
+        self.assertIn("+0.31", line)
+        self.assertNotIn("9.99", line)
+        self.assertIn("Pinnacle", line)
+
+    def test_a_missing_interval_is_stated_not_omitted(self):
+        line = build_shop_record({
+            "alerts_logged": 5, "forward_status": "research_only",
+            "against_sharp_close": {"alerts": 5, "dates": 1,
+                                    "mean_clv_probability_points": 0.13,
+                                    "ci90_date_clustered_points": None,
+                                    "share_beating_close": 0.6}})
+        self.assertIn("too few dates", line)
 
 
 if __name__ == "__main__":
