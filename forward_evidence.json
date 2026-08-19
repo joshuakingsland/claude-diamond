@@ -1,10 +1,10 @@
 {
-  "repository_revision": "c2af495c71c7",
+  "repository_revision": "32eeb78d76fd",
   "staking_policy_version": "paper-ev-mainline-riskbucket-v3",
   "independent_games": 72,
   "accepted_fill_rate": 0.0,
-  "sharp_close_matches": 104,
-  "mean_clv_probability": -0.007845,
+  "sharp_close_matches": 108,
+  "mean_clv_probability": -0.007814,
   "clv_ci95_date_clustered": null,
   "promotion_status": "research_only",
   "promotion_failures": [
@@ -13,6 +13,6 @@
     "positive sharp-close CLV is not established"
   ],
   "source": "clv_signals",
-  "signals": 133,
+  "signals": 134,
   "paper_ledger_settled_roi": 0.389311
 }
