@@ -111,7 +111,6 @@ game_pk,weather_source,weather_hour_utc,temp_c,humidity_pct,pressure_hpa,wind_sp
 824719,open-meteo-forecast,2026-08-31T22:00,18.4,71,1017.1,1.46,74,0.0,-1.277,-0.708,open
 824716,open-meteo-forecast,2026-09-01T22:00,22.6,50,1018.7,2.5,88,0.0,-1.828,-1.705,open
 824717,open-meteo-forecast,2026-09-02T20:00,26.5,55,1018.3,3.8,92,0.0,-2.592,-2.779,open
-823342,open-meteo-forecast,2026-08-19T16:00,24.8,67,987.6,3.83,237,0.0,1.973,-3.283,open
 823340,open-meteo-forecast,2026-09-01T22:00,27.9,55,989.8,1.44,124,0.0,-1.426,-0.2,open
 823339,open-meteo-forecast,2026-09-02T22:00,29.5,52,989.5,1.36,197,0.0,-0.213,-1.343,open
 823748,open-meteo-forecast,2026-08-19T23:00,23.0,53,992.3,2.4,88,0.0,-1.811,1.575,retractable
