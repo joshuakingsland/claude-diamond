@@ -41,6 +41,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from provenance import merge_report
+
 from features import FEATURE_COLUMNS
 from models import RunsModel, _design, mirror
 from runs import GRID
@@ -290,7 +292,10 @@ def main():
         print(f"  schemes that helped: {look['excluded_zero_helping']}   "
               f"schemes that hurt: {look['excluded_zero_hurting']}")
 
-    Path(args.report).write_text(json.dumps(result, indent=2), encoding="utf-8")
+    # merge, not overwrite: without --walk-forward this run has no
+    # walk_forward block, and replacing the file would delete the one an
+    # earlier run paid minutes to produce.
+    merge_report(args.report, result)
     print(f"\nwrote {args.report}")
 
 

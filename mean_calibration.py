@@ -56,6 +56,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from provenance import merge_report
+
 from runs import (GRID, calibrate_extra_innings, calibrate_walk_off,
                   fit_dispersion, fit_inning_shape, joint_distribution,
                   uncensor_home_mean)
@@ -356,8 +358,9 @@ def main():
                   f"error {entry['error']:.5f}   "
                   f"sd(prob) {entry['sd_predicted']:.4f}")
 
-    Path(args.report).write_text(json.dumps(result, indent=2),
-                                 encoding="utf-8")
+    # merge, not overwrite: without --corrections this run has no
+    # corrections block, and replacing the file would delete it.
+    merge_report(args.report, result)
     print(f"\nwrote {args.report}")
 
 

@@ -28,8 +28,8 @@ actually being tested.
 | --- | --- |
 | Does the model predict baseball? | **Yes.** Calibration, log loss, Brier against 13,857 completed games |
 | Does the standalone model beat a price? | **No.** On the coherent main-line comparison the close wins all three markets with date-clustered intervals excluding zero |
-| Is there a credible route to an edge? | **Yes, but not from the model.** Taking the best price when one book sits 0.25 points off the panel's own fair consensus is worth **+0.31 points of CLV against Pinnacle's close** [+0.07, +0.49], robust to dropping any single book. The model's own 24-hour movement signal is worth **0.4-0.6 points** on the moneyline and run line, but live CLV is **-0.52 points** at a 0% fill rate |
-| Should anyone stake money? | **No.** 70 shops over 13 dates is not a sample, and the study cannot see whether the outlier book would accept the bet. The promotion gate requires 500 independent games, 95% accepted fills, and positive sharp-close CLV; there is no real-money path in this code |
+| Is there a credible route to an edge? | **Yes, but not from the model.** Taking the best price when one book sits 0.25 points off the panel's own fair consensus is worth **+0.25 points of CLV against Pinnacle's close** [+0.04, +0.45], robust to dropping any single book -- but the estimate has fallen from +0.31 as captures accumulated, and the lower bound is now close to zero. The model's own 24-hour movement signal is worth **0.4-0.6 points** on the moneyline and run line, but live CLV is **-0.52 points** at a 0% fill rate |
+| Should anyone stake money? | **No.** 82 shops over 14 dates is not a sample, and the study cannot see whether the outlier book would accept the bet. The promotion gate requires 500 independent games, 95% accepted fills, and positive sharp-close CLV; there is no real-money path in this code |
 
 A well-calibrated model that loses money is the *normal* outcome in a liquid
 market, and that is what happened here. The two claims are reported
@@ -984,12 +984,15 @@ identified defects that should be left alone.
 
 Every study above asks whether the model beats the market. This one takes the
 model out entirely and asks whether the **market's disagreement with itself**
-beats the market. `line_shopping.py`, against 261,890 quotes from 284 bursts.
+beats the market. `line_shopping.py`, against 395,118 quotes from 415 captures.
 
 Start with the number that sets the bar. Across the eleven US books that appear
 in at least half of all captures, the two-way overround at the **median** price
-is 1.0357 — 1.79 points of vig per side. At the **best** price on the same
-panel it is 1.0186, or 0.93 points. Shopping halves the house edge. It does not
+is 1.0367 — 1.84 points of vig per side. At the **best** price on the same
+panel it is 1.0185, or 0.92 points. (A single book's own two-way quote runs
+1.0451, 2.26 points a side: taking the median of each side *independently*
+already beats any individual book, because the books disagree about where the
+line is and the median of the two sides is not the median book.) Shopping halves the house edge. It does not
 remove it, and that is not an empirical claim but an arithmetic one: sum the
 closing line value of both sides of one game and the consensus cancels, leaving
 `1 - best_overround` whatever the close does. A study that bets both sides of
@@ -1004,8 +1007,8 @@ forward. Scored against the panel's own close:
 
 | Deviation at entry | Bets | Dates | CLV vs panel close | CLV vs Pinnacle close |
 | ---: | ---: | ---: | ---: | ---: |
-| 0.25 pt | 70 | 13 | **+0.437** [+0.256, +0.569] | **+0.312** [+0.072, +0.486] |
-| 0.50 pt | 35 | 10 | **+0.663** [+0.431, +0.833] | **+0.486** [+0.194, +0.733] |
+| 0.25 pt | 82 | 14 | **+0.359** [+0.159, +0.546] | **+0.250** [+0.039, +0.447] |
+| 0.50 pt | 40 | 9 | **+0.601** [+0.355, +0.830] | **+0.441** [+0.183, +0.699] |
 | 1.00 pt | 11 | 6 | **+1.147** [+0.881, +1.489] | **+0.863** [+0.417, +1.278] |
 
 Intervals are 90%, bootstrapped over dates. This is the first positive result
@@ -1020,16 +1023,16 @@ in expectation. So the number that carries the content is the **decay**: of the
 **18%**. The outlier book was not early; it was wrong, and the other ten never
 came to it.
 
-**It is not one book.** Outlier prices concentrate — BetRivers supplies 38 of
-the 70 bets at the 0.25-point threshold, which is exactly the fingerprint of a
+**It is not one book.** Outlier prices concentrate — BetRivers supplies 35 of
+the 82 bets at the 0.25-point threshold, which is exactly the fingerprint of a
 persistently stale book rather than a market phenomenon. So the study is rebuilt
 eleven times, each time dropping one book from the panel, the consensus and the
-close together. CLV ranges **+0.270 to +0.508** across all eleven exclusions and
+close together. CLV ranges **+0.258 to +0.467** across all eleven exclusions and
 never touches zero. Dropping BetRivers costs the most and the signal survives it.
 
 **It is not scored against itself.** The panel median is built from the same
 quotes the bet deviated from, so the study is also run against Pinnacle, which
-sits outside the shopping panel and covers 280 of 284 captures. The result
+sits outside the shopping panel and covers 411 of 415 captures. The result
 attenuates by roughly a third at every threshold and stays positive. That
 attenuation is the honest measure of how much of the panel-median figure was
 self-reference. The Pinnacle column is the one to believe.
@@ -1038,10 +1041,24 @@ Writing that third check turned up a real defect in the second. A bet taken at
 the *last* capture before first pitch was being scored against the consensus at
 its own capture — so its CLV was identical to the deviation it was selected on,
 by construction. Fourteen of 84 bets, 17%, were pure tautology. `settle` now
-drops any bet with no strictly later close, which is why the tables above read
-70 rather than 84.
+drops any bet with no strictly later close, which cost the sample about a sixth
+of its rows.
 
-**What it does not establish.** Thirteen dates is two weeks of burst capture,
+**The estimate has already come down once.** When this section was first
+written the study had 284 captures and reported **+0.312** against Pinnacle
+over 70 bets, interval [+0.072, +0.486]. At 415 captures and 82 bets it reports
+**+0.250**, interval [+0.039, +0.447]. The point estimate fell by a fifth and
+the lower bound moved most of the way to zero. Nothing was changed about the
+rule; the extra data simply disagreed slightly with the first fortnight.
+
+That is the ordinary behaviour of a thin sample, and it is recorded here rather
+than quietly overwritten because the direction matters: the number is drifting
+*toward* zero as evidence accumulates, not away from it. A reader who saw only
+today's table would think the finding had always been +0.25. If it keeps
+sliding at this rate the interval crosses zero within a few hundred more
+captures, and the honest reading of this section becomes "probably nothing".
+
+**What it does not establish.** Fourteen dates is two weeks of burst capture,
 and the 1-point row is eleven bets — the sweep is shown precisely so that no
 single threshold carries the verdict. Positive CLV against a close is a
 necessary condition for an edge and never a sufficient one: the study cannot
@@ -1153,6 +1170,40 @@ date gives the same mean every draw, so the interval collapses onto the point
 estimate and any positivity test on it passes automatically. That is precisely
 the kind of number that reads as evidence and is not. Below three dates the
 function now returns no interval at all and says why.
+
+### An audit, and the two things it broke
+
+Running every script in the repository to see which ones still worked found no
+crashes and two real defects — one of them by causing it.
+
+**A cheap run could delete an expensive result.** `stationarity.py` computes its
+walk-forward only under `--walk-forward`, and `mean_calibration.py` its
+corrections only under `--corrections`, but both wrote their whole report every
+time. Running them plainly replaced complete reports with partial ones: 212 and
+85 lines of results gone, silently, exit code zero. This is the same shape as
+the stale `--seasons` argument that once deleted an entire season from the
+results table, and it takes the same answer. `provenance.merge_report` keeps
+blocks the current run did not compute and **marks them carried over**, because
+a stale number presented as fresh is the failure this repository cares most
+about. Both reports were restored from git.
+
+**The README had already drifted from its own data.** Two days after the
+line-shopping section was written the study had picked up 131 more captures and
+its headline had moved from +0.312 to +0.250, while every sentence still said
++0.312. The page was safe from this — `model_card.py` recomputes nothing — but
+the README, where the findings are actually argued, had no such discipline.
+
+The table is now generated: `line_shopping.py --sync-readme` rewrites those rows
+from the report, and `revalidate.yml` runs it weekly so the study itself stops
+going stale. The prose is deliberately *not* generated — a changed conclusion
+needs a person to write it — so `tests/test_documented_numbers.py` checks the
+generated rows exactly and the prose loosely, failing only when a sentence has
+stopped describing the data. It also fails if the interval crosses zero while
+the verdict table still answers "yes" to whether an edge exists.
+
+A third, smaller one: `alert_evidence.json` was tracked and rewritten hourly but
+was in no workflow's commit list, so the copy in the repository would have
+frozen while the page showed live values.
 
 ### A real defect that must not be fixed
 

@@ -1,7 +1,7 @@
 """Did the alerts that actually fired beat the close?
 
-`line_shopping.py` looked backwards: it swept 261,890 stored quotes, chose a
-rule, and reported what that rule would have earned. Every study in this
+`line_shopping.py` looked backwards: it swept the whole stored quote log,
+chose a rule, and reported what that rule would have earned. Every study in this
 repository that ever looked good looked good that way, and most of them stopped
 looking good the moment something independent was asked of them. This file asks
 the independent question. It scores `data/shop_alerts.csv` — the prices that
@@ -26,9 +26,11 @@ exists yet — the same leak `forward_evidence.sharp_closes` was written to
 avoid. An alert whose game has not started is carried, not scored.
 
 **The gate is deliberately hard to pass.** `MIN_ALERTS` and `MIN_ALERT_DATES`
-exist because 70 backward-looking observations over 13 dates is already thin,
-and a forward record needs to clear that bar independently before it means
-anything. Nothing here promotes an alert to a wager; the status is a statement
+exist because the backward study's own sample is already thin, and a forward
+record needs to clear roughly that bar independently before it means anything.
+That study's estimate has itself drifted downward as captures accumulated,
+which is the reason to want an independent record rather than more of the same
+sweep. Nothing here promotes an alert to a wager; the status is a statement
 about evidence, not a green light.
 
     python alert_evidence.py
@@ -47,8 +49,10 @@ from line_shopping import (DRAWS, MIN_PANEL_BOOKS, SHARP_BOOK, closes,
 from provenance import repository_revision
 
 # A forward record has to stand on its own before it says anything. The study
-# it is testing had 70 observations over 13 dates; matching that is the floor,
-# not the target.
+# it is testing carried 82 observations over 14 dates when this was written and
+# grows with the quote log; matching roughly that weight is the floor, not the
+# target, and the constant is deliberately not tied to the study's live count so
+# a gate cannot be moved by re-running the thing it is meant to check.
 MIN_ALERTS = 70
 MIN_ALERT_DATES = 13
 # Below this a date-clustered bootstrap is not an interval. Resampling one date

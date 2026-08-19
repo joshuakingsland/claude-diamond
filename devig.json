@@ -1,96 +1,96 @@
 {
-  "quotes": 43060,
+  "quotes": 232261,
   "median_overround": 1.0463,
   "per_quote": {
-    "proportional": 0.69547,
-    "additive": 0.69609,
-    "power": 0.69644,
-    "shin": 0.69609
+    "proportional": 0.68817,
+    "additive": 0.68841,
+    "power": 0.68855,
+    "shin": 0.68841
   },
-  "consensus_rows": 2392,
-  "books_per_consensus": 8.05,
+  "consensus_rows": 14106,
+  "books_per_consensus": 7.72,
   "per_consensus": {
-    "proportional": 0.6854,
-    "additive": 0.68554,
-    "power": 0.68565,
-    "shin": 0.68554
+    "proportional": 0.68799,
+    "additive": 0.68818,
+    "power": 0.68829,
+    "shin": 0.68818
   },
   "by_market": {
     "h2h": {
-      "proportional": 0.70786,
-      "additive": 0.70899,
-      "power": 0.70962,
-      "shin": 0.70899
+      "proportional": 0.66728,
+      "additive": 0.66666,
+      "power": 0.66639,
+      "shin": 0.66666
     },
     "spreads": {
-      "proportional": 0.65664,
-      "additive": 0.6561,
-      "power": 0.65587,
-      "shin": 0.6561
+      "proportional": 0.69721,
+      "additive": 0.69822,
+      "power": 0.69875,
+      "shin": 0.69822
     },
     "totals": {
-      "proportional": 0.69308,
-      "additive": 0.69308,
-      "power": 0.69309,
-      "shin": 0.69308
+      "proportional": 0.69533,
+      "additive": 0.69544,
+      "power": 0.6955,
+      "shin": 0.69544
     }
   },
   "vs_proportional": {
     "additive": {
-      "delta": 0.00015,
+      "delta": 0.00018,
       "ci90_date_clustered": [
-        -0.00013,
-        0.00044
+        -0.00025,
+        0.00045
       ],
       "better": false
     },
     "power": {
-      "delta": 0.00025,
+      "delta": 0.0003,
       "ci90_date_clustered": [
-        -0.00016,
-        0.00071
+        -0.00035,
+        0.0007
       ],
       "better": false
     },
     "shin": {
-      "delta": 0.00015,
+      "delta": 0.00018,
       "ci90_date_clustered": [
-        -0.00013,
-        0.00043
+        -0.00025,
+        0.00046
       ],
       "better": false
     }
   },
   "benchmark": {
     "book": "pinnacle",
-    "rows": 1644,
-    "dates": 5,
-    "priced_median_log_loss": 0.68781,
-    "reference_log_loss": 0.68671,
-    "delta": -0.0011,
+    "rows": 7707,
+    "dates": 14,
+    "priced_median_log_loss": 0.68831,
+    "reference_log_loss": 0.68824,
+    "delta": -8e-05,
     "ci90_date_clustered": [
-      -0.00157,
-      -0.00052
+      -0.00087,
+      0.00046
     ],
-    "mean_abs_gap_points": 0.517,
+    "mean_abs_gap_points": 0.455,
     "by_market": {
       "h2h": {
-        "rows": 558,
-        "priced_median": 0.71387,
-        "reference": 0.71299
+        "rows": 2603,
+        "priced_median": 0.68227,
+        "reference": 0.68192
       },
       "spreads": {
-        "rows": 547,
-        "priced_median": 0.66016,
-        "reference": 0.6581
+        "rows": 2528,
+        "priced_median": 0.68583,
+        "reference": 0.68601
       },
       "totals": {
-        "rows": 539,
-        "priced_median": 0.68889,
-        "reference": 0.68853
+        "rows": 2576,
+        "priced_median": 0.69685,
+        "reference": 0.6968
       }
     },
     "interval_trustworthy": false,
-    "status": "reference book is better"
+    "status": "indistinguishable"
   }
 }

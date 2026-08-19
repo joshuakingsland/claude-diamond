@@ -8,6 +8,7 @@ changes.
 """
 
 import hashlib
+import json
 import os
 import subprocess
 from pathlib import Path
@@ -67,3 +68,44 @@ def model_version(kind, columns, revision=None):
     revision = revision or repository_revision()
     return (f"{MODEL_FAMILY}-{kind}-{revision}-"
             f"features-{feature_schema(columns)}")
+
+
+def merge_report(path, fresh, indent=2):
+    """Write a report without destroying blocks this run did not compute.
+
+    A plain overwrite is wrong whenever some of a report's blocks come from an
+    optional expensive pass. `stationarity.py` computes `walk_forward` only
+    under `--walk-forward` and `mean_calibration.py` computes `corrections`
+    only under `--fit`, and running either without its flag replaced a complete
+    report with a partial one — silently, and with an exit code of zero. Both
+    reports lost a block that way during an audit, which is how this was found.
+
+    This is the same rule `results.merge_table` applies to the results table
+    after a stale `--seasons` argument deleted a whole season: a fetch that did
+    not run must not be able to delete what an earlier one produced.
+
+    A carried block is marked rather than passed off as current, because a
+    stale number presented as fresh is the failure this repository cares most
+    about. Returns the written document.
+    """
+    path = Path(path)
+    existing = {}
+    if path.exists():
+        try:
+            existing = json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            existing = {}
+    document = dict(fresh)
+    carried = [key for key in existing if key not in document]
+    for key in carried:
+        block = existing[key]
+        if isinstance(block, dict):
+            block = dict(block)
+            block["carried_over"] = (
+                "not recomputed by this run; rerun with the flag that "
+                "produces it to refresh")
+        document[key] = block
+    if carried:
+        document["carried_over_blocks"] = sorted(carried)
+    path.write_text(json.dumps(document, indent=indent), encoding="utf-8")
+    return document

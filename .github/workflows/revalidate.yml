@@ -113,6 +113,16 @@ jobs:
       - name: Measure forward sharp-close evidence
         run: python forward_evidence.py
 
+      - name: Re-run the line-shopping study
+        # Tracked, quoted in the README, and previously in no workflow at all,
+        # so it only refreshed when someone ran it by hand -- and its headline
+        # moved from +0.312 to +0.250 in the two days before anyone noticed.
+        # tests/test_documented_numbers.py now fails when the README and this
+        # report disagree, which only helps if the report is actually current.
+        run: |
+          python line_shopping.py --sync-readme || echo "line shopping failed; keeping the last report"
+          python alert_evidence.py || echo "alert scoring failed; log is intact"
+
       - name: Write final validation reports
         # Only evaluate here: market comparison and forward evidence now both
         # belong to the same repository revision and prediction artifacts.
@@ -154,4 +164,5 @@ jobs:
             data docs validation_glm.json validation_gbm.json \
             market_comparison.json market_offset.json forward_evidence.json \
             movement_model.json first_inning_model_evaluation.json \
+            line_shopping.json alert_evidence.json \
             data/research/yrfi_model_rows.csv

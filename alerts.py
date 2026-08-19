@@ -39,7 +39,7 @@ movement probe. The study looked backwards over 13 dates; this is the record
 that will eventually say whether it holds forwards.
 
 **Nothing here places a bet or recommends a stake.** An alert is a price worth
-looking at, on a rule with 70 historical observations. It is not a wager.
+looking at, on a rule with 82 historical observations. It is not a wager.
 
     python alerts.py
     python alerts.py --threshold 0.0025 --send
@@ -269,7 +269,7 @@ def compose(fresh, age_minutes):
         "on the screen five minutes after capture, so expect most to be gone.",
         "",
         "This is a price worth checking, not a recommended stake. The rule "
-        "behind it has 70 historical observations over 13 dates and has never "
+        "behind it has 82 historical observations over 14 dates and has never "
         "been tested forwards.",
     ]
     return "\n".join(lines)

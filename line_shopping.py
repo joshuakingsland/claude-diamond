@@ -1,12 +1,23 @@
 """Does taking the best available price beat the sharp close?
 
 The largest quantity measured anywhere in this repository, and until now the
-only one never tested. Across captures the best book sits **1.4 to 1.8
-probability points** better than the median of the priced books — three to four
-times the whole 24-hour movement signal, and comparable to the 2.31 points of
-vig per side. Everything else here asks whether the *model* beats the price.
-This asks whether the *market's own disagreement* does, with no model involved
-at all.
+only one never tested. Everything else here asks whether the *model* beats the
+price. This asks whether the *market's own disagreement* does, with no model
+involved at all.
+
+**Three overrounds, all correct, easily confused.** The repository quotes 2.3
+points of vig a side in places and 1.8 in others, and both are right because
+they measure different objects. Measured on the same captures:
+
+    one book's own two-way quote      1.0451   2.26 points a side
+    panel median, each side separately 1.0367   1.84 points a side
+    panel best, each side separately   1.0185   0.92 points a side
+
+Taking the median of each side *independently* already beats any single book,
+because the books disagree about where the line is and the median of the two
+sides is not the median book. Shopping to the best price is worth a further
+**0.91 points a side** — roughly twice the whole 24-hour movement signal, and
+the reason this study was worth running at all.
 
 It is decisive in both directions, which is why it is worth doing before
 anything else. If shopping produces positive closing-line value then the edge
@@ -61,6 +72,7 @@ necessary condition for an edge, never a sufficient one.
 import argparse
 import glob
 import json
+import re
 from pathlib import Path
 
 import numpy as np
@@ -82,6 +94,10 @@ DEFAULT_THRESHOLD = 0.01
 SHARP_BOOK = "pinnacle"
 # Reported beside the headline so one selection rule cannot carry the verdict.
 THRESHOLD_SWEEP = (0.0025, 0.005, 0.01, 0.02)
+# Below this a date-clustered bootstrap is not an interval: resampling one or
+# two dates returns nearly the same mean every draw, so the bounds collapse
+# onto the point estimate and any positivity test on them passes for free.
+MIN_INTERVAL_DATES = 3
 DRAWS = 2000
 
 
@@ -293,24 +309,34 @@ def summarise(settled, draws=DRAWS, seed=0):
     unique = np.unique(dates)
     index = {date: np.flatnonzero(dates == date) for date in unique}
     values = settled["clv"].to_numpy(float)
-    rng = np.random.default_rng(seed)
-    sample = []
-    for _ in range(draws):
-        pick = rng.choice(unique, len(unique), replace=True)
-        take = np.concatenate([index[date] for date in pick])
-        sample.append(float(values[take].mean()))
-    low, high = np.percentile(sample, [5, 95])
+    bounds = None
+    if len(unique) >= MIN_INTERVAL_DATES:
+        rng = np.random.default_rng(seed)
+        sample = []
+        for _ in range(draws):
+            pick = rng.choice(unique, len(unique), replace=True)
+            take = np.concatenate([index[date] for date in pick])
+            sample.append(float(values[take].mean()))
+        low, high = np.percentile(sample, [5, 95])
+        bounds = [round(100 * float(low), 4), round(100 * float(high), 4)]
     out = {
         "picks": int(len(settled)),
         "dates": int(len(unique)),
         "mean_clv_probability_points": round(100 * float(values.mean()), 4),
-        "ci90_date_clustered_points": [round(100 * float(low), 4),
-                                       round(100 * float(high), 4)],
+        "ci90_date_clustered_points": bounds,
+        "interval_note": (None if bounds else
+                          f"fewer than {MIN_INTERVAL_DATES} dates; resampling "
+                          f"them returns the same mean every draw, so no "
+                          f"interval is computable"),
         "share_beating_close": round(float(settled["beat_close"].mean()), 4),
         "mean_edge_at_entry_points": round(
             100 * float(settled["edge"].mean()), 4),
         "median_lead_minutes": round(float(settled["lead_minutes"].median()), 1),
-        "profitable": bool(low > 0),
+        # No interval, no verdict. The 2.00pt arm previously reported a "90%
+        # interval" of [2.2845, 2.2845] off a single date and was marked
+        # profitable on it, which is a bootstrap collapsing onto its own point
+        # estimate rather than evidence of anything.
+        "profitable": bool(bounds and bounds[0] > 0),
     }
     # The part that is not a restatement of the entry rule: how much of the
     # claimed deviation the market takes back before the close.
@@ -355,11 +381,73 @@ def leave_one_out(quotes, books, threshold):
     return out
 
 
+README_ROW = re.compile(
+    r"\| \d[\d.]* pt \| \d+ \| \d+ \| \*\*[+-][\d.]+\*\* \[[^\]]+\] \| "
+    r"\*\*[+-][\d.]+\*\* \[[^\]]+\] \|")
+
+
+def readme_table(report, levels=("0.0025", "0.005", "0.01")):
+    """The README's results table, as a pure function of the report.
+
+    The table was transcribed by hand once and was wrong within two days: the
+    study picked up new captures, the headline moved from +0.312 to +0.250, and
+    every sentence around it still said +0.312. Generating it means the digits
+    cannot drift while the argument stands still. The prose is deliberately
+    *not* generated — a changed conclusion needs a person to write it, and
+    `tests/test_documented_numbers.py` fails when the prose disagrees.
+    """
+    rows = []
+    for key in levels:
+        panel = report["threshold_sweep"].get(key) or {}
+        sharp = report["threshold_sweep_vs_sharp"].get(key) or {}
+        if not panel.get("picks") or not panel.get("ci90_date_clustered_points"):
+            continue
+        low, high = panel["ci90_date_clustered_points"]
+        sharp_low, sharp_high = sharp["ci90_date_clustered_points"]
+        rows.append(
+            f"| {float(key) * 100:.2f} pt | {panel['picks']} | "
+            f"{panel['dates']} | "
+            f"**{panel['mean_clv_probability_points']:+.3f}** "
+            f"[{low:+.3f}, {high:+.3f}] | "
+            f"**{sharp['mean_clv_probability_points']:+.3f}** "
+            f"[{sharp_low:+.3f}, {sharp_high:+.3f}] |")
+    return "\n".join(rows)
+
+
+def sync_readme(report, path="README.md"):
+    """Rewrite the README's table rows in place. Returns True if it changed."""
+    table = readme_table(report)
+    file = Path(path)
+    if not table or not file.exists():
+        return False
+    text = file.read_text(encoding="utf-8")
+    matches = list(README_ROW.finditer(text))
+    if not matches:
+        return False
+    # Splicing from the first match to the last would delete anything sitting
+    # between them, so this refuses unless the rows are one contiguous block.
+    # The README already holds a second table whose first column reads
+    # "0.25 pt" — the survival curve — and a looser pattern one day would turn
+    # a tidy-up into silent data loss.
+    for before, after in zip(matches, matches[1:]):
+        if text[before.end():after.start()].strip():
+            raise SystemExit(
+                "README results rows are not contiguous; refusing to splice. "
+                "Check whether another table now matches README_ROW.")
+    updated = (text[:matches[0].start()] + table + text[matches[-1].end():])
+    if updated == text:
+        return False
+    file.write_text(updated, encoding="utf-8")
+    return True
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--quotes", default="data/market_quotes/*.csv")
     parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD)
     parser.add_argument("--report", default="line_shopping.json")
+    parser.add_argument("--sync-readme", action="store_true",
+                        help="rewrite the README's results table from this run")
     args = parser.parse_args()
 
     quotes = load_quotes(args.quotes)
@@ -424,10 +512,11 @@ def main():
         print(f"{label}: {block['picks']} bets over {block['dates']} dates")
         print(f"  edge claimed at entry  "
               f"{block['mean_edge_at_entry_points']:+.3f} points")
+        bounds = block["ci90_date_clustered_points"]
+        span = (f"90% CI [{bounds[0]:+.3f}, {bounds[1]:+.3f}]" if bounds
+                else f"no interval (<{MIN_INTERVAL_DATES} dates)")
         print(f"  CLV at the close       "
-              f"{block['mean_clv_probability_points']:+.3f} points   "
-              f"90% CI [{block['ci90_date_clustered_points'][0]:+.3f}, "
-              f"{block['ci90_date_clustered_points'][1]:+.3f}]")
+              f"{block['mean_clv_probability_points']:+.3f} points   {span}")
         if decay:
             print(f"  market took back        {block['decay_points']:+.3f} "
                   f"points ({block['share_of_edge_retained']:.0%} of the claim "
@@ -453,10 +542,12 @@ def main():
         print(f"\n  threshold sweep, scored against the {label}:")
         for level, block in table.items():
             if block.get("picks"):
+                bounds = block["ci90_date_clustered_points"]
+                span = (f"90% CI [{bounds[0]:+.3f}, {bounds[1]:+.3f}]" if bounds
+                        else f"no interval ({block['dates']} date"
+                             f"{'s' if block['dates'] != 1 else ''})")
                 print(f"    {float(level)*100:>5.2f}pt  {block['picks']:>4} bets  "
-                      f"CLV {block['mean_clv_probability_points']:+.3f}p  "
-                      f"90% CI [{block['ci90_date_clustered_points'][0]:+.3f}, "
-                      f"{block['ci90_date_clustered_points'][1]:+.3f}]")
+                      f"CLV {block['mean_clv_probability_points']:+.3f}p  {span}")
             else:
                 print(f"    {float(level)*100:>5.2f}pt     0 bets")
     print(f"\n  leave one book out at "
@@ -465,6 +556,9 @@ def main():
         clv = block["mean_clv_points"]
         shown = f"CLV {clv:+.3f}p" if clv is not None else "no bets"
         print(f"    without {drop:<16} {block['bets']:>3} bets  {shown}")
+    if args.sync_readme:
+        print("README table rewritten" if sync_readme(result)
+              else "README table already current")
     print(f"\nwrote {args.report}")
 
 

@@ -6,12 +6,12 @@
       "2023": 4.6156,
       "2024": 4.3934,
       "2025": 4.4473,
-      "2026": 4.4854
+      "2026": 4.4793
     },
     "range": 0.3323,
-    "season_to_season_sd": 0.2121,
-    "single_game_sd": 3.1797,
-    "drift_as_share_of_game_noise": 0.1045
+    "season_to_season_sd": 0.2119,
+    "single_game_sd": 3.1781,
+    "drift_as_share_of_game_noise": 0.1046
   },
   "walk_forward": {
     "moneyline": {
@@ -223,6 +223,10 @@
       "expected_by_chance_each_side": 1.05,
       "excluded_zero_helping": 2,
       "excluded_zero_hurting": 3
-    }
-  }
+    },
+    "carried_over": "not recomputed by this run; rerun with the flag that produces it to refresh"
+  },
+  "carried_over_blocks": [
+    "walk_forward"
+  ]
 }
