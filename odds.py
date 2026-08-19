@@ -29,6 +29,7 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
+from csv_collection import dated_part
 from config import (LEADER_BOOK_KEYS, MARKETS, ODDS_CONSENSUS_VERSION,
                     ODDS_REGIONS, PRICED_ODDS_REGIONS, SPORT_KEY)
 
@@ -469,7 +470,7 @@ def main(argv=None):
         quotes.extend(_quote_rows(event, paired, stamp))
 
     _write_atomic(args.lines, LINE_FIELDS, rows)
-    quote_path = Path(args.quotes_dir) / f"quotes_{stamp[:7]}.csv"
+    quote_path = dated_part(args.quotes_dir, stamp)
     append_quote_log(quote_path, quotes)
     priced = sum(int(row.get("priced", 1)) for row in quotes)
     print(f"wrote {len(rows)} consensus lines and appended {len(quotes)} quotes "

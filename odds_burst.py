@@ -48,6 +48,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from config import MARKETS, ODDS_CONSENSUS_VERSION, ODDS_REGIONS
+from csv_collection import dated_part
 from odds import (LINE_FIELDS, QUOTE_FIELDS, _is_future, _quote_rows,
                   _write_atomic, collect_events, consensus_lines,
                   record_credits)
@@ -181,11 +182,10 @@ def run(key, minutes=180, every_seconds=90, quotes_dir="data/market_quotes",
         polled += 1
         spent += CREDITS_PER_POLL
         if result["quotes"]:
-            # Monthly shards, the same convention `odds.py` uses. Passing the
-            # directory straight to append_quote_log would write a file named
-            # after the directory and split the log from the hourly path.
-            shard = (Path(quotes_dir)
-                     / f"quotes_{result['stamp'][:7]}.csv")
+            # Daily, size-capped shards, the same convention `odds.py` uses.
+            # Monthly ones reached 138 MB under this cadence and the remote
+            # refused the push after the whole burst had been paid for.
+            shard = dated_part(quotes_dir, result["stamp"])
             append_quotes(shard, result["quotes"])
             written += len(result["quotes"])
             # After the write, so a detection always has its quote on disk

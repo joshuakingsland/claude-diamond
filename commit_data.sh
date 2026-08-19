@@ -33,6 +33,29 @@ if git diff --cached --quiet; then
   echo "Nothing to commit."
   exit 0
 fi
+
+# GitHub refuses any file of 100 MB at the pre-receive hook, which is the worst
+# possible place to find out: a burst discovered it after 5.5 hours of polling
+# and roughly 1,300 credits, then retried the merge four times and lost the lot.
+# Shards are rolled at 40 MB so this should never fire, and if it does the run
+# says which file and stops rather than burning the retry loop on a push the
+# remote will never accept.
+LIMIT=$((95 * 1024 * 1024))
+oversize=$(git diff --cached --name-only --diff-filter=ACM \
+  | while IFS= read -r file; do
+      [ -f "$file" ] || continue
+      size=$(wc -c < "$file")
+      if [ "$size" -ge "$LIMIT" ]; then
+        printf '  %s (%s MB)\n' "$file" "$((size / 1048576))"
+      fi
+    done)
+if [ -n "$oversize" ]; then
+  echo "refusing to commit: file(s) at or above GitHub's 100 MB limit:"
+  echo "$oversize"
+  echo "shard the file before capturing again; see csv_collection.dated_part"
+  exit 1
+fi
+
 git commit -m "$MESSAGE"
 
 for attempt in 1 2 3 4; do
