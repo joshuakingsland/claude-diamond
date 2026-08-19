@@ -1,38 +1,40 @@
 {
-  "repository_revision": "b4b7ce0bb984",
+  "repository_revision": "554c61faa9ce",
   "alerts_logged": 11,
-  "alerts_awaiting_first_pitch": 4,
+  "alerts_awaiting_first_pitch": 1,
   "against_panel_median": {
-    "alerts": 7,
+    "alerts": 10,
     "dates": 2,
-    "mean_clv_probability_points": 0.1865,
+    "mean_clv_probability_points": 0.5562,
     "ci90_date_clustered_points": null,
     "interval_note": "fewer than 3 dates; no interval is computable from this",
-    "share_beating_close": 0.8571,
-    "mean_deviation_at_alert_points": 0.6197,
+    "share_beating_close": 0.9,
+    "mean_deviation_at_alert_points": 0.8918,
     "by_book": {
-      "betrivers": 4,
+      "betrivers": 5,
       "williamhill_us": 2,
+      "bovada": 2,
       "fanduel": 1
     }
   },
   "against_sharp_close": {
-    "alerts": 7,
+    "alerts": 10,
     "dates": 2,
-    "mean_clv_probability_points": 0.2408,
+    "mean_clv_probability_points": 0.6902,
     "ci90_date_clustered_points": null,
     "interval_note": "fewer than 3 dates; no interval is computable from this",
-    "share_beating_close": 0.7143,
-    "mean_deviation_at_alert_points": 0.6197,
+    "share_beating_close": 0.8,
+    "mean_deviation_at_alert_points": 0.8918,
     "by_book": {
-      "betrivers": 4,
+      "betrivers": 5,
       "williamhill_us": 2,
+      "bovada": 2,
       "fanduel": 1
     }
   },
   "forward_status": "research_only",
   "forward_failures": [
-    "7 scored alerts < 70",
+    "10 scored alerts < 70",
     "2 dates < 13",
     "positive CLV against the sharp close is not established forwards"
   ],
