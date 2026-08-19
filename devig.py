@@ -44,6 +44,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from csv_collection import read_quote_shards
+
 from market import normalise
 
 # Below this the pair is not a real two-way price and the margin cannot be

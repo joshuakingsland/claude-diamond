@@ -79,6 +79,7 @@ import numpy as np
 import pandas as pd
 
 from config import MAX_LOCK_LEAD_MINUTES, MIN_LOCK_LEAD_MINUTES
+from csv_collection import read_quote_shards
 from devig import (MAX_OVERROUND, MIN_OVERROUND, american_to_prob,
                    proportional)
 
@@ -102,8 +103,13 @@ DRAWS = 2000
 
 
 def load_quotes(pattern="data/market_quotes/*.csv"):
-    frames = [pd.read_csv(path) for path in sorted(glob.glob(pattern))]
-    return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+    """Every quote shard as one frame, each quote counted once.
+
+    De-duplicated because shards can overlap: a resharding once left the same
+    quotes in both a monthly and a daily file, and every count downstream
+    silently doubled without anything failing.
+    """
+    return read_quote_shards(pattern)
 
 
 def panel_books(quotes, min_coverage=MIN_BOOK_COVERAGE, priced_only=True):

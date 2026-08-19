@@ -97,5 +97,41 @@ class CommitGuardTests(unittest.TestCase):
         self.assertIn("refusing to commit", script)
 
 
+
+
+class OverlappingShardTests(unittest.TestCase):
+    """Two shards holding the same quote must count it once."""
+
+    def setUp(self):
+        self.dir = TemporaryDirectory()
+        self.addCleanup(self.dir.cleanup)
+        self.root = Path(self.dir.name)
+
+    def write(self, name, ids):
+        rows = ["snapshot_id,fetched_at,price_home"]
+        rows += [f"{i},2026-08-19T20:00:00Z,-110" for i in ids]
+        (self.root / name).write_text("\n".join(rows) + "\n", encoding="utf-8")
+
+    def test_a_quote_in_two_shards_is_read_once(self):
+        # This actually happened: a run on older code pushed its monthly file
+        # back beside the new daily ones and every count silently doubled.
+        from csv_collection import read_quote_shards
+        self.write("quotes_2026-08.csv", ["a", "b", "c"])
+        self.write("quotes_2026-08-19.csv", ["b", "c", "d"])
+        quotes = read_quote_shards(self.root / "*.csv")
+        self.assertEqual(len(quotes), 4)
+        self.assertEqual(sorted(quotes["snapshot_id"]), ["a", "b", "c", "d"])
+
+    def test_shards_without_the_key_are_still_concatenated(self):
+        from csv_collection import read_quote_shards
+        (self.root / "a.csv").write_text("x\n1\n", encoding="utf-8")
+        (self.root / "b.csv").write_text("x\n2\n", encoding="utf-8")
+        self.assertEqual(len(read_quote_shards(self.root / "*.csv")), 2)
+
+    def test_no_shards_is_an_empty_frame_not_an_error(self):
+        from csv_collection import read_quote_shards
+        self.assertTrue(read_quote_shards(self.root / "*.csv").empty)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,5 +1,6 @@
 """Small helpers for CSV datasets split into deterministic part files."""
 
+import glob
 from pathlib import Path
 
 import pandas as pd
@@ -56,6 +57,30 @@ def dated_part(path, timestamp, prefix="quotes", max_bytes=MAX_SHARD_BYTES):
         part += 1
         shard = target / f"{prefix}_{day}.p{part}.csv"
     return shard
+
+
+def read_quote_shards(pattern="data/market_quotes/*.csv", key="snapshot_id"):
+    """Read every quote shard as one frame, counting each quote once.
+
+    Overlapping shards are not hypothetical. When the log was resharded from
+    monthly to daily files, a workflow run that had checked out the older code
+    pushed its monthly file back alongside the new daily ones, and for a few
+    minutes every quote in the repository appeared twice. Nothing failed:
+    `panel_books` still returned eleven books, the studies still ran, and every
+    count they reported was double. That is the worst kind of breakage here —
+    silent, plausible, and wrong.
+
+    De-duplicating on `snapshot_id` costs a moment and makes the shard layout
+    an implementation detail rather than something every reader must get right.
+    """
+    frames = [pd.read_csv(path) for path in sorted(glob.glob(str(pattern)))]
+    if not frames:
+        return pd.DataFrame()
+    quotes = pd.concat(frames, ignore_index=True)
+    if key in quotes.columns:
+        quotes = quotes.drop_duplicates(subset=[key], keep="first")
+        quotes = quotes.reset_index(drop=True)
+    return quotes
 
 
 def yearly_part(path, timestamp, prefix="quotes"):

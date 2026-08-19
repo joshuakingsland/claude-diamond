@@ -1007,8 +1007,8 @@ forward. Scored against the panel's own close:
 
 | Deviation at entry | Bets | Dates | CLV vs panel close | CLV vs Pinnacle close |
 | ---: | ---: | ---: | ---: | ---: |
-| 0.25 pt | 82 | 14 | **+0.359** [+0.159, +0.546] | **+0.250** [+0.039, +0.447] |
-| 0.50 pt | 40 | 9 | **+0.601** [+0.355, +0.830] | **+0.441** [+0.183, +0.699] |
+| 0.25 pt | 85 | 14 | **+0.358** [+0.165, +0.540] | **+0.245** [+0.045, +0.437] |
+| 0.50 pt | 41 | 10 | **+0.598** [+0.360, +0.823] | **+0.448** [+0.197, +0.700] |
 | 1.00 pt | 11 | 6 | **+1.147** [+0.881, +1.489] | **+0.863** [+0.417, +1.278] |
 
 Intervals are 90%, bootstrapped over dates. This is the first positive result
