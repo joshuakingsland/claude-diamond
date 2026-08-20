@@ -26,3 +26,4 @@ alerted_at,fetched_at,event_id,commence_time,home_team,away_team,market,point,si
 2026-08-19T21:33:44Z,2026-08-19T21:33:44Z,18f51290a26a4a37315eaba858f736c8,2026-08-19T22:40:00Z,Cincinnati Reds,St. Louis Cardinals,h2h,,away,St. Louis Cardinals ML,betrivers,128,0.503,0.443623,0.438596,11,66.3,0.005
 2026-08-19T21:42:49Z,2026-08-19T21:42:48Z,6d6d28fd44922349f17b60e2eb9dc487,2026-08-19T22:05:00Z,Philadelphia Phillies,Miami Marlins,spreads,-1.5,home,Philadelphia Phillies -1.5,betrivers,155,0.900,0.401156,0.392157,11,22.2,0.005
 2026-08-19T22:55:31Z,2026-08-19T22:55:30Z,118d9a25ad5e9070a57cf4cb0b5d0314,2026-08-19T23:40:00Z,Milwaukee Brewers,Seattle Mariners,h2h,,away,Seattle Mariners ML,betrivers,114,0.507,0.472358,0.467290,11,44.5,0.005
+2026-08-20T16:47:54Z,2026-08-20T16:47:18Z,0e5490a74e6eb5ea18cf0dc7b8cf02cd,2026-08-20T18:10:00Z,Chicago White Sox,Atlanta Braves,spreads,1.5,away,Atlanta Braves -1.5,betonlineag,165,0.527,0.382632,0.377358,11,82.7,0.005
