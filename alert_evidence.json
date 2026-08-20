@@ -1,20 +1,20 @@
 {
-  "repository_revision": "9adc16c652db",
+  "repository_revision": "4cf4651984f8",
   "alerts_logged": 48,
-  "alerts_awaiting_first_pitch": 1,
+  "alerts_awaiting_first_pitch": 0,
   "against_panel_median": {
-    "alerts": 46,
+    "alerts": 47,
     "dates": 3,
-    "mean_clv_probability_points": 1.039,
+    "mean_clv_probability_points": 1.0347,
     "ci90_date_clustered_points": [
-      0.7905,
-      1.1916
+      0.7918,
+      1.1855
     ],
     "interval_note": null,
-    "share_beating_close": 0.8261,
-    "mean_deviation_at_alert_points": 1.1403,
+    "share_beating_close": 0.8298,
+    "mean_deviation_at_alert_points": 1.1569,
     "by_book": {
-      "betrivers": 23,
+      "betrivers": 24,
       "fanduel": 6,
       "williamhill_us": 5,
       "draftkings": 3,
@@ -25,18 +25,18 @@
     }
   },
   "against_sharp_close": {
-    "alerts": 47,
+    "alerts": 48,
     "dates": 3,
-    "mean_clv_probability_points": 1.0417,
+    "mean_clv_probability_points": 1.0551,
     "ci90_date_clustered_points": [
-      0.7693,
-      1.2032
+      0.7948,
+      1.2113
     ],
     "interval_note": null,
-    "share_beating_close": 0.766,
-    "mean_deviation_at_alert_points": 1.1297,
+    "share_beating_close": 0.7708,
+    "mean_deviation_at_alert_points": 1.1463,
     "by_book": {
-      "betrivers": 23,
+      "betrivers": 24,
       "fanduel": 6,
       "williamhill_us": 5,
       "lowvig": 4,
@@ -48,7 +48,7 @@
   },
   "forward_status": "research_only",
   "forward_failures": [
-    "47 scored alerts < 70",
+    "48 scored alerts < 70",
     "3 dates < 13"
   ],
   "stake_recommendation": "none"
