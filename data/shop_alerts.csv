@@ -39,3 +39,5 @@ alerted_at,fetched_at,event_id,commence_time,home_team,away_team,market,point,si
 2026-08-21T19:43:59Z,2026-08-21T19:43:59Z,4d3658b1534e40fb6966575b9ceae5e0,2026-08-21T23:41:00Z,Chicago White Sox,New York Mets,h2h,,home,Chicago White Sox ML,betrivers,-124,1.252,0.566089,0.553571,11,237.0,0.005
 2026-08-21T19:45:30Z,2026-08-21T19:45:29Z,4d3658b1534e40fb6966575b9ceae5e0,2026-08-21T23:41:00Z,Chicago White Sox,New York Mets,spreads,-1.5,home,Chicago White Sox -1.5,betrivers,165,1.763,0.394992,0.377358,11,235.5,0.005
 2026-08-21T19:45:30Z,2026-08-21T19:45:29Z,4d3658b1534e40fb6966575b9ceae5e0,2026-08-21T23:41:00Z,Chicago White Sox,New York Mets,h2h,,home,Chicago White Sox ML,betrivers,-125,1.053,0.566089,0.555556,11,235.5,0.005
+2026-08-21T23:54:26Z,2026-08-21T23:53:35Z,4a4bb5c831a75630b5ce38bfb873fdae,2026-08-22T01:41:00Z,Arizona Diamondbacks,Cincinnati Reds,h2h,,away,Cincinnati Reds ML,williamhill_us,140,0.682,0.423492,0.416667,11,107.4,0.005
+2026-08-21T23:54:26Z,2026-08-21T23:53:35Z,8cfedfb07af33f8feff3825d2e30c1ff,2026-08-22T02:11:00Z,Los Angeles Dodgers,Pittsburgh Pirates,h2h,,away,Pittsburgh Pirates ML,betrivers,215,0.681,0.324270,0.317460,11,137.4,0.005
