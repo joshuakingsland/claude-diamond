@@ -188,5 +188,91 @@ class FreshnessTests(unittest.TestCase):
         self.assertEqual(alerts.latest_capture(pd.DataFrame()), (None, None))
 
 
+class PushTests(unittest.TestCase):
+    """The channel that needs no account and no second factor."""
+
+    def _fresh(self):
+        return [{"deviation_points": "1.25", "selection": "Chicago Cubs ML",
+                 "price": "120", "book_key": "betrivers", "books": 11,
+                 "lead_minutes": "60"}]
+
+    def test_no_topic_is_not_an_error(self):
+        sent, note = alerts.push(self._fresh(), 2.0, env={})
+        self.assertFalse(sent)
+        self.assertIn("no ntfy topic", note)
+
+    def test_a_topic_posts_the_alert_body(self):
+        seen = {}
+
+        class Response:
+            def read(self): return b"{}"
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+
+        def opener(request, timeout=None):
+            seen["url"] = request.full_url
+            seen["body"] = request.data.decode("utf-8")
+            seen["headers"] = request.headers
+            return Response()
+
+        sent, note = alerts.push(self._fresh(), 2.0,
+                                 env={"NTFY_TOPIC": "secret-topic"},
+                                 opener=opener)
+        self.assertTrue(sent)
+        self.assertEqual(seen["url"], "https://ntfy.sh/secret-topic")
+        self.assertIn("Chicago Cubs ML", seen["body"])
+        self.assertIn("1.25pt", seen["body"])
+        # High priority, or a silenced phone swallows a 90-second opportunity.
+        self.assertEqual(seen["headers"].get("Priority"), "high")
+
+    def test_a_self_hosted_server_is_honoured(self):
+        seen = {}
+
+        class Response:
+            def read(self): return b"{}"
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+
+        def opener(request, timeout=None):
+            seen["url"] = request.full_url
+            return Response()
+
+        alerts.push(self._fresh(), 2.0,
+                    env={"NTFY_TOPIC": "t", "NTFY_SERVER": "https://n.me/"},
+                    opener=opener)
+        self.assertEqual(seen["url"], "https://n.me/t")
+
+
+class NotifyTests(unittest.TestCase):
+    """One channel failing must never silence the other."""
+
+    def _fresh(self):
+        return [{"deviation_points": "1.25", "selection": "Cubs ML",
+                 "price": "120", "book_key": "betrivers", "books": 11,
+                 "lead_minutes": "60"}]
+
+    def test_nothing_configured_reports_the_log_only(self):
+        delivered, note = alerts.notify(self._fresh(), 2.0, env={})
+        self.assertFalse(delivered)
+        self.assertIn("written to the log only", note)
+
+    def test_a_raising_channel_does_not_stop_the_other(self):
+        # A mail server refusing a connection must not swallow the push, and
+        # neither may end a capture that has already been paid for.
+        def boom(*args, **kwargs):
+            raise OSError("connection refused")
+        original = alerts.send
+        alerts.send = boom
+        try:
+            delivered, note = alerts.notify(
+                self._fresh(), 2.0,
+                env={"NTFY_TOPIC": "t", "NTFY_SERVER": "http://127.0.0.1:1"})
+        finally:
+            alerts.send = original
+        # Both failed here, but neither raised out of notify.
+        self.assertFalse(delivered)
+        self.assertIn("failed", note)
+
+
 if __name__ == "__main__":
     unittest.main()

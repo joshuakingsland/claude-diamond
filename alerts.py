@@ -49,6 +49,7 @@ import argparse
 import csv
 import os
 import smtplib
+import urllib.request
 from datetime import datetime, timezone
 from email.message import EmailMessage
 from pathlib import Path
@@ -184,7 +185,7 @@ def scan(rows, books, threshold=DEFAULT_THRESHOLD, log=ALERT_LOG, send_mail=Fals
             return []
         fresh = record(found, threshold, path=log)
         if fresh and send_mail:
-            send(fresh, 0.0)
+            notify(fresh, 0.0)
         return fresh
     except Exception as error:                       # noqa: BLE001
         print(f"  alerting failed ({error}); the capture continues")
@@ -275,18 +276,82 @@ def compose(fresh, age_minutes):
     return "\n".join(lines)
 
 
+def push(fresh, age_minutes, env=None, opener=None):
+    """Push the alert to an ntfy topic, if one is configured.
+
+    Preferred over mail for the reason the survival table gives: three
+    quarters of these prices are gone inside ninety seconds, and a phone
+    notification arrives while an inbox is still being checked. It also needs
+    no account and no second factor anywhere — the topic name *is* the
+    address.
+
+    That convenience is also the caveat, and it is worth stating rather than
+    burying: **anyone who knows the topic can read the alerts**. Use a long
+    random topic, treat it as a password, or point `NTFY_SERVER` at your own
+    instance.
+    """
+    env = os.environ if env is None else env
+    topic = env.get("NTFY_TOPIC")
+    if not topic:
+        return False, "no ntfy topic set"
+    server = env.get("NTFY_SERVER", "https://ntfy.sh").rstrip("/")
+    best = max(float(row["deviation_points"]) for row in fresh)
+    body = compose(fresh, age_minutes).encode("utf-8")
+    request = urllib.request.Request(
+        f"{server}/{topic}", data=body, method="POST",
+        headers={
+            "Title": (f"{len(fresh)} shop alert"
+                      f"{'s' if len(fresh) != 1 else ''}, "
+                      f"best {best:.2f}pt off consensus"),
+            # High priority so it breaks through a silenced phone; these are
+            # worth nothing if read an hour later.
+            "Priority": "high",
+            "Tags": "money_with_wings",
+        })
+    open_url = opener or urllib.request.urlopen
+    with open_url(request, timeout=15) as response:
+        response.read()
+    return True, f"pushed {len(fresh)} alert(s) to {server}/{topic}"
+
+
+def notify(fresh, age_minutes, env=None):
+    """Deliver by every configured channel; absent configuration is not an error.
+
+    Each channel is attempted independently so one failing does not silence
+    the other, and a channel raising cannot end a capture — the detection is
+    already in the log by the time this runs.
+    """
+    env = os.environ if env is None else env
+    notes, delivered = [], False
+    for channel in (push, send):
+        try:
+            sent, note = channel(fresh, age_minutes, env=env)
+            delivered = delivered or sent
+        except Exception as error:                   # noqa: BLE001
+            note = f"{channel.__name__} failed ({error})"
+        notes.append(note)
+    if not delivered:
+        notes.append("alert written to the log only")
+    return delivered, "; ".join(notes)
+
+
 def send(fresh, age_minutes, env=None):
     """Mail the alert, if and only if the mail settings exist.
 
     Absent configuration is not an error: the same pattern as the odds key, so
     a fork with no mail secrets runs the detector and writes the log without
     the workflow going red.
+
+    Note that Gmail is not usable here without enabling two-factor
+    authentication on the account, because an app password requires it. Any
+    transactional sender with a plain API key works, and `push` avoids the
+    question entirely.
     """
     env = os.environ if env is None else env
     host = env.get("SMTP_HOST")
     to = env.get("ALERT_EMAIL_TO")
     if not host or not to:
-        return False, "no mail settings; alert written to the log only"
+        return False, "no mail settings"
     message = EmailMessage()
     best = max(float(row["deviation_points"]) for row in fresh)
     message["Subject"] = (f"{len(fresh)} shop alert"
@@ -339,7 +404,7 @@ def main():
               f"{row['book_key']:<16} {row['deviation_points']:>6}pt  "
               f"{row['lead_minutes']:>5} min out")
     if fresh and args.send:
-        sent, note = send(fresh, age)
+        _, note = notify(fresh, age)
         print(note)
 
 

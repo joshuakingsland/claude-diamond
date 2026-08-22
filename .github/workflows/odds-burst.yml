@@ -118,6 +118,13 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           SMTP_FROM: ${{ secrets.SMTP_FROM }}
           ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+          # ntfy needs no account and no second factor: the
+          # topic name is the address. Set NTFY_TOPIC alone
+          # and alerts arrive as phone push, which suits a
+          # price with a ninety-second half-life better than
+          # any inbox does.
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NTFY_SERVER: ${{ secrets.NTFY_SERVER }}
         # The credit floor is deliberately higher than the hourly capture's.
         # A burst spends in one job what the hourly path spends in a week, so
         # it should stand down earlier and leave the routine capture running.

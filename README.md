@@ -1121,6 +1121,18 @@ or it is not; there is no losing bet in a missed one. That asymmetry is why the
 honest response is to send anyway and label the odds, rather than suppress
 anything unlikely to survive.
 
+**Delivery, without a Google second factor.** A Gmail app password requires
+two-factor authentication on the account, so that route is closed if you would
+rather not enable it. Two others are not: any transactional sender with a plain
+API key, or — better suited to the problem — `NTFY_TOPIC`, which pushes to a
+phone with no account and no second factor anywhere, because the topic name *is*
+the address. Given that three quarters of these prices are gone in ninety
+seconds, a push notification beats an inbox on the only axis that matters. The
+same property is the caveat, and it belongs in the open: anyone who knows the
+topic can read the alerts, so use a long random one or point `NTFY_SERVER` at
+your own instance. Channels are independent; one failing does not silence the
+other, and neither can end a capture.
+
 `data/shop_alerts.csv` is append-only and never revised. It is the forward test:
 the study looked backwards over 13 dates, and this is the record that will
 eventually say whether the rule holds forwards on prices flagged live. Nothing
