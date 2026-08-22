@@ -62,3 +62,4 @@ alerted_at,fetched_at,event_id,commence_time,home_team,away_team,market,point,si
 2026-08-22T00:16:56Z,2026-08-22T00:16:56Z,3102c4dbe9ea0f9ae9ca9caa2e1be844,2026-08-22T00:41:00Z,Colorado Rockies,Cleveland Guardians,spreads,1.5,away,Cleveland Guardians -1.5,betonlineag,119,2.164,0.478261,0.456621,11,24.1,0.005
 2026-08-22T00:16:56Z,2026-08-22T00:16:56Z,3102c4dbe9ea0f9ae9ca9caa2e1be844,2026-08-22T00:41:00Z,Colorado Rockies,Cleveland Guardians,h2h,,home,Colorado Rockies ML,draftkings,140,0.510,0.421767,0.416667,11,24.1,0.005
 2026-08-22T00:18:27Z,2026-08-22T00:18:26Z,3102c4dbe9ea0f9ae9ca9caa2e1be844,2026-08-22T00:41:00Z,Colorado Rockies,Cleveland Guardians,spreads,1.5,away,Cleveland Guardians -1.5,lowvig,116,1.530,0.478261,0.462963,11,22.6,0.005
+2026-08-22T15:32:37Z,2026-08-22T15:31:44Z,37d5ada29cdca43791f56ead0c6f958a,2026-08-22T17:36:00Z,New York Yankees,Toronto Blue Jays,totals,6.5,away,Under 6.5,betrivers,102,1.145,0.506496,0.495050,11,124.3,0.005
