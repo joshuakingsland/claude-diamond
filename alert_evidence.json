@@ -1,57 +1,57 @@
 {
-  "repository_revision": "ee724f66a81b",
-  "alerts_logged": 42,
+  "repository_revision": "0e7914fd0aab",
+  "alerts_logged": 63,
   "alerts_awaiting_first_pitch": 2,
   "against_panel_median": {
-    "alerts": 39,
-    "dates": 4,
-    "mean_clv_probability_points": 0.6893,
+    "alerts": 60,
+    "dates": 5,
+    "mean_clv_probability_points": 1.0818,
     "ci90_date_clustered_points": [
-      -0.0668,
-      1.2949
+      0.6296,
+      1.6001
     ],
     "interval_note": null,
-    "share_beating_close": 0.7692,
-    "mean_deviation_at_alert_points": 1.1578,
+    "share_beating_close": 0.85,
+    "mean_deviation_at_alert_points": 1.2246,
     "by_book": {
-      "betrivers": 23,
-      "williamhill_us": 5,
-      "draftkings": 3,
-      "bovada": 3,
-      "fanduel": 2,
-      "betus": 1,
-      "betonlineag": 1,
+      "betrivers": 30,
+      "williamhill_us": 6,
+      "draftkings": 6,
+      "bovada": 4,
+      "lowvig": 4,
+      "fanduel": 3,
+      "betus": 3,
+      "betonlineag": 3,
       "fanatics": 1
     }
   },
   "against_sharp_close": {
-    "alerts": 40,
-    "dates": 4,
-    "mean_clv_probability_points": 0.7324,
+    "alerts": 61,
+    "dates": 5,
+    "mean_clv_probability_points": 1.0417,
     "ci90_date_clustered_points": [
-      -0.1023,
-      1.3554
+      0.5705,
+      1.5229
     ],
     "interval_note": null,
-    "share_beating_close": 0.725,
-    "mean_deviation_at_alert_points": 1.145,
+    "share_beating_close": 0.8197,
+    "mean_deviation_at_alert_points": 1.215,
     "by_book": {
-      "betrivers": 23,
-      "williamhill_us": 5,
-      "draftkings": 3,
-      "bovada": 3,
-      "fanduel": 2,
-      "lowvig": 1,
-      "betus": 1,
-      "betonlineag": 1,
+      "betrivers": 30,
+      "williamhill_us": 6,
+      "draftkings": 6,
+      "lowvig": 5,
+      "bovada": 4,
+      "fanduel": 3,
+      "betus": 3,
+      "betonlineag": 3,
       "fanatics": 1
     }
   },
   "forward_status": "research_only",
   "forward_failures": [
-    "40 scored alerts < 70",
-    "4 dates < 13",
-    "positive CLV against the sharp close is not established forwards"
+    "61 scored alerts < 70",
+    "5 dates < 13"
   ],
   "stake_recommendation": "none"
 }
