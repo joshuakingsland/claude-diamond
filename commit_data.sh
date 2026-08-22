@@ -37,7 +37,7 @@ fi
 # GitHub refuses any file of 100 MB at the pre-receive hook, which is the worst
 # possible place to find out: a burst discovered it after 5.5 hours of polling
 # and roughly 1,300 credits, then retried the merge four times and lost the lot.
-# Shards are rolled at 40 MB so this should never fire, and if it does the run
+# Shards are three-hour blocks so this should never fire, and if it does the run
 # says which file and stops rather than burning the retry loop on a push the
 # remote will never accept.
 LIMIT=$((95 * 1024 * 1024))

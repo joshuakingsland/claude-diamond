@@ -1223,9 +1223,7 @@ remote, after the data was paid for**, and a capture cannot be re-bought at the
 live price. So there are two changes, and the second matters more:
 
 - `csv_collection.dated_part` shards by day and rolls to `.p2`, `.p3` past
-  40 MB. The name stays a pure function of the timestamp and what is on disk,
-  so two runs appending in the same second still land in the same file and
-  `merge_data.py` can union them.
+  40 MB. **This did not work either — see below.**
 - `commit_data.sh` refuses to commit any file at or above 95 MB, naming it. It
   should never fire. It exists because the previous unforeseen growth was only
   discovered by the remote.
@@ -1242,6 +1240,34 @@ shard layout is an implementation detail rather than something every reader must
 independently get right. The 13,723 rows that only the monthly file held were
 folded into the daily shard first, so the cancellation cost seventeen minutes
 rather than the five hours that were otherwise guaranteed to be lost.
+
+**The size cap was the wrong instrument, and it took three days to show it.**
+Rolling to a new part past 40 MB looked obviously right and could not work. A
+shard is written on a runner; what lands in the repository is `merge_data.py`'s
+union of every runner that committed meanwhile. Two bursts each wrote about
+35 MB locally, neither crossed the cap, neither rolled, and the union committed
+at **70 MB**. A local size check cannot bound a merged file — it cannot see the
+rows another job is writing at that moment. By 21 August one day carried 124 MB
+and the largest single shard stood at 70.6 MB, two thirds of the way to a hard
+rejection, with the code believing its ceiling was 40.
+
+The replacement removes the feedback loop entirely. `dated_part` now returns a
+**three-hour block derived from the timestamp alone** — `quotes_2026-08-21T18.csv`
+— and never consults the disk. Concurrent writers agree on the destination
+without observing anything, so the bound becomes the real traffic in those
+hours: about 15 MB on the heaviest day yet, and under 50 MB at triple that. A
+test asserts `dated_part` contains no `st_size`, because the failure mode is
+subtle enough to be reintroduced by someone tidying up.
+
+The commit-time check in `commit_data.sh` is the only guarantee that ever held,
+because it is the only one that runs on the merged tree rather than on one
+runner's copy. That is why it stays.
+
+**And the merge was rewriting files nobody had changed.** `merge_tree` wrote
+every destination unconditionally, so a single burst commit rewrote all
+nineteen shards — 318 MB — and git stored a fresh blob for each. The repository
+grew about 50 MB a day for unchanged data. The merge now renders the result,
+compares it with what is on disk, and writes only on a difference.
 
 ### A real defect that must not be fixed
 

@@ -28,6 +28,7 @@ other run wrote open may have been settled in this one.
 
 import argparse
 import csv
+import io
 import shutil
 from pathlib import Path
 
@@ -112,7 +113,7 @@ def merge_csv(ours_path, theirs_path, key):
 def merge_tree(ours_root, targets, verbose=True):
     """Merge every file under ``ours_root`` into the working tree."""
     ours_root = Path(ours_root)
-    unioned, replaced = 0, 0
+    unioned, replaced, unchanged = 0, 0, 0
     for source in sorted(ours_root.rglob("*")):
         if not source.is_file():
             continue
@@ -133,17 +134,36 @@ def merge_tree(ours_root, targets, verbose=True):
             replaced += 1
             continue
         fields, rows = result
+        # newline="" throughout, on the render, the comparison and the write.
+        # The csv writer emits \r\n; universal-newline translation on either
+        # side would rewrite every file forever by comparing \r\n against \n.
+        buffer = io.StringIO(newline="")
+        writer = csv.DictWriter(buffer, fieldnames=fields,
+                                extrasaction="ignore")
+        writer.writeheader()
+        writer.writerows(rows)
+        rendered = buffer.getvalue()
+        # Only touch the file if the merge actually changed it. Every burst
+        # commit used to rewrite all nineteen shards -- about 318 MB -- because
+        # the write was unconditional. Git then stored a fresh blob for each,
+        # and the repository grew roughly 50 MB a day for data nobody changed.
+        try:
+            if destination.exists():
+                with destination.open(newline="", encoding="utf-8") as handle:
+                    if handle.read() == rendered:
+                        unchanged += 1
+                        continue
+        except (OSError, UnicodeDecodeError):
+            pass
         with destination.open("w", newline="", encoding="utf-8") as handle:
-            writer = csv.DictWriter(handle, fieldnames=fields,
-                                    extrasaction="ignore")
-            writer.writeheader()
-            writer.writerows(rows)
+            handle.write(rendered)
         unioned += 1
         if verbose and added:
             print(f"  union {relative}: +{added} row(s) from this run")
     if verbose:
         print(f"merged {unioned} append-only file(s), "
-              f"replaced {replaced} regenerated file(s)")
+              f"replaced {replaced} regenerated file(s), "
+              f"left {unchanged} unchanged")
     return unioned, replaced
 
 

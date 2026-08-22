@@ -11,7 +11,11 @@ that never existed.
 import csv
 import shutil
 import tempfile
+import os
+import pathlib
 import unittest
+
+import merge_data
 from pathlib import Path
 
 from merge_data import merge_csv, merge_tree, union_key
@@ -143,6 +147,60 @@ class TreeTests(unittest.TestCase):
                [{"wager_id": "w"}])
         merge_tree(ours, ["data"], verbose=False)
         self.assertEqual(len(_read("data/credit_log.csv")), 1)
+
+
+class NoOpMergeTests(unittest.TestCase):
+    """A merge that changes nothing must not touch the file.
+
+    Every burst commit rewrote all nineteen quote shards -- about 318 MB --
+    because the write was unconditional. Git stored a fresh blob for each and
+    the repository grew roughly 50 MB a day for data nobody had changed.
+    """
+
+    def setUp(self):
+        self.dir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.dir.cleanup)
+        self.root = pathlib.Path(self.dir.name)
+        self.cwd = os.getcwd()
+        os.chdir(self.root)
+        self.addCleanup(os.chdir, self.cwd)
+        (self.root / "data" / "market_quotes").mkdir(parents=True)
+        (self.root / "ours" / "data" / "market_quotes").mkdir(parents=True)
+
+    def write(self, path, ids):
+        rows = ["snapshot_id,fetched_at,price_home"]
+        rows += [f"{i},2026-08-21T20:00:00Z,-110" for i in ids]
+        pathlib.Path(path).write_text("\r\n".join(rows) + "\r\n",
+                                      encoding="utf-8", newline="")
+
+    def test_identical_content_leaves_the_file_untouched(self):
+        dest = "data/market_quotes/quotes_2026-08-21T18.csv"
+        ours = "ours/" + dest
+        self.write(dest, ["a", "b", "c"])
+        self.write(ours, ["a", "b", "c"])
+        before = os.stat(dest).st_mtime_ns
+        merge_data.merge_tree("ours", ["data"], verbose=False)
+        self.assertEqual(os.stat(dest).st_mtime_ns, before,
+                         "a no-op merge rewrote the file")
+
+    def test_new_rows_still_get_written(self):
+        dest = "data/market_quotes/quotes_2026-08-21T18.csv"
+        self.write(dest, ["a", "b"])
+        self.write("ours/" + dest, ["b", "c"])
+        merge_data.merge_tree("ours", ["data"], verbose=False)
+        text = pathlib.Path(dest).read_text(encoding="utf-8")
+        for marker in ("a", "b", "c"):
+            self.assertIn(f"{marker},2026-08-21", text)
+
+    def test_a_second_identical_merge_is_also_a_no_op(self):
+        # The first merge may legitimately reformat. The second must not.
+        dest = "data/market_quotes/quotes_2026-08-21T18.csv"
+        self.write(dest, ["a"])
+        self.write("ours/" + dest, ["a", "b"])
+        merge_data.merge_tree("ours", ["data"], verbose=False)
+        settled = os.stat(dest).st_mtime_ns
+        merge_data.merge_tree("ours", ["data"], verbose=False)
+        self.assertEqual(os.stat(dest).st_mtime_ns, settled)
 
 
 if __name__ == "__main__":
