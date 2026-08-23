@@ -116,6 +116,14 @@ jobs:
           # any inbox does.
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           NTFY_SERVER: ${{ secrets.NTFY_SERVER }}
+          # Resend authenticates with a plain API key, so it
+          # needs no second factor on any account. Until a
+          # domain is verified its sandbox sender delivers
+          # only to the address that owns the Resend account,
+          # which is why RESEND_FROM is optional.
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM: ${{ secrets.RESEND_FROM }}
+          BET_EMAIL_TO: ${{ secrets.BET_EMAIL_TO }}
         # Runs on every capture rather than on its own schedule. The lock
         # window, the edge rule and the day cap are all enforced inside
         # ledger.py, and a wager is written once and never revised, so running

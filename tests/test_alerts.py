@@ -6,6 +6,7 @@ could cry wolf: a panel that grows, a repeat of a price already sent, a quote
 from outside the window, and a label that names the wrong side of a total.
 """
 
+import json
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -272,6 +273,102 @@ class NotifyTests(unittest.TestCase):
         # Both failed here, but neither raised out of notify.
         self.assertFalse(delivered)
         self.assertIn("failed", note)
+
+
+class ResendTests(unittest.TestCase):
+    """Email by API key, so no account needs a second factor."""
+
+    def _fresh(self):
+        return [{"deviation_points": "1.25", "selection": "Chicago Cubs ML",
+                 "price": "120", "book_key": "betrivers", "books": 11,
+                 "lead_minutes": "60"}]
+
+    def _capture(self):
+        seen = {}
+
+        class Response:
+            def read(self): return b'{"id":"abc"}'
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+
+        def opener(request, timeout=None):
+            seen["url"] = request.full_url
+            seen["headers"] = request.headers
+            seen["payload"] = json.loads(request.data.decode("utf-8"))
+            return Response()
+
+        return seen, opener
+
+    def test_no_key_is_not_an_error(self):
+        sent, note = alerts.resend(self._fresh(), 2.0,
+                                   env={"BET_EMAIL_TO": "a@b.c"})
+        self.assertFalse(sent)
+        self.assertIn("no resend key", note)
+
+    def test_a_key_without_a_recipient_is_not_an_error(self):
+        sent, note = alerts.resend(self._fresh(), 2.0,
+                                   env={"RESEND_API_KEY": "re_x"})
+        self.assertFalse(sent)
+        self.assertIn("recipient", note)
+
+    def test_the_request_carries_the_key_and_the_alert(self):
+        seen, opener = self._capture()
+        sent, _ = alerts.resend(
+            self._fresh(), 2.0,
+            env={"RESEND_API_KEY": "re_secret", "BET_EMAIL_TO": "me@x.com"},
+            opener=opener)
+        self.assertTrue(sent)
+        self.assertEqual(seen["url"], "https://api.resend.com/emails")
+        self.assertEqual(seen["headers"].get("Authorization"),
+                         "Bearer re_secret")
+        self.assertEqual(seen["payload"]["to"], ["me@x.com"])
+        self.assertIn("Chicago Cubs ML", seen["payload"]["text"])
+        self.assertIn("1.25pt", seen["payload"]["subject"])
+
+    def test_the_sandbox_sender_is_the_default(self):
+        # Resend only delivers from a verified domain; until there is one, its
+        # sandbox sender reaches the account owner and nobody else.
+        seen, opener = self._capture()
+        alerts.resend(self._fresh(), 2.0,
+                      env={"RESEND_API_KEY": "k", "BET_EMAIL_TO": "me@x.com"},
+                      opener=opener)
+        self.assertEqual(seen["payload"]["from"], "onboarding@resend.dev")
+
+    def test_a_verified_sender_is_honoured(self):
+        seen, opener = self._capture()
+        alerts.resend(self._fresh(), 2.0,
+                      env={"RESEND_API_KEY": "k", "BET_EMAIL_TO": "me@x.com",
+                           "RESEND_FROM": "bets@mine.com"}, opener=opener)
+        self.assertEqual(seen["payload"]["from"], "bets@mine.com")
+
+    def test_several_recipients_are_split(self):
+        seen, opener = self._capture()
+        alerts.resend(self._fresh(), 2.0,
+                      env={"RESEND_API_KEY": "k",
+                           "BET_EMAIL_TO": "a@x.com, b@y.com"}, opener=opener)
+        self.assertEqual(seen["payload"]["to"], ["a@x.com", "b@y.com"])
+
+    def test_the_older_recipient_name_still_works(self):
+        seen, opener = self._capture()
+        alerts.resend(self._fresh(), 2.0,
+                      env={"RESEND_API_KEY": "k",
+                           "ALERT_EMAIL_TO": "old@x.com"}, opener=opener)
+        self.assertEqual(seen["payload"]["to"], ["old@x.com"])
+
+
+class SelfTestTests(unittest.TestCase):
+    """A delivery check must be unmistakable and must not touch the log."""
+
+    def test_a_test_message_says_so(self):
+        body = alerts.compose([dict(alerts.SAMPLE_ALERT)], 0.0)
+        self.assertIn("TEST MESSAGE", body)
+        self.assertIn("no bet here", body)
+
+    def test_nothing_configured_reports_failure(self):
+        self.assertFalse(alerts.self_test(env={}))
+
+    def test_the_sample_never_looks_like_a_real_price(self):
+        self.assertTrue(alerts.SAMPLE_ALERT["selection"].startswith("TEST"))
 
 
 if __name__ == "__main__":

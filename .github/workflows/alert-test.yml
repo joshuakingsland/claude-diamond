@@ -1,0 +1,49 @@
+name: alert delivery test
+
+# Sends one clearly-labelled test message through every configured channel.
+#
+# Delivery cannot be verified by waiting. An alert fires only when a book is
+# genuinely off consensus, which may be hours away and cannot be summoned, so
+# without this the first test of a new key is a real opportunity — and finding
+# out then that the recipient was wrong wastes the one thing that cannot be
+# re-bought at the live price.
+#
+# Manual only. It never touches data/shop_alerts.csv: that log is the forward
+# test, and a synthetic row in it would corrupt the one record that cannot be
+# re-derived.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+
+      - name: Send a test alert
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NTFY_SERVER: ${{ secrets.NTFY_SERVER }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM: ${{ secrets.RESEND_FROM }}
+          BET_EMAIL_TO: ${{ secrets.BET_EMAIL_TO }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_FROM: ${{ secrets.SMTP_FROM }}
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+        # Exits non-zero when nothing was delivered, so a misconfigured key
+        # shows as a red run rather than a green one that sent nothing.
+        run: python alerts.py --self-test

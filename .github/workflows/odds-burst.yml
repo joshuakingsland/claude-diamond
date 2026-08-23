@@ -125,6 +125,14 @@ jobs:
           # any inbox does.
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           NTFY_SERVER: ${{ secrets.NTFY_SERVER }}
+          # Resend authenticates with a plain API key, so it
+          # needs no second factor on any account. Until a
+          # domain is verified its sandbox sender delivers
+          # only to the address that owns the Resend account,
+          # which is why RESEND_FROM is optional.
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM: ${{ secrets.RESEND_FROM }}
+          BET_EMAIL_TO: ${{ secrets.BET_EMAIL_TO }}
         # The credit floor is deliberately higher than the hourly capture's.
         # A burst spends in one job what the hourly path spends in a week, so
         # it should stand down earlier and leave the routine capture running.

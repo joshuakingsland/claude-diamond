@@ -47,6 +47,7 @@ looking at, on a rule with 82 historical observations. It is not a wager.
 
 import argparse
 import csv
+import json
 import os
 import smtplib
 import urllib.request
@@ -255,8 +256,12 @@ def record(found, threshold, path=ALERT_LOG, now=None):
 
 def compose(fresh, age_minutes):
     """The message body. States the odds of the price still being there."""
-    lines = [f"{len(fresh)} price{'s' if len(fresh) != 1 else ''} off the "
-             f"market consensus.", ""]
+    test = any(str(row.get("selection", "")).startswith("TEST") for row in fresh)
+    lines = []
+    if test:
+        lines += ["TEST MESSAGE — delivery check only, no bet here.", ""]
+    lines += [f"{len(fresh)} price{'s' if len(fresh) != 1 else ''} off the "
+              f"market consensus.", ""]
     for row in fresh:
         lines.append(f"  {row['selection']}  {row['price']} at "
                      f"{row['book_key']}")
@@ -314,6 +319,44 @@ def push(fresh, age_minutes, env=None, opener=None):
     return True, f"pushed {len(fresh)} alert(s) to {server}/{topic}"
 
 
+def resend(fresh, age_minutes, env=None, opener=None):
+    """Email the alert through Resend's HTTP API, if a key is configured.
+
+    Resend rather than SMTP because it authenticates with a plain API key. A
+    Gmail app password requires two-factor authentication on the Google
+    account; nothing here does.
+
+    **The sender address is the part that catches people.** Resend will only
+    deliver from a domain you have verified. Until one is, the sandbox sender
+    `onboarding@resend.dev` works but will *only* deliver to the address that
+    owns the Resend account — which is exactly the case here, and why it is
+    the default. Set `RESEND_FROM` once a domain is verified.
+    """
+    env = os.environ if env is None else env
+    key = env.get("RESEND_API_KEY")
+    to = env.get("BET_EMAIL_TO") or env.get("ALERT_EMAIL_TO")
+    if not key or not to:
+        missing = "key" if not key else "recipient"
+        return False, f"no resend {missing}"
+    best = max(float(row["deviation_points"]) for row in fresh)
+    payload = json.dumps({
+        "from": env.get("RESEND_FROM", "onboarding@resend.dev"),
+        "to": [address.strip() for address in to.split(",") if address.strip()],
+        "subject": (f"{len(fresh)} shop alert"
+                    f"{'s' if len(fresh) != 1 else ''}, "
+                    f"best {best:.2f}pt off consensus"),
+        "text": compose(fresh, age_minutes),
+    }).encode("utf-8")
+    request = urllib.request.Request(
+        "https://api.resend.com/emails", data=payload, method="POST",
+        headers={"Authorization": f"Bearer {key}",
+                 "Content-Type": "application/json"})
+    open_url = opener or urllib.request.urlopen
+    with open_url(request, timeout=20) as response:
+        body = response.read().decode("utf-8", "replace")
+    return True, f"emailed {len(fresh)} alert(s) to {to} via resend ({body[:80]})"
+
+
 def notify(fresh, age_minutes, env=None):
     """Deliver by every configured channel; absent configuration is not an error.
 
@@ -323,7 +366,7 @@ def notify(fresh, age_minutes, env=None):
     """
     env = os.environ if env is None else env
     notes, delivered = [], False
-    for channel in (push, send):
+    for channel in (push, resend, send):
         try:
             sent, note = channel(fresh, age_minutes, env=env)
             delivered = delivered or sent
@@ -370,17 +413,61 @@ def send(fresh, age_minutes, env=None):
     return True, f"mailed {len(fresh)} alert(s) to {to}"
 
 
+SAMPLE_ALERT = {
+    "selection": "TEST — not a real price", "book_key": "example",
+    "price": "+120", "deviation_points": "0.00", "books": 11,
+    "lead_minutes": "60",
+}
+
+
+def self_test(env=None):
+    """Send one clearly-labelled message through every configured channel.
+
+    Delivery cannot be verified by waiting: alerts fire only when a book is
+    genuinely off consensus, which may be hours away and cannot be summoned.
+    Without this, the first test of a new channel is a real opportunity — and
+    finding out then that the key was wrong wastes the one thing that cannot
+    be re-bought.
+
+    The message says TEST in the subject and in the body, because an alert
+    that looks real and is not is worse than no alert.
+    """
+    env = os.environ if env is None else env
+    fresh = [dict(SAMPLE_ALERT)]
+    configured = [name for name, key in (("ntfy", "NTFY_TOPIC"),
+                                         ("resend", "RESEND_API_KEY"),
+                                         ("smtp", "SMTP_HOST"))
+                  if env.get(key)]
+    print(f"channels configured: {', '.join(configured) or 'none'}")
+    if not configured:
+        print("nothing to test; set NTFY_TOPIC or RESEND_API_KEY")
+        return False
+    delivered, note = notify(fresh, 0.0, env=env)
+    print(note)
+    print("delivered" if delivered
+          else "NOT delivered — check the key and the recipient")
+    return delivered
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--quotes", default="data/market_quotes/*.csv")
     parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD)
     parser.add_argument("--log", default=ALERT_LOG)
     parser.add_argument("--send", action="store_true",
-                        help="mail the alert if SMTP settings are present")
+                        help="deliver by every configured channel")
+    parser.add_argument("--self-test", action="store_true",
+                        help="send one labelled test message and exit")
     parser.add_argument("--max-age", type=float,
                         default=float(MAX_ODDS_AGE_MINUTES),
                         help="refuse to alert on a capture older than this")
     args = parser.parse_args()
+
+    if args.self_test:
+        # Never writes to the alert log: the log is the forward test and a
+        # synthetic row in it would corrupt the one record that cannot be
+        # re-derived.
+        raise SystemExit(0 if self_test() else 1)
 
     quotes = load_quotes(args.quotes)
     stamp, age = latest_capture(quotes)
