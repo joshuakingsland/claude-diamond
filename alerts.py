@@ -50,6 +50,7 @@ import csv
 import json
 import os
 import smtplib
+import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 from email.message import EmailMessage
@@ -352,8 +353,16 @@ def resend(fresh, age_minutes, env=None, opener=None):
         headers={"Authorization": f"Bearer {key}",
                  "Content-Type": "application/json"})
     open_url = opener or urllib.request.urlopen
-    with open_url(request, timeout=20) as response:
-        body = response.read().decode("utf-8", "replace")
+    try:
+        with open_url(request, timeout=20) as response:
+            body = response.read().decode("utf-8", "replace")
+    except urllib.error.HTTPError as error:
+        # Resend explains the refusal in the response body and the status
+        # alone does not. A bare "403 Forbidden" sent someone hunting for a
+        # bad key when the real cause was the sandbox sender refusing to
+        # deliver anywhere except the account owner's own address.
+        detail = error.read().decode("utf-8", "replace").strip()
+        return False, (f"resend refused ({error.code}): {detail[:300]}")
     return True, f"emailed {len(fresh)} alert(s) to {to} via resend ({body[:80]})"
 
 

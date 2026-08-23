@@ -6,6 +6,7 @@ could cry wolf: a panel that grows, a repeat of a price already sent, a quote
 from outside the window, and a label that names the wrong side of a total.
 """
 
+import io
 import json
 import unittest
 from datetime import datetime, timedelta, timezone
@@ -347,6 +348,26 @@ class ResendTests(unittest.TestCase):
                       env={"RESEND_API_KEY": "k",
                            "BET_EMAIL_TO": "a@x.com, b@y.com"}, opener=opener)
         self.assertEqual(seen["payload"]["to"], ["a@x.com", "b@y.com"])
+
+    def test_a_refusal_surfaces_the_reason_not_just_the_status(self):
+        # "403 Forbidden" alone sent someone hunting for a bad key when the
+        # real cause was the sandbox sender refusing every address except the
+        # Resend account owner's. The body says which; the status never does.
+        import urllib.error
+
+        def opener(request, timeout=None):
+            raise urllib.error.HTTPError(
+                request.full_url, 403, "Forbidden", {},
+                io.BytesIO(b'{"message":"You can only send testing emails to '
+                           b'your own email address"}'))
+
+        sent, note = alerts.resend(
+            self._fresh(), 2.0,
+            env={"RESEND_API_KEY": "k", "BET_EMAIL_TO": "other@x.com"},
+            opener=opener)
+        self.assertFalse(sent)
+        self.assertIn("403", note)
+        self.assertIn("your own email address", note)
 
     def test_the_older_recipient_name_still_works(self):
         seen, opener = self._capture()
