@@ -332,12 +332,12 @@ def _resend_hint(code, detail, env):
     Every one of these was hit in sequence getting delivery working, and each
     time the status alone pointed at the wrong thing.
     """
-    sender = (env or {}).get("RESEND_FROM") or "onboarding@resend.dev"
     lowered = detail.lower()
     if "domain" in lowered:
-        return (f" -- the sender {sender} is not a domain this account may "
-                f"send from. Verify a domain at resend.com/domains and set "
-                f"RESEND_FROM to an address on it.")
+        return (" -- that sender is not a domain this account may send from. "
+                "The account reported no verified domain to fall back on, so "
+                "either verify one at resend.com/domains, or set RESEND_FROM "
+                "to an address the account already owns.")
     if "testing emails" in lowered or "own email" in lowered:
         return (" -- an unverified account may only send to the address that "
                 "owns it. Set BET_EMAIL_TO to that address, or verify a "
@@ -347,6 +347,49 @@ def _resend_hint(code, detail, env):
     return ""
 
 
+def resend_senders(key, opener=None):
+    """Which domains this Resend account may actually send from.
+
+    Asking beats guessing. Resend refuses an unknown sender with a 422 that
+    names no alternative, so without this the only way to find a working
+    `from` address is to try addresses until one sticks. The key may be
+    sending-only and unable to list domains, in which case this returns
+    nothing and the caller falls back.
+    """
+    request = urllib.request.Request(
+        "https://api.resend.com/domains", method="GET",
+        headers={"Authorization": f"Bearer {key}", "User-Agent": USER_AGENT})
+    open_url = opener or urllib.request.urlopen
+    try:
+        with open_url(request, timeout=20) as response:
+            payload = json.loads(response.read().decode("utf-8", "replace"))
+    except Exception:                                # noqa: BLE001
+        return []
+    entries = payload.get("data") if isinstance(payload, dict) else payload
+    domains = []
+    for entry in entries or []:
+        name = (entry or {}).get("name")
+        if name:
+            domains.append((name, (entry or {}).get("status", "unknown")))
+    # Verified first: an unverified domain is refused exactly like an unknown
+    # one, so offering it as the default would only move the error.
+    domains.sort(key=lambda pair: pair[1] != "verified")
+    return domains
+
+
+def resend_sender(env, key, opener=None):
+    """The address to send from, discovered when it has not been configured."""
+    configured = env.get("RESEND_FROM")
+    if configured:
+        return configured, "configured"
+    for name, status in resend_senders(key, opener=opener):
+        if status == "verified":
+            return f"alerts@{name}", f"discovered ({name}, verified)"
+    # Resend's shared sandbox sender. It reaches the account owner and nobody
+    # else, and some accounts refuse it outright.
+    return "onboarding@resend.dev", "fallback"
+
+
 def resend(fresh, age_minutes, env=None, opener=None):
     """Email the alert through Resend's HTTP API, if a key is configured.
 
@@ -354,11 +397,11 @@ def resend(fresh, age_minutes, env=None, opener=None):
     Gmail app password requires two-factor authentication on the Google
     account; nothing here does.
 
-    **The sender address is the part that catches people.** Resend will only
-    deliver from a domain you have verified. Until one is, the sandbox sender
-    `onboarding@resend.dev` works but will *only* deliver to the address that
-    owns the Resend account — which is exactly the case here, and why it is
-    the default. Set `RESEND_FROM` once a domain is verified.
+    **The sender is the part that catches people, not the key.** Resend
+    delivers only from a domain the account owns, and refuses anything else
+    with a 422 that suggests no alternative. So when `RESEND_FROM` is unset
+    the account is asked what it can send from, and the first verified domain
+    is used. No domain of your own is needed if the account already has one.
     """
     env = os.environ if env is None else env
     key = env.get("RESEND_API_KEY")
@@ -366,9 +409,10 @@ def resend(fresh, age_minutes, env=None, opener=None):
     if not key or not to:
         missing = "key" if not key else "recipient"
         return False, f"no resend {missing}"
+    sender, origin = resend_sender(env, key, opener=opener)
     best = max(float(row["deviation_points"]) for row in fresh)
     payload = json.dumps({
-        "from": env.get("RESEND_FROM", "onboarding@resend.dev"),
+        "from": sender,
         "to": [address.strip() for address in to.split(",") if address.strip()],
         "subject": (f"{len(fresh)} shop alert"
                     f"{'s' if len(fresh) != 1 else ''}, "
@@ -390,9 +434,11 @@ def resend(fresh, age_minutes, env=None, opener=None):
         # bad key when the real cause was the sandbox sender refusing to
         # deliver anywhere except the account owner's own address.
         detail = error.read().decode("utf-8", "replace").strip()
-        return False, (f"resend refused ({error.code}): {detail[:300]}"
+        return False, (f"resend refused ({error.code}) sending from {sender} "
+                       f"[{origin}]: {detail[:300]}"
                        f"{_resend_hint(error.code, detail, env)}")
-    return True, f"emailed {len(fresh)} alert(s) to {to} via resend ({body[:80]})"
+    return True, (f"emailed {len(fresh)} alert(s) to {to} from {sender} "
+                  f"[{origin}] via resend ({body[:60]})")
 
 
 def notify(fresh, age_minutes, env=None):
@@ -477,6 +523,15 @@ def self_test(env=None):
                                          ("smtp", "SMTP_HOST"))
                   if env.get(key)]
     print(f"channels configured: {', '.join(configured) or 'none'}")
+    key = env.get("RESEND_API_KEY")
+    if key:
+        senders = resend_senders(key)
+        if senders:
+            print("resend account can send from: "
+                  + ", ".join(f"{name} ({status})" for name, status in senders))
+        else:
+            print("resend account listed no domains "
+                  "(the key may be sending-only, or none is set up)")
     if not configured:
         print("nothing to test; set NTFY_TOPIC or RESEND_API_KEY")
         return False

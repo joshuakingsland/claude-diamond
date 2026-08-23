@@ -338,14 +338,50 @@ class ResendTests(unittest.TestCase):
         self.assertIsNotNone(agent, "no User-Agent; Cloudflare will refuse it")
         self.assertNotIn("Python-urllib", agent)
 
-    def test_the_sandbox_sender_is_the_default(self):
-        # Resend only delivers from a verified domain; until there is one, its
-        # sandbox sender reaches the account owner and nobody else.
+    def test_the_sandbox_sender_is_only_a_last_resort(self):
+        # Reached when the account lists no domain at all. Resend refuses an
+        # unknown sender with a 422 naming no alternative, so the fallback has
+        # to be something rather than nothing.
         seen, opener = self._capture()
         alerts.resend(self._fresh(), 2.0,
                       env={"RESEND_API_KEY": "k", "BET_EMAIL_TO": "me@x.com"},
                       opener=opener)
         self.assertEqual(seen["payload"]["from"], "onboarding@resend.dev")
+
+    def test_a_verified_domain_is_discovered_rather_than_guessed(self):
+        # The account knows what it can send from; asking beats trying
+        # addresses until one sticks.
+        class Response:
+            def __init__(self, body): self.body = body
+            def read(self): return self.body
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+
+        seen = {}
+
+        def opener(request, timeout=None):
+            if request.full_url.endswith("/domains"):
+                return Response(json.dumps({"data": [
+                    {"name": "unverified.com", "status": "pending"},
+                    {"name": "diamondfights.com", "status": "verified"}]}
+                ).encode())
+            seen["payload"] = json.loads(request.data.decode())
+            return Response(b'{"id":"abc"}')
+
+        alerts.resend(self._fresh(), 2.0,
+                      env={"RESEND_API_KEY": "k", "BET_EMAIL_TO": "me@x.com"},
+                      opener=opener)
+        self.assertEqual(seen["payload"]["from"], "alerts@diamondfights.com")
+
+    def test_an_explicit_sender_is_never_overridden_by_discovery(self):
+        def opener(request, timeout=None):
+            self.assertNotIn("/domains", request.full_url,
+                             "discovery ran despite RESEND_FROM being set")
+            raise AssertionError("unreachable")
+        with self.assertRaises(AssertionError):
+            alerts.resend(self._fresh(), 2.0,
+                          env={"RESEND_API_KEY": "k", "BET_EMAIL_TO": "m@x.com",
+                               "RESEND_FROM": "bets@mine.com"}, opener=opener)
 
     def test_a_verified_sender_is_honoured(self):
         seen, opener = self._capture()
