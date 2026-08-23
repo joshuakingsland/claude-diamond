@@ -85,3 +85,4 @@ alerted_at,fetched_at,event_id,commence_time,home_team,away_team,market,point,si
 2026-08-22T22:38:20Z,2026-08-22T22:38:20Z,bc93cc6a5c4779c620007a3657cc78ad,2026-08-23T00:11:00Z,Colorado Rockies,Cleveland Guardians,h2h,,home,Colorado Rockies ML,betrivers,130,0.872,0.443502,0.434783,11,92.7,0.005
 2026-08-22T23:03:58Z,2026-08-22T23:03:58Z,d159265b7c107d36584b234b2b334e03,2026-08-23T00:10:00Z,Arizona Diamondbacks,Cincinnati Reds,spreads,-1.5,home,Arizona Diamondbacks -1.5,betrivers,117,0.579,0.466622,0.460829,11,66.0,0.005
 2026-08-22T23:05:29Z,2026-08-22T23:05:28Z,bc93cc6a5c4779c620007a3657cc78ad,2026-08-23T00:11:00Z,Colorado Rockies,Cleveland Guardians,h2h,,home,Colorado Rockies ML,betrivers,132,1.084,0.441871,0.431034,11,65.5,0.005
+2026-08-23T16:38:45Z,2026-08-23T16:37:53Z,e51668b233a9e89462f303ece6fac37e,2026-08-23T20:11:00Z,San Diego Padres,Minnesota Twins,spreads,-1.5,home,San Diego Padres -1.5,betrivers,160,1.051,0.395124,0.384615,10,213.1,0.005
