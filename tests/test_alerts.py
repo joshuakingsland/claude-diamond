@@ -326,6 +326,18 @@ class ResendTests(unittest.TestCase):
         self.assertIn("Chicago Cubs ML", seen["payload"]["text"])
         self.assertIn("1.25pt", seen["payload"]["subject"])
 
+    def test_a_real_user_agent_is_sent(self):
+        # Resend sits behind Cloudflare, which refuses urllib's default
+        # signature with a 403 carrying "error code: 1010". That reads exactly
+        # like a bad API key and cost a round trip to diagnose.
+        seen, opener = self._capture()
+        alerts.resend(self._fresh(), 2.0,
+                      env={"RESEND_API_KEY": "k", "BET_EMAIL_TO": "me@x.com"},
+                      opener=opener)
+        agent = seen["headers"].get("User-agent") or seen["headers"].get("User-Agent")
+        self.assertIsNotNone(agent, "no User-Agent; Cloudflare will refuse it")
+        self.assertNotIn("Python-urllib", agent)
+
     def test_the_sandbox_sender_is_the_default(self):
         # Resend only delivers from a verified domain; until there is one, its
         # sandbox sender reaches the account owner and nobody else.

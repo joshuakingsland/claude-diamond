@@ -70,6 +70,11 @@ DEFAULT_THRESHOLD = 0.005
 # Measured, not assumed. See the table above.
 EXPECTED_LIVE_AT_FIVE_MINUTES = 0.21
 ALERT_LOG = "data/shop_alerts.csv"
+# Sent on every outbound request. Not decoration: Resend sits behind
+# Cloudflare, which rejects urllib's default `Python-urllib/3.11` signature
+# with a 403 carrying "error code: 1010" -- a browser-integrity refusal that
+# looks exactly like a bad API key until you read the response body.
+USER_AGENT = "claude-diamond-alerts/1.0 (+https://github.com/joshuakingsland/claude-diamond)"
 ALERT_FIELDS = ["alerted_at", "fetched_at", "event_id", "commence_time",
                 "home_team", "away_team", "market", "point", "side",
                 "selection", "book_key", "price", "deviation_points",
@@ -313,6 +318,7 @@ def push(fresh, age_minutes, env=None, opener=None):
             # worth nothing if read an hour later.
             "Priority": "high",
             "Tags": "money_with_wings",
+            "User-Agent": USER_AGENT,
         })
     open_url = opener or urllib.request.urlopen
     with open_url(request, timeout=15) as response:
@@ -351,7 +357,8 @@ def resend(fresh, age_minutes, env=None, opener=None):
     request = urllib.request.Request(
         "https://api.resend.com/emails", data=payload, method="POST",
         headers={"Authorization": f"Bearer {key}",
-                 "Content-Type": "application/json"})
+                 "Content-Type": "application/json",
+                 "User-Agent": USER_AGENT})
     open_url = opener or urllib.request.urlopen
     try:
         with open_url(request, timeout=20) as response:
