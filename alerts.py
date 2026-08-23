@@ -326,6 +326,27 @@ def push(fresh, age_minutes, env=None, opener=None):
     return True, f"pushed {len(fresh)} alert(s) to {server}/{topic}"
 
 
+def _resend_hint(code, detail, env):
+    """Name the remedy. A refusal that only restates itself wastes a round trip.
+
+    Every one of these was hit in sequence getting delivery working, and each
+    time the status alone pointed at the wrong thing.
+    """
+    sender = (env or {}).get("RESEND_FROM") or "onboarding@resend.dev"
+    lowered = detail.lower()
+    if "domain" in lowered:
+        return (f" -- the sender {sender} is not a domain this account may "
+                f"send from. Verify a domain at resend.com/domains and set "
+                f"RESEND_FROM to an address on it.")
+    if "testing emails" in lowered or "own email" in lowered:
+        return (" -- an unverified account may only send to the address that "
+                "owns it. Set BET_EMAIL_TO to that address, or verify a "
+                "domain.")
+    if code in (401, 403):
+        return " -- the API key was rejected; check RESEND_API_KEY."
+    return ""
+
+
 def resend(fresh, age_minutes, env=None, opener=None):
     """Email the alert through Resend's HTTP API, if a key is configured.
 
@@ -369,7 +390,8 @@ def resend(fresh, age_minutes, env=None, opener=None):
         # bad key when the real cause was the sandbox sender refusing to
         # deliver anywhere except the account owner's own address.
         detail = error.read().decode("utf-8", "replace").strip()
-        return False, (f"resend refused ({error.code}): {detail[:300]}")
+        return False, (f"resend refused ({error.code}): {detail[:300]}"
+                       f"{_resend_hint(error.code, detail, env)}")
     return True, f"emailed {len(fresh)} alert(s) to {to} via resend ({body[:80]})"
 
 
@@ -461,7 +483,7 @@ def self_test(env=None):
     delivered, note = notify(fresh, 0.0, env=env)
     print(note)
     print("delivered" if delivered
-          else "NOT delivered — check the key and the recipient")
+          else "NOT delivered — the reason is on the line above")
     return delivered
 
 
