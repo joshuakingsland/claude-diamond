@@ -1,8 +1,8 @@
 {
   "version": "full-game-24h-close-probe-v1",
-  "repository_revision": "9c700905f8d2",
-  "source_protocol": "full-game-entry-close-v1",
-  "source_protocol_hash": "eeaa8fa0b399ff9c",
+  "repository_revision": "bf7263155438",
+  "source_protocol": "full-game-entry-close-v2",
+  "source_protocol_hash": "a87c9f6017d92a79",
   "target": "24h_entry_to_20m_close",
   "entry_window_minutes": [
     1380,
@@ -88,18 +88,20 @@
       "intercept": 0.008139864364,
       "confirmation_2024": {
         "rows": 1438,
+        "implied_clv_logit": 0.01780498,
+        "implied_clv_probability_points": 0.4451,
         "rmse_no_move_logit": 0.09796692,
-        "rmse_candidate_logit": 0.09557917,
-        "mse_improvement": 0.0004621409,
-        "relative_mse_reduction": 0.04815213,
+        "rmse_candidate_logit": 0.09557899,
+        "mse_improvement": 0.0004621748,
+        "relative_mse_reduction": 0.04815566,
         "improvement_ci95_date_clustered": [
-          0.00025371,
-          0.00067073
+          0.00025375,
+          0.00067081
         ],
         "direction_accuracy_nontrivial_moves": 0.592764,
-        "movement_correlation": 0.181413,
+        "movement_correlation": 0.181404,
         "mean_actual_move_logit": 0.01642433,
-        "mean_predicted_move_logit": 0.00571917
+        "mean_predicted_move_logit": 0.00572211
       }
     },
     "spreads": {
@@ -172,18 +174,20 @@
       "intercept": 0.001720370774,
       "confirmation_2024": {
         "rows": 929,
+        "implied_clv_logit": 0.02199328,
+        "implied_clv_probability_points": 0.5498,
         "rmse_no_move_logit": 0.0930295,
-        "rmse_candidate_logit": 0.09000269,
-        "mse_improvement": 0.0005540029,
-        "relative_mse_reduction": 0.06401337,
+        "rmse_candidate_logit": 0.09000225,
+        "mse_improvement": 0.0005540829,
+        "relative_mse_reduction": 0.06402261,
         "improvement_ci95_date_clustered": [
-          0.00023586,
-          0.00084623
+          0.000236,
+          0.00084628
         ],
         "direction_accuracy_nontrivial_moves": 0.601449,
-        "movement_correlation": 0.268008,
+        "movement_correlation": 0.267999,
         "mean_actual_move_logit": 0.01991007,
-        "mean_predicted_move_logit": -0.00094982
+        "mean_predicted_move_logit": -0.00094698
       }
     },
     "totals": {
@@ -252,6 +256,8 @@
       "intercept": 0.000884117959,
       "confirmation_2024": {
         "rows": 611,
+        "implied_clv_logit": 0.03947578,
+        "implied_clv_probability_points": 0.9868,
         "rmse_no_move_logit": 0.07646185,
         "rmse_candidate_logit": 0.06015105,
         "mse_improvement": 0.0022282646,
