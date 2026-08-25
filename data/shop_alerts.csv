@@ -90,5 +90,5 @@ alerted_at,fetched_at,event_id,commence_time,home_team,away_team,market,point,si
 2026-08-23T18:45:03Z,2026-08-23T18:44:11Z,48805e1d6ad752f8943b4149bd983ec2,2026-08-23T20:16:00Z,Arizona Diamondbacks,Cincinnati Reds,spreads,-1.5,home,Arizona Diamondbacks -1.5,betrivers,155,1.382,0.405975,0.392157,11,91.8,0.005
 2026-08-23T20:37:21Z,2026-08-23T20:37:21Z,bda345f597a8317d5812e066bfdd364a,2026-08-23T23:11:00Z,Milwaukee Brewers,Atlanta Braves,totals,7.5,away,Under 7.5,williamhill_us,110,0.863,0.484816,0.476190,11,153.7,0.005
 2026-08-23T22:46:55Z,2026-08-23T22:46:54Z,bda345f597a8317d5812e066bfdd364a,2026-08-23T23:11:00Z,Milwaukee Brewers,Atlanta Braves,h2h,,away,Atlanta Braves ML,fanduel,106,0.625,0.491686,0.485437,11,24.1,0.005
-2026-08-24T18:41:20Z,2026-08-24T18:41:20Z,b5df91df571dbd961d2781f345abe770,2026-08-24T22:41:00Z,Detroit Tigers,Tampa Bay Rays,h2h,,home,Detroit Tigers ML,betrivers,123,0.682,0.455253,0.448430,11,239.7,0.005
-2026-08-24T19:25:07Z,2026-08-24T19:25:06Z,e3da176886eb60e63e5b0017a5f213bc,2026-08-24T22:46:00Z,Washington Nationals,Colorado Rockies,h2h,,away,Colorado Rockies ML,fanduel,180,0.556,0.362706,0.357143,11,200.9,0.005
+2026-08-25T00:23:43Z,2026-08-25T00:23:42Z,8e1262b8729ca1c5b33dc4667cb1bd1a,2026-08-25T01:41:00Z,Athletics,Minnesota Twins,totals,11,away,Under 11,williamhill_us,110,1.222,0.488410,0.476190,10,77.3,0.005
+2026-08-25T00:41:48Z,2026-08-25T00:41:47Z,c5a5e268823c62f5cdee679faf9b778c,2026-08-25T01:40:00Z,Arizona Diamondbacks,Chicago Cubs,totals,9,away,Under 9,williamhill_us,105,1.220,0.500000,0.487805,11,58.2,0.005
