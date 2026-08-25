@@ -92,3 +92,4 @@ alerted_at,fetched_at,event_id,commence_time,home_team,away_team,market,point,si
 2026-08-23T22:46:55Z,2026-08-23T22:46:54Z,bda345f597a8317d5812e066bfdd364a,2026-08-23T23:11:00Z,Milwaukee Brewers,Atlanta Braves,h2h,,away,Atlanta Braves ML,fanduel,106,0.625,0.491686,0.485437,11,24.1,0.005
 2026-08-25T00:23:43Z,2026-08-25T00:23:42Z,8e1262b8729ca1c5b33dc4667cb1bd1a,2026-08-25T01:41:00Z,Athletics,Minnesota Twins,totals,11,away,Under 11,williamhill_us,110,1.222,0.488410,0.476190,10,77.3,0.005
 2026-08-25T00:41:48Z,2026-08-25T00:41:47Z,c5a5e268823c62f5cdee679faf9b778c,2026-08-25T01:40:00Z,Arizona Diamondbacks,Chicago Cubs,totals,9,away,Under 9,williamhill_us,105,1.220,0.500000,0.487805,11,58.2,0.005
+2026-08-25T19:41:52Z,2026-08-25T19:40:53Z,587e76b251f060a951bfa47ee07cf6ac,2026-08-25T23:08:00Z,Toronto Blue Jays,Kansas City Royals,totals,8.5,away,Under 8.5,bovada,105,1.972,0.507528,0.487805,9,207.1,0.005
