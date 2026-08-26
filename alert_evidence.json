@@ -1,7 +1,7 @@
 {
-  "repository_revision": "e25f422317ea",
-  "alerts_logged": 105,
-  "alerts_awaiting_first_pitch": 0,
+  "repository_revision": "4e437923a18b",
+  "alerts_logged": 106,
+  "alerts_awaiting_first_pitch": 1,
   "against_panel_median": {
     "alerts": 100,
     "dates": 8,

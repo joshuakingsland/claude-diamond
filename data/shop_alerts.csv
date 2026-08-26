@@ -104,3 +104,4 @@ alerted_at,fetched_at,event_id,commence_time,home_team,away_team,market,point,si
 2026-08-25T22:50:07Z,2026-08-25T22:50:06Z,ccb7afafeeb739ec9623deb9cba63f64,2026-08-26T01:40:00Z,San Diego Padres,Pittsburgh Pirates,h2h,,away,Pittsburgh Pirates ML,draftkings,120,0.643,0.460972,0.454545,11,169.9,0.005
 2026-08-25T23:18:51Z,2026-08-25T23:18:50Z,928203119cbe56b5e4102e4372ff78bd,2026-08-25T23:45:00Z,St. Louis Cardinals,Baltimore Orioles,h2h,,away,Baltimore Orioles ML,betrivers,120,0.643,0.460972,0.454545,11,26.2,0.005
 2026-08-25T23:21:52Z,2026-08-25T23:21:52Z,57e5de55a9616dbe31da6693615d0af8,2026-08-26T01:38:00Z,Los Angeles Angels,Cleveland Guardians,h2h,,home,Los Angeles Angels ML,betrivers,143,1.552,0.427046,0.411523,11,136.1,0.005
+2026-08-26T16:28:56Z,2026-08-26T16:27:41Z,c840ffd21f721ac963c0f3d748f5db02,2026-08-26T20:08:00Z,Los Angeles Angels,Cleveland Guardians,totals,8.5,home,Over 8.5,lowvig,107,0.607,0.489166,0.483092,11,220.3,0.005
