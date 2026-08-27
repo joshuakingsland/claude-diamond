@@ -119,3 +119,5 @@ alerted_at,fetched_at,event_id,commence_time,home_team,away_team,market,point,si
 2026-08-26T19:23:20Z,2026-08-26T19:23:19Z,c840ffd21f721ac963c0f3d748f5db02,2026-08-26T20:08:00Z,Los Angeles Angels,Cleveland Guardians,h2h,,home,Los Angeles Angels ML,betrivers,148,3.439,0.437621,0.403226,11,44.7,0.005
 2026-08-26T19:23:20Z,2026-08-26T19:23:19Z,c840ffd21f721ac963c0f3d748f5db02,2026-08-26T20:08:00Z,Los Angeles Angels,Cleveland Guardians,spreads,1.5,home,Los Angeles Angels +1.5,betrivers,-121,1.453,0.562044,0.547511,11,44.7,0.005
 2026-08-26T19:41:31Z,2026-08-26T19:41:30Z,886be82de38102833fb4e1eb8d27d5c0,2026-08-26T22:46:00Z,Washington Nationals,Colorado Rockies,h2h,,away,Colorado Rockies ML,betus,124,0.753,0.453955,0.446429,11,184.5,0.005
+2026-08-26T22:27:40Z,2026-08-26T22:27:40Z,d8f4d0d32572d2c5acdc10831f7b16b3,2026-08-27T01:06:00Z,Athletics,Minnesota Twins,h2h,,home,Athletics ML,betrivers,128,0.551,0.444104,0.438596,11,158.3,0.005
+2026-08-26T22:50:17Z,2026-08-26T22:50:17Z,821b22e0957b3177e6e950de4b55696f,2026-08-26T23:11:00Z,New York Mets,Milwaukee Brewers,h2h,,home,New York Mets ML,draftkings,144,0.717,0.417007,0.409836,11,20.7,0.005
