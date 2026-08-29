@@ -1,58 +1,57 @@
 {
-  "repository_revision": "b8b5696b3081",
-  "alerts_logged": 126,
+  "repository_revision": "5c2a0c1682c6",
+  "alerts_logged": 122,
   "alerts_awaiting_first_pitch": 0,
   "against_panel_median": {
-    "alerts": 119,
-    "dates": 10,
-    "mean_clv_probability_points": 0.9704,
+    "alerts": 115,
+    "dates": 9,
+    "mean_clv_probability_points": 0.9799,
     "ci90_date_clustered_points": [
-      0.7031,
-      1.2048
+      0.7029,
+      1.2316
     ],
     "interval_note": null,
-    "share_beating_close": 0.8319,
-    "mean_deviation_at_alert_points": 1.1424,
+    "share_beating_close": 0.8261,
+    "mean_deviation_at_alert_points": 1.1538,
     "by_book": {
       "betrivers": 62,
       "williamhill_us": 15,
       "fanduel": 9,
       "draftkings": 9,
-      "lowvig": 8,
-      "betus": 6,
+      "lowvig": 7,
+      "betus": 4,
       "bovada": 4,
+      "betonlineag": 3,
+      "fanatics": 2
+    }
+  },
+  "against_sharp_close": {
+    "alerts": 120,
+    "dates": 9,
+    "mean_clv_probability_points": 0.9036,
+    "ci90_date_clustered_points": [
+      0.6723,
+      1.1215
+    ],
+    "interval_note": null,
+    "share_beating_close": 0.7833,
+    "mean_deviation_at_alert_points": 1.1424,
+    "by_book": {
+      "betrivers": 62,
+      "williamhill_us": 16,
+      "fanduel": 9,
+      "draftkings": 9,
+      "lowvig": 9,
+      "bovada": 5,
+      "betus": 4,
       "betonlineag": 3,
       "fanatics": 2,
       "mybookieag": 1
     }
   },
-  "against_sharp_close": {
-    "alerts": 124,
-    "dates": 10,
-    "mean_clv_probability_points": 0.9063,
-    "ci90_date_clustered_points": [
-      0.6835,
-      1.1114
-    ],
-    "interval_note": null,
-    "share_beating_close": 0.7823,
-    "mean_deviation_at_alert_points": 1.1318,
-    "by_book": {
-      "betrivers": 62,
-      "williamhill_us": 16,
-      "lowvig": 10,
-      "fanduel": 9,
-      "draftkings": 9,
-      "betus": 6,
-      "bovada": 5,
-      "betonlineag": 3,
-      "fanatics": 2,
-      "mybookieag": 2
-    }
-  },
   "forward_status": "research_only",
   "forward_failures": [
-    "10 dates < 13"
+    "9 dates < 13"
   ],
   "stake_recommendation": "none"
 }
