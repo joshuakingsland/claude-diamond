@@ -1,57 +1,57 @@
 {
-  "repository_revision": "414c82a8a6ee",
-  "alerts_logged": 122,
-  "alerts_awaiting_first_pitch": 0,
+  "repository_revision": "5fcff2a9c2e9",
+  "alerts_logged": 139,
+  "alerts_awaiting_first_pitch": 2,
   "against_panel_median": {
-    "alerts": 115,
-    "dates": 9,
-    "mean_clv_probability_points": 0.9799,
+    "alerts": 130,
+    "dates": 10,
+    "mean_clv_probability_points": 0.9638,
     "ci90_date_clustered_points": [
-      0.7029,
-      1.2316
+      0.7255,
+      1.1811
     ],
     "interval_note": null,
-    "share_beating_close": 0.8261,
-    "mean_deviation_at_alert_points": 1.1538,
+    "share_beating_close": 0.8308,
+    "mean_deviation_at_alert_points": 1.1141,
     "by_book": {
-      "betrivers": 62,
-      "williamhill_us": 15,
-      "fanduel": 9,
+      "betrivers": 69,
+      "williamhill_us": 19,
+      "fanduel": 10,
       "draftkings": 9,
       "lowvig": 7,
-      "betus": 4,
+      "betus": 5,
       "bovada": 4,
-      "betonlineag": 3,
-      "fanatics": 2
+      "betonlineag": 4,
+      "fanatics": 3
     }
   },
   "against_sharp_close": {
-    "alerts": 120,
-    "dates": 9,
-    "mean_clv_probability_points": 0.9036,
+    "alerts": 135,
+    "dates": 10,
+    "mean_clv_probability_points": 0.913,
     "ci90_date_clustered_points": [
-      0.6723,
-      1.1215
+      0.7096,
+      1.1002
     ],
     "interval_note": null,
-    "share_beating_close": 0.7833,
-    "mean_deviation_at_alert_points": 1.1424,
+    "share_beating_close": 0.7852,
+    "mean_deviation_at_alert_points": 1.1054,
     "by_book": {
-      "betrivers": 62,
-      "williamhill_us": 16,
-      "fanduel": 9,
+      "betrivers": 69,
+      "williamhill_us": 20,
+      "fanduel": 10,
       "draftkings": 9,
       "lowvig": 9,
+      "betus": 5,
       "bovada": 5,
-      "betus": 4,
-      "betonlineag": 3,
-      "fanatics": 2,
+      "betonlineag": 4,
+      "fanatics": 3,
       "mybookieag": 1
     }
   },
   "forward_status": "research_only",
   "forward_failures": [
-    "9 dates < 13"
+    "10 dates < 13"
   ],
   "stake_recommendation": "none"
 }

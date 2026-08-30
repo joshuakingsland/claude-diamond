@@ -14160,61 +14160,61 @@ game_pk,official_date,game_date_utc,season,game_type,double_header,game_number,s
 823503,2026-08-27,2026-08-27T23:05:00Z,2026,R,N,1,3,night,9,Final,147,New York Yankees,117,Houston Astros,1,5,0,6,-4,543037,Gerrit Cole,669713,Hayden Wesneski,3313,Yankee Stadium,Cloudy,76,"9 mph, R To L",9,1
 823581,2026-08-27,2026-08-27T23:10:00Z,2026,R,N,1,3,night,9,Final,121,New York Mets,158,Milwaukee Brewers,2,8,0,10,-6,640455,Sean Manaea,694819,Jacob Misiorowski,3289,Citi Field,Overcast,74,"10 mph, Out To LF",9,1
 824879,2026-08-27,2026-08-27T23:15:00Z,2026,R,N,1,3,night,9,Final,144,Atlanta Braves,119,Los Angeles Dodgers,1,0,1,1,1,519242,Chris Sale,808967,Yoshinobu Yamamoto,4705,Truist Park,Partly Cloudy,84,"2 mph, Calm",9,0
-822691,2026-08-28,2026-08-28T22:45:00Z,2026,R,N,1,1,night,9,Live,120,Washington Nationals,146,Miami Marlins,,,,,,800600,Jackson Kent,691587,Eury Pérez,3309,Nationals Park,Partly Cloudy,84,"8 mph, In From RF",4,
-822769,2026-08-28,2026-08-28T23:15:00Z,2026,R,N,1,1,night,9,Live,141,Toronto Blue Jays,136,Seattle Mariners,,,,,,656302,Dylan Cease,676106,Emerson Hancock,14,Rogers Centre,Clear,69,"3 mph, Out To LF",3,
-822935,2026-08-28,2026-08-28T23:10:00Z,2026,R,N,1,1,night,9,Live,139,Tampa Bay Rays,135,San Diego Padres,,,,,,663556,Shane McClanahan,663554,Casey Mize,12,Tropicana Field,Dome,72,"0 mph, None",4,
-823013,2026-08-28,2026-08-29T00:15:00Z,2026,R,N,1,1,night,9,Live,138,St. Louis Cardinals,134,Pittsburgh Pirates,,,,,,687273,Quinn Mathews,683003,Jared Jones,2889,Busch Stadium,Clear,84,"4 mph, In From RF",1,
-823178,2026-08-28,2026-08-29T02:15:00Z,2026,R,N,1,2,night,9,Preview,137,San Francisco Giants,109,Arizona Diamondbacks,,,,,,694918,Blade Tidwell,684442,Kohl Drake,2395,Oracle Park,Partly Cloudy,61,"13 mph, Out To CF",1,
-823504,2026-08-28,2026-08-28T23:15:00Z,2026,R,N,1,1,night,9,Live,147,New York Yankees,111,Boston Red Sox,,,,,,693645,Cam Schlittler,663776,Patrick Sandoval,3313,Yankee Stadium,Partly Cloudy,81,"7 mph, Out To RF",3,
-823583,2026-08-28,2026-08-28T23:10:00Z,2026,R,N,1,1,night,9,Live,121,New York Mets,117,Houston Astros,,,,,,681035,Christian Scott,686613,Hunter Brown,3289,Citi Field,Partly Cloudy,79,"5 mph, In From LF",3,
-823666,2026-08-28,2026-08-29T00:10:00Z,2026,R,N,1,1,night,9,Live,142,Minnesota Twins,145,Chicago White Sox,,,,,,665152,Dean Kremer,622491,Luis Castillo,3312,Target Field,Partly Cloudy,79,"5 mph, Out To LF",1,
-823744,2026-08-28,2026-08-28T23:40:00Z,2026,R,N,1,1,night,9,Live,158,Milwaukee Brewers,140,Texas Rangers,,,,,,701656,Logan Henderson,674003,Cody Bradford,32,American Family Field,Partly Cloudy,79,"11 mph, R To L",2,
-823985,2026-08-28,2026-08-29T01:38:00Z,2026,R,N,1,1,night,9,Preview,108,Los Angeles Angels,143,Philadelphia Phillies,,,,,,672282,Reid Detmers,691725,Andrew Painter,1,Angel Stadium,Clear,92,"7 mph, Out To CF",1,
-824231,2026-08-28,2026-08-28T22:40:00Z,2026,R,N,1,1,night,9,Live,116,Detroit Tigers,119,Los Angeles Dodgers,,,,,,623454,Drew Anderson,669373,Tarik Skubal,2394,Comerica Park,Partly Cloudy,76,"5 mph, In From LF",5,
-824396,2026-08-28,2026-08-28T23:10:00Z,2026,R,N,1,1,night,9,Live,114,Cleveland Guardians,118,Kansas City Royals,,,,,,676440,Tanner Bibee,608379,Michael Wacha,5,Progressive Field,Clear,73,"7 mph, In From RF",3,
+822691,2026-08-28,2026-08-28T22:45:00Z,2026,R,N,1,1,night,9,Final,120,Washington Nationals,146,Miami Marlins,9,2,1,11,7,800600,Jackson Kent,691587,Eury Pérez,3309,Nationals Park,Partly Cloudy,84,"8 mph, In From RF",9,0
+822769,2026-08-28,2026-08-28T23:15:00Z,2026,R,N,1,1,night,9,Final,141,Toronto Blue Jays,136,Seattle Mariners,8,1,1,9,7,656302,Dylan Cease,676106,Emerson Hancock,14,Rogers Centre,Clear,69,"3 mph, Out To LF",9,0
+822935,2026-08-28,2026-08-28T23:10:00Z,2026,R,N,1,1,night,9,Final,139,Tampa Bay Rays,135,San Diego Padres,9,4,1,13,5,663556,Shane McClanahan,663554,Casey Mize,12,Tropicana Field,Dome,72,"0 mph, None",9,0
+823013,2026-08-28,2026-08-29T00:15:00Z,2026,R,N,1,1,night,9,Final,138,St. Louis Cardinals,134,Pittsburgh Pirates,4,1,1,5,3,687273,Quinn Mathews,683003,Jared Jones,2889,Busch Stadium,Clear,82,"4 mph, In From RF",9,0
+823178,2026-08-28,2026-08-29T02:15:00Z,2026,R,N,1,2,night,9,Final,137,San Francisco Giants,109,Arizona Diamondbacks,6,10,0,16,-4,694918,Blade Tidwell,684442,Kohl Drake,2395,Oracle Park,Partly Cloudy,63,"13 mph, Varies",9,1
+823504,2026-08-28,2026-08-28T23:15:00Z,2026,R,N,1,1,night,9,Final,147,New York Yankees,111,Boston Red Sox,1,0,1,1,1,693645,Cam Schlittler,663776,Patrick Sandoval,3313,Yankee Stadium,Partly Cloudy,81,"7 mph, Out To RF",9,0
+823583,2026-08-28,2026-08-28T23:10:00Z,2026,R,N,1,1,night,9,Final,121,New York Mets,117,Houston Astros,1,3,0,4,-2,681035,Christian Scott,686613,Hunter Brown,3289,Citi Field,Partly Cloudy,79,"5 mph, In From LF",9,1
+823666,2026-08-28,2026-08-29T00:10:00Z,2026,R,N,1,1,night,9,Final,142,Minnesota Twins,145,Chicago White Sox,4,7,0,11,-3,665152,Dean Kremer,622491,Luis Castillo,3312,Target Field,Partly Cloudy,78,"6 mph, Out To LF",9,1
+823744,2026-08-28,2026-08-28T23:40:00Z,2026,R,N,1,1,night,9,Final,158,Milwaukee Brewers,140,Texas Rangers,6,1,1,7,5,701656,Logan Henderson,674003,Cody Bradford,32,American Family Field,Partly Cloudy,79,"11 mph, R To L",9,0
+823985,2026-08-28,2026-08-29T01:38:00Z,2026,R,N,1,1,night,9,Final,108,Los Angeles Angels,143,Philadelphia Phillies,3,5,0,8,-2,672282,Reid Detmers,691725,Andrew Painter,1,Angel Stadium,Clear,89,"5 mph, R To L",9,1
+824231,2026-08-28,2026-08-28T22:40:00Z,2026,R,N,1,1,night,9,Final,116,Detroit Tigers,119,Los Angeles Dodgers,1,2,0,3,-1,623454,Drew Anderson,669373,Tarik Skubal,2394,Comerica Park,Partly Cloudy,76,"5 mph, In From LF",9,1
+824396,2026-08-28,2026-08-28T23:10:00Z,2026,R,N,1,1,night,9,Final,114,Cleveland Guardians,118,Kansas City Royals,0,3,0,3,-3,676440,Tanner Bibee,608379,Michael Wacha,5,Progressive Field,Clear,73,"7 mph, In From RF",9,1
 824638,2026-08-28,2026-08-28T18:20:00Z,2026,R,N,1,1,day,9,Final,112,Chicago Cubs,113,Cincinnati Reds,8,10,0,18,-2,656849,David Peterson,695076,Rhett Lowder,17,Wrigley Field,Sunny,77,"6 mph, R To L",9,1
-824877,2026-08-28,2026-08-28T23:15:00Z,2026,R,N,1,1,night,9,Live,144,Atlanta Braves,115,Colorado Rockies,,,,,,656550,Grant Holmes,608372,Tomoyuki Sugano,4705,Truist Park,Cloudy,84,"5 mph, Out To RF",3,
-824960,2026-08-28,2026-08-29T01:40:00Z,2026,R,N,1,1,night,9,Preview,133,Athletics,110,Baltimore Orioles,,,,,,682052,Jacob Lopez,687064,Brandon Young,2529,Sutter Health Park,Partly Cloudy,84,"8 mph, Out To CF",1,
-822690,2026-08-29,2026-08-29T20:05:00Z,2026,R,N,1,2,day,9,Preview,120,Washington Nationals,146,Miami Marlins,,,,,,676917,Cade Cavalli,645261,Sandy Alcantara,3309,Nationals Park,,,,,
-822770,2026-08-29,2026-08-29T19:07:00Z,2026,R,N,1,2,day,9,Preview,141,Toronto Blue Jays,136,Seattle Mariners,,,,,,667755,José Soriano,807739,Kade Anderson,14,Rogers Centre,,,,,
-822936,2026-08-29,2026-08-29T20:10:00Z,2026,R,N,1,2,day,9,Preview,139,Tampa Bay Rays,135,San Diego Padres,,,,,,607259,Nick Martinez,621111,Walker Buehler,12,Tropicana Field,,,,,
-823011,2026-08-29,2026-08-29T18:15:00Z,2026,R,N,1,2,day,9,Preview,138,St. Louis Cardinals,134,Pittsburgh Pirates,,,,,,681517,Kyle Leahy,,,2889,Busch Stadium,,,,,
-823176,2026-08-29,2026-08-30T02:05:00Z,2026,R,S,2,4,night,9,Preview,137,San Francisco Giants,109,Arizona Diamondbacks,,,,,,,,,,2395,Oracle Park,,,,,
-823177,2026-08-29,2026-08-29T20:05:00Z,2026,R,S,1,3,day,9,Preview,137,San Francisco Giants,109,Arizona Diamondbacks,,,,,,,,,,2395,Oracle Park,,,,,
-823501,2026-08-29,2026-08-29T23:15:00Z,2026,R,S,2,3,night,9,Preview,147,New York Yankees,111,Boston Red Sox,,,,,,,,,,3313,Yankee Stadium,,,,,
-823539,2026-08-29,2026-08-29T17:05:00Z,2026,R,S,1,2,day,9,Preview,147,New York Yankees,111,Boston Red Sox,,,,,,,,687562,Jake Bennett,3313,Yankee Stadium,,,,,
-823582,2026-08-29,2026-08-29T20:10:00Z,2026,R,N,1,2,day,9,Preview,121,New York Mets,117,Houston Astros,,,,,,690997,Nolan McLean,,,3289,Citi Field,,,,,
-823665,2026-08-29,2026-08-29T18:10:00Z,2026,R,N,1,2,day,9,Preview,142,Minnesota Twins,145,Chicago White Sox,,,,,,641927,Bailey Ober,607200,Erick Fedde,3312,Target Field,,,,,
-823741,2026-08-29,2026-08-29T23:15:00Z,2026,R,N,1,2,night,9,Preview,158,Milwaukee Brewers,140,Texas Rangers,,,,,,675660,Shane Drohan,615698,Cal Quantrill,32,American Family Field,,,,,
-823986,2026-08-29,2026-08-30T02:07:00Z,2026,R,N,1,2,night,9,Preview,108,Los Angeles Angels,143,Philadelphia Phillies,,,,,,696270,Ryan Johnson,650911,Cristopher Sánchez,1,Angel Stadium,,,,,
-824230,2026-08-29,2026-08-29T17:10:00Z,2026,R,N,1,2,day,9,Preview,116,Detroit Tigers,119,Los Angeles Dodgers,,,,,,672456,Keider Montero,605483,Blake Snell,2394,Comerica Park,,,,,
-824392,2026-08-29,2026-08-29T20:10:00Z,2026,R,N,1,2,day,9,Preview,114,Cleveland Guardians,118,Kansas City Royals,,,,,,656492,Foster Griffin,663738,Daniel Lynch IV,5,Progressive Field,,,,,
-824637,2026-08-29,2026-08-29T18:20:00Z,2026,R,N,1,2,day,9,Preview,112,Chicago Cubs,113,Cincinnati Reds,,,,,,592332,Kevin Gausman,671096,Andrew Abbott,17,Wrigley Field,,,,,
-824874,2026-08-29,2026-08-29T20:10:00Z,2026,R,N,1,2,day,9,Preview,144,Atlanta Braves,115,Colorado Rockies,,,,,,527048,Martín Pérez,663372,Ryan Feltner,4705,Truist Park,,,,,
-824961,2026-08-29,2026-08-30T02:05:00Z,2026,R,N,1,2,night,9,Preview,133,Athletics,110,Baltimore Orioles,,,,,,,,669358,Shane Baz,2529,Sutter Health Park,,,,,
-822688,2026-08-30,2026-08-30T16:15:00Z,2026,R,N,1,3,day,9,Preview,120,Washington Nationals,146,Miami Marlins,,,,,,674841,Andrew Alvarez,676083,Janson Junk,3309,Nationals Park,,,,,
+824877,2026-08-28,2026-08-28T23:15:00Z,2026,R,N,1,1,night,9,Final,144,Atlanta Braves,115,Colorado Rockies,6,4,1,10,2,656550,Grant Holmes,608372,Tomoyuki Sugano,4705,Truist Park,Cloudy,84,"5 mph, Out To RF",9,0
+824960,2026-08-28,2026-08-29T01:40:00Z,2026,R,N,1,1,night,9,Final,133,Athletics,110,Baltimore Orioles,3,4,0,7,-1,682052,Jacob Lopez,687064,Brandon Young,2529,Sutter Health Park,Cloudy,74,"7 mph, Out To LF",10,1
+822690,2026-08-29,2026-08-29T20:05:00Z,2026,R,N,1,2,day,9,Final,120,Washington Nationals,146,Miami Marlins,5,4,1,9,1,676917,Cade Cavalli,645261,Sandy Alcantara,3309,Nationals Park,Partly Cloudy,84,"5 mph, R To L",10,1
+822770,2026-08-29,2026-08-29T19:07:00Z,2026,R,N,1,2,day,9,Final,141,Toronto Blue Jays,136,Seattle Mariners,4,3,1,7,1,667755,José Soriano,807739,Kade Anderson,14,Rogers Centre,Partly Cloudy,75,"9 mph, Out To CF",9,0
+822936,2026-08-29,2026-08-29T20:10:00Z,2026,R,N,1,2,day,9,Final,139,Tampa Bay Rays,135,San Diego Padres,7,6,1,13,1,607259,Nick Martinez,621111,Walker Buehler,12,Tropicana Field,Dome,72,"0 mph, None",9,0
+823011,2026-08-29,2026-08-29T18:15:00Z,2026,R,N,1,2,day,9,Final,138,St. Louis Cardinals,134,Pittsburgh Pirates,2,6,0,8,-4,681517,Kyle Leahy,669199,Lake Bachar,2889,Busch Stadium,Cloudy,87,"7 mph, In From RF",9,1
+823176,2026-08-29,2026-08-30T02:05:00Z,2026,R,S,2,4,night,9,Preview,137,San Francisco Giants,109,Arizona Diamondbacks,,,,,,805074,Yunior Marte,683352,Mitch Bratt,2395,Oracle Park,Partly Cloudy,59,"8 mph, Out To CF",1,
+823177,2026-08-29,2026-08-29T20:05:00Z,2026,R,S,1,3,day,9,Final,137,San Francisco Giants,109,Arizona Diamondbacks,1,7,0,8,-6,683363,Matt Wilkinson,518876,Merrill Kelly,2395,Oracle Park,Sunny,65,"13 mph, Out To CF",9,1
+823501,2026-08-29,2026-08-29T23:15:00Z,2026,R,S,2,3,night,9,Live,147,New York Yankees,111,Boston Red Sox,,,,,,608331,Max Fried,687941,Alec Gamboa,3313,Yankee Stadium,Clear,75,"4 mph, In From LF",3,
+823539,2026-08-29,2026-08-29T17:05:00Z,2026,R,S,1,2,day,9,Final,147,New York Yankees,111,Boston Red Sox,0,6,0,6,-6,607074,Carlos Rodón,687562,Jake Bennett,3313,Yankee Stadium,Sunny,76,"5 mph, In From CF",9,1
+823582,2026-08-29,2026-08-29T20:10:00Z,2026,R,N,1,2,day,9,Final,121,New York Mets,117,Houston Astros,6,2,1,8,4,690997,Nolan McLean,656986,Bennett Sousa,3289,Citi Field,Sunny,79,"4 mph, In From LF",9,0
+823665,2026-08-29,2026-08-29T18:10:00Z,2026,R,N,1,2,day,9,Final,142,Minnesota Twins,145,Chicago White Sox,2,3,0,5,-1,641927,Bailey Ober,607200,Erick Fedde,3312,Target Field,Cloudy,75,"10 mph, In From LF",9,1
+823741,2026-08-29,2026-08-29T23:15:00Z,2026,R,N,1,2,night,9,Live,158,Milwaukee Brewers,140,Texas Rangers,,,,,,675660,Shane Drohan,615698,Cal Quantrill,32,American Family Field,Roof Closed,77,"0 mph, None",3,
+823986,2026-08-29,2026-08-30T02:07:00Z,2026,R,N,1,2,night,9,Preview,108,Los Angeles Angels,143,Philadelphia Phillies,,,,,,696270,Ryan Johnson,650911,Cristopher Sánchez,1,Angel Stadium,Partly Cloudy,80,"8 mph, R To L",,
+824230,2026-08-29,2026-08-29T17:10:00Z,2026,R,N,1,2,day,9,Final,116,Detroit Tigers,119,Los Angeles Dodgers,2,1,1,3,1,672456,Keider Montero,605483,Blake Snell,2394,Comerica Park,Partly Cloudy,80,"10 mph, R To L",9,1
+824392,2026-08-29,2026-08-29T20:10:00Z,2026,R,N,1,2,day,9,Final,114,Cleveland Guardians,118,Kansas City Royals,3,8,0,11,-5,656492,Foster Griffin,663738,Daniel Lynch IV,5,Progressive Field,Partly Cloudy,81,"4 mph, L To R",9,1
+824637,2026-08-29,2026-08-29T18:20:00Z,2026,R,N,1,2,day,9,Final,112,Chicago Cubs,113,Cincinnati Reds,17,5,1,22,12,592332,Kevin Gausman,671096,Andrew Abbott,17,Wrigley Field,Partly Cloudy,81,"10 mph, Out To CF",9,0
+824874,2026-08-29,2026-08-29T20:10:00Z,2026,R,N,1,2,day,9,Final,144,Atlanta Braves,115,Colorado Rockies,2,1,1,3,1,527048,Martín Pérez,688642,Zach Agnos,4705,Truist Park,Partly Cloudy,85,"6 mph, L To R",9,0
+824961,2026-08-29,2026-08-30T02:05:00Z,2026,R,N,1,2,night,9,Preview,133,Athletics,110,Baltimore Orioles,,,,,,678022,Jack Perkins,669358,Shane Baz,2529,Sutter Health Park,Partly Cloudy,77,"7 mph, Out To LF",,
+822688,2026-08-30,2026-08-30T16:15:00Z,2026,R,N,1,3,day,9,Preview,120,Washington Nationals,146,Miami Marlins,,,,,,674841,Andrew Alvarez,663969,Tyler Phillips,3309,Nationals Park,,,,,
 822766,2026-08-30,2026-08-30T17:37:00Z,2026,R,N,1,3,day,9,Preview,141,Toronto Blue Jays,136,Seattle Mariners,,,,,,453286,Max Scherzer,669302,Logan Gilbert,14,Rogers Centre,,,,,
 822933,2026-08-30,2026-08-30T17:40:00Z,2026,R,N,1,3,day,9,Preview,139,Tampa Bay Rays,135,San Diego Padres,,,,,,656876,Drew Rasmussen,592662,Robbie Ray,12,Tropicana Field,,,,,
 823010,2026-08-30,2026-08-30T18:15:00Z,2026,R,N,1,3,day,9,Preview,138,St. Louis Cardinals,134,Pittsburgh Pirates,,,,,,669461,Matthew Liberatore,677952,Braxton Ashcraft,2889,Busch Stadium,,,,,
 823502,2026-08-30,2026-08-30T17:35:00Z,2026,R,N,1,4,day,9,Preview,147,New York Yankees,111,Boston Red Sox,,,,,,701542,Will Warren,624133,Ranger Suarez,3313,Yankee Stadium,,,,,
-823580,2026-08-30,2026-08-30T19:10:00Z,2026,R,N,1,3,day,9,Preview,121,New York Mets,117,Houston Astros,,,,,,804267,Zac Thornton,,,3289,Citi Field,,,,,
-823662,2026-08-30,2026-08-30T18:10:00Z,2026,R,N,1,3,day,9,Preview,142,Minnesota Twins,145,Chicago White Sox,,,,,,805673,Zebby Matthews,,,3312,Target Field,,,,,
+823580,2026-08-30,2026-08-30T19:10:00Z,2026,R,N,1,3,day,9,Preview,121,New York Mets,117,Houston Astros,,,,,,804267,Zac Thornton,814490,Ethan Pecko,3289,Citi Field,,,,,
+823662,2026-08-30,2026-08-30T18:10:00Z,2026,R,N,1,3,day,9,Preview,142,Minnesota Twins,145,Chicago White Sox,,,,,,805673,Zebby Matthews,663855,Jordan Hicks,3312,Target Field,,,,,
 823740,2026-08-30,2026-08-30T18:10:00Z,2026,R,N,1,3,day,9,Preview,158,Milwaukee Brewers,140,Texas Rangers,,,,,,669160,Dustin May,677958,Kumar Rocker,32,American Family Field,,,,,
 823987,2026-08-30,2026-08-30T20:07:00Z,2026,R,N,1,3,day,9,Preview,108,Los Angeles Angels,143,Philadelphia Phillies,,,,,,579328,Yusei Kikuchi,554430,Zack Wheeler,1,Angel Stadium,,,,,
-824232,2026-08-30,2026-08-30T17:40:00Z,2026,R,N,1,3,day,9,Preview,116,Detroit Tigers,119,Los Angeles Dodgers,,,,,,664285,Framber Valdez,,,2394,Comerica Park,,,,,
+824232,2026-08-30,2026-08-30T17:40:00Z,2026,R,N,1,3,day,9,Preview,116,Detroit Tigers,119,Los Angeles Dodgers,,,,,,664285,Framber Valdez,607192,Tyler Glasnow,2394,Comerica Park,,,,,
 824393,2026-08-30,2026-08-30T17:40:00Z,2026,R,N,1,3,day,9,Preview,114,Cleveland Guardians,118,Kansas City Royals,,,,,,800048,Parker Messick,607625,Seth Lugo,5,Progressive Field,,,,,
 824636,2026-08-30,2026-08-30T23:20:00Z,2026,R,N,1,3,night,9,Preview,112,Chicago Cubs,113,Cincinnati Reds,,,,,,684007,Shota Imanaga,695505,Chase Burns,17,Wrigley Field,,,,,
 824876,2026-08-30,2026-08-30T17:35:00Z,2026,R,N,1,3,day,9,Preview,144,Atlanta Braves,115,Colorado Rockies,,,,,,641816,Tyler Mahle,690279,Mason Adams,4705,Truist Park,,,,,
 824959,2026-08-30,2026-08-30T20:05:00Z,2026,R,N,1,3,day,9,Preview,133,Athletics,110,Baltimore Orioles,,,,,,,,605135,Chris Bassitt,2529,Sutter Health Park,,,,,
-822689,2026-08-31,2026-08-31T22:45:00Z,2026,R,N,1,4,night,9,Preview,120,Washington Nationals,146,Miami Marlins,,,,,,,,687473,Ryan Gusto,3309,Nationals Park,,,,,
+822689,2026-08-31,2026-08-31T22:45:00Z,2026,R,N,1,4,night,9,Preview,120,Washington Nationals,146,Miami Marlins,,,,,,,,676083,Janson Junk,3309,Nationals Park,,,,,
 822855,2026-08-31,2026-09-01T00:05:00Z,2026,R,N,1,1,night,9,Preview,140,Texas Rangers,133,Athletics,,,,,,,,,,5325,Globe Life Field,,,,,
 822932,2026-08-31,2026-08-31T22:40:00Z,2026,R,N,1,1,night,9,Preview,139,Tampa Bay Rays,121,New York Mets,,,,,,,,476594,Robert Stock,12,Tropicana Field,,,,,
 823663,2026-08-31,2026-08-31T23:40:00Z,2026,R,N,1,1,night,9,Preview,142,Minnesota Twins,116,Detroit Tigers,,,,,,,,,,3312,Target Field,,,,,
-823982,2026-08-31,2026-09-01T01:38:00Z,2026,R,N,1,1,night,9,Preview,108,Los Angeles Angels,147,New York Yankees,,,,,,,,,,1,Angel Stadium,,,,,
+823982,2026-08-31,2026-09-01T01:38:00Z,2026,R,N,1,1,night,9,Preview,108,Los Angeles Angels,147,New York Yankees,,,,,,,,695684,Elmer Rodríguez,1,Angel Stadium,,,,,
 824149,2026-08-31,2026-09-01T00:10:00Z,2026,R,N,1,1,night,9,Preview,117,Houston Astros,145,Chicago White Sox,,,,,,,,,,2392,Daikin Park,,,,,
 824314,2026-08-31,2026-09-01T00:40:00Z,2026,R,N,1,1,night,9,Preview,115,Colorado Rockies,110,Baltimore Orioles,,,,,,,,,,19,Coors Field,,,,,
 824473,2026-08-31,2026-08-31T22:40:00Z,2026,R,N,1,1,night,9,Preview,113,Cincinnati Reds,135,San Diego Padres,,,,,,663903,Brady Singer,,,2602,Great American Ball Park,,,,,
-824635,2026-08-31,2026-08-31T23:40:00Z,2026,R,N,1,1,night,9,Preview,112,Chicago Cubs,158,Milwaukee Brewers,,,,,,,,,,17,Wrigley Field,,,,,
+824635,2026-08-31,2026-08-31T23:40:00Z,2026,R,N,1,1,night,9,Preview,112,Chicago Cubs,158,Milwaukee Brewers,,,,,,,,690986,Kyle Harrison,17,Wrigley Field,,,,,
 824719,2026-08-31,2026-08-31T22:45:00Z,2026,R,N,1,1,night,9,Preview,111,Boston Red Sox,136,Seattle Mariners,,,,,,,,,,3,Fenway Park,,,,,
 824911,2026-08-31,2026-08-31T22:05:00Z,2026,R,N,1,1,night,9,Preview,144,Atlanta Braves,137,San Francisco Giants,,,,,,,,,,4705,Truist Park,,,,,
 825040,2026-08-31,2026-09-01T01:40:00Z,2026,R,N,1,1,night,9,Preview,109,Arizona Diamondbacks,143,Philadelphia Phillies,,,,,,,,,,15,Chase Field,,,,,
@@ -14228,14 +14228,14 @@ game_pk,official_date,game_date_utc,season,game_type,double_header,game_number,s
 824070,2026-09-01,2026-09-01T23:40:00Z,2026,R,N,1,1,night,9,Preview,118,Kansas City Royals,146,Miami Marlins,,,,,,,,,,7,Kauffman Stadium,,,,,
 824148,2026-09-01,2026-09-02T00:10:00Z,2026,R,N,1,2,night,9,Preview,117,Houston Astros,145,Chicago White Sox,,,,,,,,,,2392,Daikin Park,,,,,
 824313,2026-09-01,2026-09-02T00:40:00Z,2026,R,N,1,2,night,9,Preview,115,Colorado Rockies,110,Baltimore Orioles,,,,,,,,,,19,Coors Field,,,,,
-824391,2026-09-01,2026-09-01T22:40:00Z,2026,R,N,1,1,night,9,Preview,114,Cleveland Guardians,141,Toronto Blue Jays,,,,,,668909,Gavin Williams,,,5,Progressive Field,,,,,
+824391,2026-09-01,2026-09-01T22:40:00Z,2026,R,N,1,1,night,9,Preview,114,Cleveland Guardians,141,Toronto Blue Jays,,,,,,668909,Gavin Williams,681293,Spencer Arrighetti,5,Progressive Field,,,,,
 824472,2026-09-01,2026-09-01T22:40:00Z,2026,R,N,1,2,night,9,Preview,113,Cincinnati Reds,135,San Diego Padres,,,,,,666157,Nick Lodolo,,,2602,Great American Ball Park,,,,,
-824633,2026-09-01,2026-09-01T23:40:00Z,2026,R,N,1,2,night,9,Preview,112,Chicago Cubs,158,Milwaukee Brewers,,,,,,,,,,17,Wrigley Field,,,,,
+824633,2026-09-01,2026-09-01T23:40:00Z,2026,R,N,1,2,night,9,Preview,112,Chicago Cubs,158,Milwaukee Brewers,,,,,,,,688107,Robert Gasser,17,Wrigley Field,,,,,
 824716,2026-09-01,2026-09-01T22:45:00Z,2026,R,N,1,2,night,9,Preview,111,Boston Red Sox,136,Seattle Mariners,,,,,,,,,,3,Fenway Park,,,,,
 825038,2026-09-01,2026-09-02T01:40:00Z,2026,R,N,1,2,night,9,Preview,109,Arizona Diamondbacks,143,Philadelphia Phillies,,,,,,,,,,15,Chase Field,,,,,
 822686,2026-09-02,2026-09-02T17:05:00Z,2026,R,N,1,2,day,9,Preview,120,Washington Nationals,144,Atlanta Braves,,,,,,,,,,3309,Nationals Park,,,,,
 822851,2026-09-02,2026-09-02T18:35:00Z,2026,R,N,1,3,day,9,Preview,140,Texas Rangers,133,Athletics,,,,,,,,,,5325,Globe Life Field,,,,,
-822931,2026-09-02,2026-09-02T22:40:00Z,2026,R,N,1,3,night,9,Preview,139,Tampa Bay Rays,121,New York Mets,,,,,,,,,,12,Tropicana Field,,,,,
+822931,2026-09-02,2026-09-02T22:40:00Z,2026,R,N,1,3,night,9,Preview,139,Tampa Bay Rays,121,New York Mets,,,,,,,,681035,Christian Scott,12,Tropicana Field,,,,,
 823339,2026-09-02,2026-09-02T22:40:00Z,2026,R,N,1,2,night,9,Preview,134,Pittsburgh Pirates,137,San Francisco Giants,,,,,,,,,,31,PNC Park,,,,,
 823660,2026-09-02,2026-09-02T23:40:00Z,2026,R,N,1,3,night,9,Preview,142,Minnesota Twins,116,Detroit Tigers,,,,,,,,,,3312,Target Field,,,,,
 823906,2026-09-02,2026-09-03T02:10:00Z,2026,R,N,1,2,night,9,Preview,119,Los Angeles Dodgers,138,St. Louis Cardinals,,,,,,,,,,22,UNIQLO Field at Dodger Stadium,,,,,
@@ -14243,9 +14243,9 @@ game_pk,official_date,game_date_utc,season,game_type,double_header,game_number,s
 824068,2026-09-02,2026-09-02T23:40:00Z,2026,R,N,1,2,night,9,Preview,118,Kansas City Royals,146,Miami Marlins,,,,,,,,,,7,Kauffman Stadium,,,,,
 824147,2026-09-02,2026-09-03T00:10:00Z,2026,R,N,1,3,night,9,Preview,117,Houston Astros,145,Chicago White Sox,,,,,,,,,,2392,Daikin Park,,,,,
 824312,2026-09-02,2026-09-02T19:10:00Z,2026,R,N,1,3,day,9,Preview,115,Colorado Rockies,110,Baltimore Orioles,,,,,,,,,,19,Coors Field,,,,,
-824390,2026-09-02,2026-09-02T22:40:00Z,2026,R,N,1,2,night,9,Preview,114,Cleveland Guardians,141,Toronto Blue Jays,,,,,,,,,,5,Progressive Field,,,,,
+824390,2026-09-02,2026-09-02T22:40:00Z,2026,R,N,1,2,night,9,Preview,114,Cleveland Guardians,141,Toronto Blue Jays,,,,,,676282,Joey Cantillo,656302,Dylan Cease,5,Progressive Field,,,,,
 824470,2026-09-02,2026-09-02T16:40:00Z,2026,R,N,1,3,day,9,Preview,113,Cincinnati Reds,135,San Diego Padres,,,,,,,,,,2602,Great American Ball Park,,,,,
-824634,2026-09-02,2026-09-02T23:40:00Z,2026,R,N,1,3,night,9,Preview,112,Chicago Cubs,158,Milwaukee Brewers,,,,,,,,,,17,Wrigley Field,,,,,
+824634,2026-09-02,2026-09-02T23:40:00Z,2026,R,N,1,3,night,9,Preview,112,Chicago Cubs,158,Milwaukee Brewers,,,,,,,,694819,Jacob Misiorowski,17,Wrigley Field,,,,,
 824717,2026-09-02,2026-09-02T20:10:00Z,2026,R,N,1,3,day,9,Preview,111,Boston Red Sox,136,Seattle Mariners,,,,,,,,,,3,Fenway Park,,,,,
 825037,2026-09-02,2026-09-02T19:40:00Z,2026,R,N,1,3,day,9,Preview,109,Arizona Diamondbacks,143,Philadelphia Phillies,,,,,,,,,,15,Chase Field,,,,,
 822853,2026-09-03,2026-09-04T00:05:00Z,2026,R,N,1,1,night,9,Preview,140,Texas Rangers,139,Tampa Bay Rays,,,,,,,,,,5325,Globe Life Field,,,,,
@@ -14254,8 +14254,8 @@ game_pk,official_date,game_date_utc,season,game_type,double_header,game_number,s
 823907,2026-09-03,2026-09-04T02:10:00Z,2026,R,N,1,3,night,9,Preview,119,Los Angeles Dodgers,138,St. Louis Cardinals,,,,,,,,,,22,UNIQLO Field at Dodger Stadium,,,,,
 824069,2026-09-03,2026-09-03T23:40:00Z,2026,R,N,1,3,night,9,Preview,118,Kansas City Royals,146,Miami Marlins,,,,,,,,,,7,Kauffman Stadium,,,,,
 824144,2026-09-03,2026-09-03T18:10:00Z,2026,R,N,1,4,day,9,Preview,117,Houston Astros,145,Chicago White Sox,,,,,,,,,,2392,Daikin Park,,,,,
-824388,2026-09-03,2026-09-03T17:10:00Z,2026,R,N,1,3,day,9,Preview,114,Cleveland Guardians,141,Toronto Blue Jays,,,,,,,,,,5,Progressive Field,,,,,
-824632,2026-09-03,2026-09-03T23:15:00Z,2026,R,N,1,4,night,9,Preview,112,Chicago Cubs,158,Milwaukee Brewers,,,,,,,,,,17,Wrigley Field,,,,,
+824388,2026-09-03,2026-09-03T17:10:00Z,2026,R,N,1,3,day,9,Preview,114,Cleveland Guardians,141,Toronto Blue Jays,,,,,,,,667755,José Soriano,5,Progressive Field,,,,,
+824632,2026-09-03,2026-09-03T23:15:00Z,2026,R,N,1,4,night,9,Preview,112,Chicago Cubs,158,Milwaukee Brewers,,,,,,,,701656,Logan Henderson,17,Wrigley Field,,,,,
 824796,2026-09-03,2026-09-03T23:15:00Z,2026,R,N,1,1,night,9,Preview,110,Baltimore Orioles,111,Boston Red Sox,,,,,,,,,,2,Oriole Park at Camden Yards,,,,,
 822852,2026-09-04,2026-09-05T00:05:00Z,2026,R,N,1,2,night,9,Preview,140,Texas Rangers,139,Tampa Bay Rays,,,,,,,,,,5325,Globe Life Field,,,,,
 823093,2026-09-04,2026-09-05T02:10:00Z,2026,R,N,1,2,night,9,Preview,136,Seattle Mariners,133,Athletics,,,,,,,,,,680,T-Mobile Park,,,,,
