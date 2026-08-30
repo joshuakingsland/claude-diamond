@@ -127,3 +127,4 @@ alerted_at,fetched_at,event_id,commence_time,home_team,away_team,market,point,si
 2026-08-29T22:21:26Z,2026-08-29T22:21:26Z,03a0ddbd6b3c88cdb2490d592317291f,2026-08-29T23:16:00Z,New York Yankees,Boston Red Sox,h2h,,away,Boston Red Sox ML,betrivers,132,0.516,0.436195,0.431034,11,54.6,0.005
 2026-08-30T00:55:37Z,2026-08-30T00:55:37Z,24be08805f9e6d828810ae8435d2563a,2026-08-30T02:08:00Z,Los Angeles Angels,Philadelphia Phillies,spreads,1.5,home,Los Angeles Angels +1.5,lowvig,132,0.549,0.436524,0.431034,10,72.4,0.005
 2026-08-30T17:53:10Z,2026-08-30T17:53:10Z,cd304593a01b05fbfdceca7ab3654067,2026-08-30T20:07:00Z,Los Angeles Angels,Philadelphia Phillies,h2h,,home,Los Angeles Angels ML,betrivers,170,1.652,0.386893,0.370370,11,133.8,0.005
+2026-08-30T18:37:17Z,2026-08-30T18:36:02Z,cd304593a01b05fbfdceca7ab3654067,2026-08-30T20:07:00Z,Los Angeles Angels,Philadelphia Phillies,h2h,,home,Los Angeles Angels ML,betrivers,165,0.527,0.382632,0.377358,11,91.0,0.005
