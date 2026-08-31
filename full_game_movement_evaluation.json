@@ -1,6 +1,6 @@
 {
   "study": "MLB 24-hour entry to 20-minute close movement",
-  "repository_revision": "64c6d0c19ea0",
+  "repository_revision": "a760d58012f4",
   "protocol": {
     "version": "full-game-entry-close-v2",
     "entry_snapshot": "24 hours before scheduled first pitch",
@@ -308,17 +308,17 @@
               "implied_clv_logit": 0.01525801,
               "implied_clv_probability_points": 0.3814,
               "rmse_no_move_logit": 0.09140136,
-              "rmse_candidate_logit": 0.08960982,
-              "mse_improvement": 0.0003242893,
-              "relative_mse_reduction": 0.03881747,
+              "rmse_candidate_logit": 0.08961388,
+              "mse_improvement": 0.0003235616,
+              "relative_mse_reduction": 0.03873036,
               "improvement_ci95_date_clustered": [
-                0.00011954,
-                0.00053976
+                0.00011841,
+                0.00053926
               ],
               "direction_accuracy_nontrivial_moves": 0.571219,
-              "movement_correlation": 0.197793,
+              "movement_correlation": 0.19773,
               "mean_actual_move_logit": 0.00689219,
-              "mean_predicted_move_logit": 0.01274792
+              "mean_predicted_move_logit": 0.01276708
             }
           },
           {
@@ -345,17 +345,17 @@
               "implied_clv_logit": 0.01525801,
               "implied_clv_probability_points": 0.3814,
               "rmse_no_move_logit": 0.09140136,
-              "rmse_candidate_logit": 0.08960927,
-              "mse_improvement": 0.0003243877,
-              "relative_mse_reduction": 0.03882925,
+              "rmse_candidate_logit": 0.08961332,
+              "mse_improvement": 0.0003236615,
+              "relative_mse_reduction": 0.03874232,
               "improvement_ci95_date_clustered": [
-                0.00011985,
-                0.00053975
+                0.00011869,
+                0.00053924
               ],
               "direction_accuracy_nontrivial_moves": 0.571219,
-              "movement_correlation": 0.197765,
+              "movement_correlation": 0.197702,
               "mean_actual_move_logit": 0.00689219,
-              "mean_predicted_move_logit": 0.01274465
+              "mean_predicted_move_logit": 0.01276377
             }
           },
           {
@@ -382,17 +382,17 @@
               "implied_clv_logit": 0.01509305,
               "implied_clv_probability_points": 0.3773,
               "rmse_no_move_logit": 0.09140136,
-              "rmse_candidate_logit": 0.08960428,
-              "mse_improvement": 0.0003252823,
-              "relative_mse_reduction": 0.03893634,
+              "rmse_candidate_logit": 0.08960825,
+              "mse_improvement": 0.0003245702,
+              "relative_mse_reduction": 0.0388511,
               "improvement_ci95_date_clustered": [
-                0.00012282,
-                0.00053933
+                0.00012181,
+                0.00053907
               ],
               "direction_accuracy_nontrivial_moves": 0.571219,
-              "movement_correlation": 0.197485,
+              "movement_correlation": 0.197418,
               "mean_actual_move_logit": 0.00689219,
-              "mean_predicted_move_logit": 0.01271243
+              "mean_predicted_move_logit": 0.01273127
             }
           },
           {
@@ -416,20 +416,20 @@
             ],
             "selection_2023": {
               "rows": 1503,
-              "implied_clv_logit": 0.01478642,
-              "implied_clv_probability_points": 0.3697,
+              "implied_clv_logit": 0.01455358,
+              "implied_clv_probability_points": 0.3638,
               "rmse_no_move_logit": 0.09140136,
-              "rmse_candidate_logit": 0.08959137,
-              "mse_improvement": 0.0003275961,
-              "relative_mse_reduction": 0.0392133,
+              "rmse_candidate_logit": 0.08959498,
+              "mse_improvement": 0.0003269493,
+              "relative_mse_reduction": 0.03913588,
               "improvement_ci95_date_clustered": [
-                0.0001396,
-                0.00052668
+                0.00013859,
+                0.00052618
               ],
-              "direction_accuracy_nontrivial_moves": 0.571953,
-              "movement_correlation": 0.194491,
+              "direction_accuracy_nontrivial_moves": 0.571219,
+              "movement_correlation": 0.194382,
               "mean_actual_move_logit": 0.00689219,
-              "mean_predicted_move_logit": 0.01243327
+              "mean_predicted_move_logit": 0.01244969
             }
           },
           {
@@ -587,20 +587,20 @@
             ],
             "selection_2023": {
               "rows": 1503,
-              "implied_clv_logit": 0.01567025,
-              "implied_clv_probability_points": 0.3917,
+              "implied_clv_logit": 0.01545187,
+              "implied_clv_probability_points": 0.3863,
               "rmse_no_move_logit": 0.09140136,
-              "rmse_candidate_logit": 0.08988631,
-              "mse_improvement": 0.0002746611,
-              "relative_mse_reduction": 0.03287697,
+              "rmse_candidate_logit": 0.08989937,
+              "mse_improvement": 0.0002723117,
+              "relative_mse_reduction": 0.03259575,
               "improvement_ci95_date_clustered": [
-                7.846e-05,
-                0.00047487
+                7.652e-05,
+                0.00047215
               ],
-              "direction_accuracy_nontrivial_moves": 0.577827,
-              "movement_correlation": 0.178339,
+              "direction_accuracy_nontrivial_moves": 0.577093,
+              "movement_correlation": 0.177635,
               "mean_actual_move_logit": 0.00689219,
-              "mean_predicted_move_logit": 0.01263064
+              "mean_predicted_move_logit": 0.01264218
             }
           },
           {
@@ -622,20 +622,20 @@
             ],
             "selection_2023": {
               "rows": 1503,
-              "implied_clv_logit": 0.01543741,
-              "implied_clv_probability_points": 0.3859,
+              "implied_clv_logit": 0.01545187,
+              "implied_clv_probability_points": 0.3863,
               "rmse_no_move_logit": 0.09140136,
-              "rmse_candidate_logit": 0.08988644,
-              "mse_improvement": 0.0002746372,
-              "relative_mse_reduction": 0.03287411,
+              "rmse_candidate_logit": 0.0898995,
+              "mse_improvement": 0.0002722886,
+              "relative_mse_reduction": 0.03259298,
               "improvement_ci95_date_clustered": [
-                7.853e-05,
-                0.00047478
+                7.671e-05,
+                0.00047206
               ],
               "direction_accuracy_nontrivial_moves": 0.577093,
-              "movement_correlation": 0.178304,
+              "movement_correlation": 0.177599,
               "mean_actual_move_logit": 0.00689219,
-              "mean_predicted_move_logit": 0.01262807
+              "mean_predicted_move_logit": 0.01263959
             }
           },
           {
@@ -660,17 +660,17 @@
               "implied_clv_logit": 0.01545187,
               "implied_clv_probability_points": 0.3863,
               "rmse_no_move_logit": 0.09140136,
-              "rmse_candidate_logit": 0.08988793,
-              "mse_improvement": 0.0002743688,
-              "relative_mse_reduction": 0.03284198,
+              "rmse_candidate_logit": 0.08990095,
+              "mse_improvement": 0.0002720282,
+              "relative_mse_reduction": 0.03256181,
               "improvement_ci95_date_clustered": [
-                7.979e-05,
-                0.00047281
+                7.788e-05,
+                0.00047035
               ],
               "direction_accuracy_nontrivial_moves": 0.577093,
-              "movement_correlation": 0.17795,
+              "movement_correlation": 0.177244,
               "mean_actual_move_logit": 0.00689219,
-              "mean_predicted_move_logit": 0.01260273
+              "mean_predicted_move_logit": 0.01261413
             }
           },
           {
@@ -692,20 +692,20 @@
             ],
             "selection_2023": {
               "rows": 1503,
-              "implied_clv_logit": 0.01497768,
-              "implied_clv_probability_points": 0.3744,
+              "implied_clv_logit": 0.01528079,
+              "implied_clv_probability_points": 0.382,
               "rmse_no_move_logit": 0.09140136,
-              "rmse_candidate_logit": 0.08991386,
-              "mse_improvement": 0.0002697075,
-              "relative_mse_reduction": 0.03228403,
+              "rmse_candidate_logit": 0.0899264,
+              "mse_improvement": 0.0002674515,
+              "relative_mse_reduction": 0.03201398,
               "improvement_ci95_date_clustered": [
-                8.489e-05,
-                0.00045942
+                8.3e-05,
+                0.00045696
               ],
-              "direction_accuracy_nontrivial_moves": 0.574156,
-              "movement_correlation": 0.174524,
+              "direction_accuracy_nontrivial_moves": 0.57489,
+              "movement_correlation": 0.173805,
               "mean_actual_move_logit": 0.00689219,
-              "mean_predicted_move_logit": 0.01238129
+              "mean_predicted_move_logit": 0.01239159
             }
           }
         ],
@@ -730,20 +730,20 @@
       "development_signal": true,
       "confirmation_2024": {
         "rows": 1438,
-        "implied_clv_logit": 0.01780498,
-        "implied_clv_probability_points": 0.4451,
+        "implied_clv_logit": 0.01767387,
+        "implied_clv_probability_points": 0.4418,
         "rmse_no_move_logit": 0.09796692,
-        "rmse_candidate_logit": 0.09557899,
-        "mse_improvement": 0.0004621748,
-        "relative_mse_reduction": 0.04815566,
+        "rmse_candidate_logit": 0.09557025,
+        "mse_improvement": 0.000463846,
+        "relative_mse_reduction": 0.04832979,
         "improvement_ci95_date_clustered": [
-          0.00025375,
-          0.00067081
+          0.00025486,
+          0.00067391
         ],
-        "direction_accuracy_nontrivial_moves": 0.592764,
-        "movement_correlation": 0.181404,
+        "direction_accuracy_nontrivial_moves": 0.591994,
+        "movement_correlation": 0.181689,
         "mean_actual_move_logit": 0.01642433,
-        "mean_predicted_move_logit": 0.00572211
+        "mean_predicted_move_logit": 0.0057554
       },
       "confirmation_signal": true,
       "status": "confirmed research signal; paper CLV only"
@@ -944,17 +944,17 @@
               "implied_clv_logit": 0.01639782,
               "implied_clv_probability_points": 0.4099,
               "rmse_no_move_logit": 0.0864133,
-              "rmse_candidate_logit": 0.08414202,
-              "mse_improvement": 0.0003873786,
-              "relative_mse_reduction": 0.05187695,
+              "rmse_candidate_logit": 0.08414167,
+              "mse_improvement": 0.0003874379,
+              "relative_mse_reduction": 0.05188489,
               "improvement_ci95_date_clustered": [
-                0.00012604,
-                0.0006287
+                0.00012596,
+                0.00062889
               ],
               "direction_accuracy_nontrivial_moves": 0.578565,
-              "movement_correlation": 0.238787,
+              "movement_correlation": 0.238841,
               "mean_actual_move_logit": 0.00072422,
-              "mean_predicted_move_logit": 0.00185728
+              "mean_predicted_move_logit": 0.00186663
             }
           },
           {
@@ -978,20 +978,20 @@
             ],
             "selection_2023": {
               "rows": 1221,
-              "implied_clv_logit": 0.01645005,
-              "implied_clv_probability_points": 0.4112,
+              "implied_clv_logit": 0.01638529,
+              "implied_clv_probability_points": 0.4096,
               "rmse_no_move_logit": 0.0864133,
-              "rmse_candidate_logit": 0.08414019,
-              "mse_improvement": 0.0003876859,
-              "relative_mse_reduction": 0.05191811,
+              "rmse_candidate_logit": 0.08413985,
+              "mse_improvement": 0.0003877434,
+              "relative_mse_reduction": 0.05192581,
               "improvement_ci95_date_clustered": [
-                0.00012688,
-                0.00062857
+                0.00012665,
+                0.0006288
               ],
-              "direction_accuracy_nontrivial_moves": 0.579473,
-              "movement_correlation": 0.238734,
+              "direction_accuracy_nontrivial_moves": 0.578565,
+              "movement_correlation": 0.238787,
               "mean_actual_move_logit": 0.00072422,
-              "mean_predicted_move_logit": 0.00185382
+              "mean_predicted_move_logit": 0.00186313
             }
           },
           {
@@ -1018,17 +1018,17 @@
               "implied_clv_logit": 0.01627994,
               "implied_clv_probability_points": 0.407,
               "rmse_no_move_logit": 0.0864133,
-              "rmse_candidate_logit": 0.08412465,
-              "mse_improvement": 0.0003903013,
-              "relative_mse_reduction": 0.05226836,
+              "rmse_candidate_logit": 0.08412443,
+              "mse_improvement": 0.0003903389,
+              "relative_mse_reduction": 0.05227339,
               "improvement_ci95_date_clustered": [
-                0.00013339,
-                0.00062741
+                0.00013347,
+                0.00062747
               ],
               "direction_accuracy_nontrivial_moves": 0.578565,
-              "movement_correlation": 0.238183,
+              "movement_correlation": 0.238225,
               "mean_actual_move_logit": 0.00072422,
-              "mean_predicted_move_logit": 0.00182106
+              "mean_predicted_move_logit": 0.00183012
             }
           },
           {
@@ -1055,17 +1055,17 @@
               "implied_clv_logit": 0.01644935,
               "implied_clv_probability_points": 0.4112,
               "rmse_no_move_logit": 0.0864133,
-              "rmse_candidate_logit": 0.08412511,
-              "mse_improvement": 0.0003902231,
-              "relative_mse_reduction": 0.05225788,
+              "rmse_candidate_logit": 0.08412639,
+              "mse_improvement": 0.0003900085,
+              "relative_mse_reduction": 0.05222914,
               "improvement_ci95_date_clustered": [
-                0.00016241,
-                0.00059684
+                0.00016198,
+                0.00059653
               ],
               "direction_accuracy_nontrivial_moves": 0.577657,
-              "movement_correlation": 0.231521,
+              "movement_correlation": 0.231475,
               "mean_actual_move_logit": 0.00072422,
-              "mean_predicted_move_logit": 0.00162719
+              "mean_predicted_move_logit": 0.00163444
             }
           },
           {
@@ -1226,17 +1226,17 @@
               "implied_clv_logit": 0.01582381,
               "implied_clv_probability_points": 0.3956,
               "rmse_no_move_logit": 0.0864133,
-              "rmse_candidate_logit": 0.08422006,
-              "mse_improvement": 0.0003742403,
-              "relative_mse_reduction": 0.0501175,
+              "rmse_candidate_logit": 0.08422193,
+              "mse_improvement": 0.0003739244,
+              "relative_mse_reduction": 0.05007519,
               "improvement_ci95_date_clustered": [
-                0.00010754,
-                0.00061866
+                0.0001068,
+                0.00061847
               ],
               "direction_accuracy_nontrivial_moves": 0.572207,
-              "movement_correlation": 0.235267,
+              "movement_correlation": 0.235204,
               "mean_actual_move_logit": 0.00072422,
-              "mean_predicted_move_logit": 0.00090403
+              "mean_predicted_move_logit": 0.0009116
             }
           },
           {
@@ -1261,17 +1261,17 @@
               "implied_clv_logit": 0.01582381,
               "implied_clv_probability_points": 0.3956,
               "rmse_no_move_logit": 0.0864133,
-              "rmse_candidate_logit": 0.08421952,
-              "mse_improvement": 0.0003743296,
-              "relative_mse_reduction": 0.05012946,
+              "rmse_candidate_logit": 0.08422141,
+              "mse_improvement": 0.0003740121,
+              "relative_mse_reduction": 0.05008695,
               "improvement_ci95_date_clustered": [
-                0.00010802,
-                0.00061843
+                0.00010729,
+                0.00061823
               ],
               "direction_accuracy_nontrivial_moves": 0.572207,
-              "movement_correlation": 0.235206,
+              "movement_correlation": 0.235143,
               "mean_actual_move_logit": 0.00072422,
-              "mean_predicted_move_logit": 0.00090634
+              "mean_predicted_move_logit": 0.0009139
             }
           },
           {
@@ -1296,17 +1296,17 @@
               "implied_clv_logit": 0.0156802,
               "implied_clv_probability_points": 0.392,
               "rmse_no_move_logit": 0.0864133,
-              "rmse_candidate_logit": 0.08421479,
-              "mse_improvement": 0.0003751269,
-              "relative_mse_reduction": 0.05023623,
+              "rmse_candidate_logit": 0.08421677,
+              "mse_improvement": 0.0003747943,
+              "relative_mse_reduction": 0.05019169,
               "improvement_ci95_date_clustered": [
-                0.00011194,
-                0.00061606
+                0.00011125,
+                0.00061582
               ],
               "direction_accuracy_nontrivial_moves": 0.570391,
-              "movement_correlation": 0.234601,
+              "movement_correlation": 0.234532,
               "mean_actual_move_logit": 0.00072422,
-              "mean_predicted_move_logit": 0.00092916
+              "mean_predicted_move_logit": 0.00093661
             }
           },
           {
@@ -1331,17 +1331,17 @@
               "implied_clv_logit": 0.01521757,
               "implied_clv_probability_points": 0.3804,
               "rmse_no_move_logit": 0.0864133,
-              "rmse_candidate_logit": 0.08420976,
-              "mse_improvement": 0.0003759737,
-              "relative_mse_reduction": 0.05034964,
+              "rmse_candidate_logit": 0.08421251,
+              "mse_improvement": 0.0003755103,
+              "relative_mse_reduction": 0.05028757,
               "improvement_ci95_date_clustered": [
-                0.0001367,
-                0.00059066
+                0.00013638,
+                0.00059013
               ],
               "direction_accuracy_nontrivial_moves": 0.567666,
-              "movement_correlation": 0.228968,
+              "movement_correlation": 0.228857,
               "mean_actual_move_logit": 0.00072422,
-              "mean_predicted_move_logit": 0.00113249
+              "mean_predicted_move_logit": 0.00113894
             }
           }
         ],
@@ -1369,17 +1369,17 @@
         "implied_clv_logit": 0.02199328,
         "implied_clv_probability_points": 0.5498,
         "rmse_no_move_logit": 0.0930295,
-        "rmse_candidate_logit": 0.09000225,
-        "mse_improvement": 0.0005540829,
-        "relative_mse_reduction": 0.06402261,
+        "rmse_candidate_logit": 0.08997104,
+        "mse_improvement": 0.0005596991,
+        "relative_mse_reduction": 0.06467155,
         "improvement_ci95_date_clustered": [
-          0.000236,
-          0.00084628
+          0.00024086,
+          0.00085241
         ],
         "direction_accuracy_nontrivial_moves": 0.601449,
-        "movement_correlation": 0.267999,
+        "movement_correlation": 0.268938,
         "mean_actual_move_logit": 0.01991007,
-        "mean_predicted_move_logit": -0.00094698
+        "mean_predicted_move_logit": -0.0009118
       },
       "confirmation_signal": true,
       "status": "confirmed research signal; paper CLV only"
@@ -1576,20 +1576,20 @@
             ],
             "selection_2023": {
               "rows": 695,
-              "implied_clv_logit": 0.03220021,
-              "implied_clv_probability_points": 0.8049,
+              "implied_clv_logit": 0.03205163,
+              "implied_clv_probability_points": 0.8012,
               "rmse_no_move_logit": 0.06842327,
-              "rmse_candidate_logit": 0.05628559,
-              "mse_improvement": 0.0015136754,
-              "relative_mse_reduction": 0.32331446,
+              "rmse_candidate_logit": 0.05642722,
+              "mse_improvement": 0.0014977128,
+              "relative_mse_reduction": 0.31990491,
               "improvement_ci95_date_clustered": [
-                0.00113008,
-                0.00187679
+                0.00111087,
+                0.00186056
               ],
-              "direction_accuracy_nontrivial_moves": 0.719858,
-              "movement_correlation": 0.599932,
+              "direction_accuracy_nontrivial_moves": 0.718085,
+              "movement_correlation": 0.599304,
               "mean_actual_move_logit": 0.00354411,
-              "mean_predicted_move_logit": -0.00980949
+              "mean_predicted_move_logit": -0.01025444
             }
           },
           {
@@ -1613,20 +1613,20 @@
             ],
             "selection_2023": {
               "rows": 695,
-              "implied_clv_logit": 0.03232494,
-              "implied_clv_probability_points": 0.8081,
+              "implied_clv_logit": 0.03217636,
+              "implied_clv_probability_points": 0.8043,
               "rmse_no_move_logit": 0.06842327,
-              "rmse_candidate_logit": 0.05627942,
-              "mse_improvement": 0.0015143709,
-              "relative_mse_reduction": 0.32346302,
+              "rmse_candidate_logit": 0.05642052,
+              "mse_improvement": 0.0014984688,
+              "relative_mse_reduction": 0.3200664,
               "improvement_ci95_date_clustered": [
-                0.00113115,
-                0.00187688
+                0.00111202,
+                0.00186069
               ],
-              "direction_accuracy_nontrivial_moves": 0.721631,
-              "movement_correlation": 0.599918,
+              "direction_accuracy_nontrivial_moves": 0.719858,
+              "movement_correlation": 0.59929,
               "mean_actual_move_logit": 0.00354411,
-              "mean_predicted_move_logit": -0.00978541
+              "mean_predicted_move_logit": -0.01022977
             }
           },
           {
@@ -1653,17 +1653,17 @@
               "implied_clv_logit": 0.03217636,
               "implied_clv_probability_points": 0.8043,
               "rmse_no_move_logit": 0.06842327,
-              "rmse_candidate_logit": 0.05622415,
-              "mse_improvement": 0.0015205889,
-              "relative_mse_reduction": 0.32479114,
+              "rmse_candidate_logit": 0.05636014,
+              "mse_improvement": 0.0015052783,
+              "relative_mse_reduction": 0.32152087,
               "improvement_ci95_date_clustered": [
-                0.00114115,
-                0.00187786
+                0.00112306,
+                0.0018633
               ],
               "direction_accuracy_nontrivial_moves": 0.719858,
-              "movement_correlation": 0.599772,
+              "movement_correlation": 0.599147,
               "mean_actual_move_logit": 0.00354411,
-              "mean_predicted_move_logit": -0.00955082
+              "mean_predicted_move_logit": -0.00998937
             }
           },
           {
@@ -1687,20 +1687,20 @@
             ],
             "selection_2023": {
               "rows": 695,
-              "implied_clv_logit": 0.03186619,
-              "implied_clv_probability_points": 0.7966,
+              "implied_clv_logit": 0.03216301,
+              "implied_clv_probability_points": 0.804,
               "rmse_no_move_logit": 0.06842327,
-              "rmse_candidate_logit": 0.05613217,
-              "mse_improvement": 0.0015309233,
-              "relative_mse_reduction": 0.32699854,
+              "rmse_candidate_logit": 0.0562269,
+              "mse_improvement": 0.0015202788,
+              "relative_mse_reduction": 0.32472492,
               "improvement_ci95_date_clustered": [
-                0.00119625,
-                0.00184285
+                0.00118341,
+                0.00183259
               ],
-              "direction_accuracy_nontrivial_moves": 0.714539,
-              "movement_correlation": 0.597875,
+              "direction_accuracy_nontrivial_moves": 0.718085,
+              "movement_correlation": 0.597314,
               "mean_actual_move_logit": 0.00354411,
-              "mean_predicted_move_logit": -0.00770721
+              "mean_predicted_move_logit": -0.00809264
             }
           },
           {
@@ -1858,20 +1858,20 @@
             ],
             "selection_2023": {
               "rows": 695,
-              "implied_clv_logit": 0.01447079,
-              "implied_clv_probability_points": 0.3618,
+              "implied_clv_logit": 0.01444696,
+              "implied_clv_probability_points": 0.3612,
               "rmse_no_move_logit": 0.06842327,
-              "rmse_candidate_logit": 0.06668879,
-              "mse_improvement": 0.0002343489,
-              "relative_mse_reduction": 0.05005589,
+              "rmse_candidate_logit": 0.0668147,
+              "mse_improvement": 0.0002175399,
+              "relative_mse_reduction": 0.04646557,
               "improvement_ci95_date_clustered": [
-                -6.889e-05,
-                0.00053159
+                -9.09e-05,
+                0.00051946
               ],
               "direction_accuracy_nontrivial_moves": 0.611702,
-              "movement_correlation": 0.299702,
+              "movement_correlation": 0.299627,
               "mean_actual_move_logit": 0.00354411,
-              "mean_predicted_move_logit": -0.00756727
+              "mean_predicted_move_logit": -0.00810208
             }
           },
           {
@@ -1893,20 +1893,20 @@
             ],
             "selection_2023": {
               "rows": 695,
-              "implied_clv_logit": 0.01447079,
-              "implied_clv_probability_points": 0.3618,
+              "implied_clv_logit": 0.01444696,
+              "implied_clv_probability_points": 0.3612,
               "rmse_no_move_logit": 0.06842327,
-              "rmse_candidate_logit": 0.06667893,
-              "mse_improvement": 0.0002356639,
-              "relative_mse_reduction": 0.05033677,
+              "rmse_candidate_logit": 0.06680413,
+              "mse_improvement": 0.0002189512,
+              "relative_mse_reduction": 0.04676703,
               "improvement_ci95_date_clustered": [
-                -6.677e-05,
-                0.00053222
+                -8.88e-05,
+                0.00051986
               ],
               "direction_accuracy_nontrivial_moves": 0.611702,
-              "movement_correlation": 0.299673,
+              "movement_correlation": 0.299599,
               "mean_actual_move_logit": 0.00354411,
-              "mean_predicted_move_logit": -0.00755049
+              "mean_predicted_move_logit": -0.00808424
             }
           },
           {
@@ -1931,17 +1931,17 @@
               "implied_clv_logit": 0.01477042,
               "implied_clv_probability_points": 0.3693,
               "rmse_no_move_logit": 0.06842327,
-              "rmse_candidate_logit": 0.06658587,
-              "mse_improvement": 0.0002480655,
-              "relative_mse_reduction": 0.0529857,
+              "rmse_candidate_logit": 0.06670436,
+              "mse_improvement": 0.000232272,
+              "relative_mse_reduction": 0.04961228,
               "improvement_ci95_date_clustered": [
-                -4.726e-05,
-                0.00053795
+                -6.794e-05,
+                0.00052619
               ],
               "direction_accuracy_nontrivial_moves": 0.615248,
-              "movement_correlation": 0.29939,
+              "movement_correlation": 0.299332,
               "mean_actual_move_logit": 0.00354411,
-              "mean_predicted_move_logit": -0.00738637
+              "mean_predicted_move_logit": -0.00790975
             }
           },
           {
@@ -1963,20 +1963,20 @@
             ],
             "selection_2023": {
               "rows": 695,
-              "implied_clv_logit": 0.01373912,
-              "implied_clv_probability_points": 0.3435,
+              "implied_clv_logit": 0.01376967,
+              "implied_clv_probability_points": 0.3442,
               "rmse_no_move_logit": 0.06842327,
-              "rmse_candidate_logit": 0.06603656,
-              "mse_improvement": 0.0003209166,
-              "relative_mse_reduction": 0.06854638,
+              "rmse_candidate_logit": 0.06610944,
+              "mse_improvement": 0.000311286,
+              "relative_mse_reduction": 0.06648934,
               "improvement_ci95_date_clustered": [
-                7.541e-05,
-                0.00056175
+                6.356e-05,
+                0.00055405
               ],
-              "direction_accuracy_nontrivial_moves": 0.613475,
-              "movement_correlation": 0.297251,
+              "direction_accuracy_nontrivial_moves": 0.611702,
+              "movement_correlation": 0.297317,
               "mean_actual_move_logit": 0.00354411,
-              "mean_predicted_move_logit": -0.00607771
+              "mean_predicted_move_logit": -0.0065168
             }
           }
         ],
