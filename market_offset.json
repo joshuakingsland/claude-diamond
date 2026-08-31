@@ -1,6 +1,6 @@
 {
   "version": "market-logit-offset-v1",
-  "repository_revision": "bf7263155438",
+  "repository_revision": "0d8cedf4124b",
   "fitted_through": "2025-09-28",
   "promotion_status": "research_only",
   "outcome": {
@@ -8,7 +8,7 @@
       "rows": 2230,
       "weight": 0.0,
       "log_loss_market": 0.676088,
-      "log_loss_standalone": 0.681926,
+      "log_loss_standalone": 0.681938,
       "log_loss_research_offset": 0.676088,
       "log_loss_offset": 0.676088,
       "status": "research_only; selected on historical outcomes",
@@ -31,20 +31,20 @@
       "rows": 2013,
       "weight": 0.0,
       "log_loss_market": 0.666006,
-      "log_loss_standalone": 0.671263,
+      "log_loss_standalone": 0.671278,
       "log_loss_research_offset": 0.666006,
       "log_loss_offset": 0.666006,
       "status": "research_only; selected on historical outcomes",
-      "research_weight": 0.001672,
+      "research_weight": 0.00121,
       "walk_forward": {
         "rows": 1041,
-        "mean_weight": 0.030814,
+        "mean_weight": 0.030384,
         "log_loss_market": 0.66626,
         "log_loss_offset": 0.666305,
-        "log_loss_improvement": -4.548e-05,
+        "log_loss_improvement": -4.494e-05,
         "improvement_ci95_date_clustered": [
-          -0.00025873,
-          0.0001632
+          -0.00025626,
+          0.00016194
         ],
         "status": "forward by date; research only"
       },
@@ -54,11 +54,11 @@
       "rows": 2093,
       "weight": 0.0,
       "log_loss_market": 0.692772,
-      "log_loss_standalone": 0.697789,
-      "log_loss_research_offset": 0.692736,
-      "log_loss_offset": 0.692736,
+      "log_loss_standalone": 0.697769,
+      "log_loss_research_offset": 0.692734,
+      "log_loss_offset": 0.692734,
       "status": "research_only; selected on historical outcomes",
-      "research_weight": 0.059989,
+      "research_weight": 0.061084,
       "walk_forward": {
         "rows": 1053,
         "mean_weight": 6e-06,
@@ -78,24 +78,24 @@
     "h2h": {
       "rows": 1483,
       "leader_rows": 1429,
-      "research_model_weight": 0.029598,
-      "research_leader_weight": 0.004861,
-      "model_weight": 0.029598,
-      "leader_weight": 0.004861,
-      "weight": 0.029598,
+      "research_model_weight": 0.029515,
+      "research_leader_weight": 0.00485,
+      "model_weight": 0.029515,
+      "leader_weight": 0.00485,
+      "weight": 0.029515,
       "rmse_entry_logit": 0.077686,
-      "rmse_offset_logit": 0.077449,
+      "rmse_offset_logit": 0.07745,
       "walk_forward": {
         "rows": 767,
         "rmse_entry_logit": 0.07787,
-        "rmse_offset_logit": 0.077519,
-        "mse_improvement": 5.452e-05,
+        "rmse_offset_logit": 0.077521,
+        "mse_improvement": 5.428e-05,
         "improvement_ci95_date_clustered": [
-          1.558e-05,
-          9.504e-05
+          1.535e-05,
+          9.482e-05
         ],
-        "mean_model_weight": 0.018971,
-        "mean_leader_weight": 0.011121,
+        "mean_model_weight": 0.018924,
+        "mean_leader_weight": 0.011111,
         "status": "forward by date; research only"
       },
       "deployment_status": "forward-supported",
@@ -104,23 +104,23 @@
     "spreads": {
       "rows": 869,
       "leader_rows": 334,
-      "research_model_weight": 0.021539,
+      "research_model_weight": 0.021444,
       "research_leader_weight": 0.0,
-      "model_weight": 0.021539,
+      "model_weight": 0.021444,
       "leader_weight": 0.0,
-      "weight": 0.021539,
+      "weight": 0.021444,
       "rmse_entry_logit": 0.071016,
-      "rmse_offset_logit": 0.07087,
+      "rmse_offset_logit": 0.070871,
       "walk_forward": {
         "rows": 472,
         "rmse_entry_logit": 0.070926,
-        "rmse_offset_logit": 0.070762,
-        "mse_improvement": 2.316e-05,
+        "rmse_offset_logit": 0.070764,
+        "mse_improvement": 2.29e-05,
         "improvement_ci95_date_clustered": [
-          4.53e-06,
-          4.838e-05
+          4.5e-06,
+          4.787e-05
         ],
-        "mean_model_weight": 0.004863,
+        "mean_model_weight": 0.004801,
         "mean_leader_weight": 0.0,
         "status": "forward by date; research only"
       },
@@ -130,7 +130,7 @@
     "totals": {
       "rows": 1022,
       "leader_rows": 936,
-      "research_model_weight": 0.028521,
+      "research_model_weight": 0.028549,
       "research_leader_weight": 0.0,
       "model_weight": 0.0,
       "leader_weight": 0.0,
@@ -141,12 +141,12 @@
         "rows": 531,
         "rmse_entry_logit": 0.056755,
         "rmse_offset_logit": 0.056676,
-        "mse_improvement": 8.9e-06,
+        "mse_improvement": 8.92e-06,
         "improvement_ci95_date_clustered": [
-          -5.713e-05,
-          7.026e-05
+          -5.706e-05,
+          7.044e-05
         ],
-        "mean_model_weight": 0.029613,
+        "mean_model_weight": 0.029616,
         "mean_leader_weight": 0.0,
         "status": "forward by date; research only"
       },

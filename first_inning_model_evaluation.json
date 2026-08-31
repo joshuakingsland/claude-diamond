@@ -1,7 +1,7 @@
 {
   "study": "MLB first-inning YRFI market-anchored model",
   "status": "no_confirmed_yrfi_edge",
-  "repository_revision": "bf7263155438",
+  "repository_revision": "0d8cedf4124b",
   "protocol": {
     "version": "yrfi-market-anchor-v1",
     "market": "totals_1st_1_innings",

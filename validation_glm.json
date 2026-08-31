@@ -1,5 +1,5 @@
 {
-  "games": 11683,
+  "games": 11776,
   "seasons": [
     2022,
     2023,
@@ -8,124 +8,124 @@
     2026
   ],
   "moneyline": {
-    "home_win_rate": 0.52949,
+    "home_win_rate": 0.52921,
     "log_loss": 0.67955,
-    "log_loss_home_field_baseline": 0.69141,
-    "brier": 0.2433,
-    "calibration_error": 0.00996,
+    "log_loss_home_field_baseline": 0.69144,
+    "brier": 0.24331,
+    "calibration_error": 0.00977,
     "calibration": [
       {
         "bin": "0.2-0.3",
         "n": 77,
-        "predicted": 0.2775,
+        "predicted": 0.2776,
         "realised": 0.3377,
-        "error": 0.0601
+        "error": 0.06
       },
       {
         "bin": "0.3-0.4",
-        "n": 881,
+        "n": 884,
         "predicted": 0.3669,
-        "realised": 0.4075,
-        "error": 0.0406
+        "realised": 0.4038,
+        "error": 0.037
       },
       {
         "bin": "0.4-0.5",
-        "n": 3752,
+        "n": 3796,
         "predicted": 0.4568,
-        "realised": 0.4709,
-        "error": 0.0141
+        "realised": 0.4708,
+        "error": 0.014
       },
       {
         "bin": "0.5-0.6",
-        "n": 4947,
+        "n": 4979,
         "predicted": 0.5462,
-        "realised": 0.5494,
-        "error": 0.0032
+        "realised": 0.5503,
+        "error": 0.0041
       },
       {
         "bin": "0.6-0.7",
-        "n": 1815,
-        "predicted": 0.6366,
-        "realised": 0.6397,
-        "error": 0.0031
+        "n": 1831,
+        "predicted": 0.6367,
+        "realised": 0.6379,
+        "error": 0.0012
       },
       {
         "bin": "0.7-0.8",
-        "n": 209,
-        "predicted": 0.7294,
-        "realised": 0.7368,
-        "error": 0.0074
+        "n": 207,
+        "predicted": 0.7296,
+        "realised": 0.7391,
+        "error": 0.0095
       }
     ],
     "log_loss_ci90_season_clustered": [
       0.67684,
-      0.68265
+      0.68258
     ]
   },
   "runline": {
     "point": -1.5,
-    "cover_rate": 0.35796,
-    "log_loss": 0.63947,
+    "cover_rate": 0.35793,
+    "log_loss": 0.63948,
     "brier": 0.22397,
-    "calibration_error": 0.00653,
+    "calibration_error": 0.00664,
     "calibration": [
       {
         "bin": "0.1-0.2",
-        "n": 273,
+        "n": 272,
         "predicted": 0.1759,
-        "realised": 0.1905,
-        "error": 0.0145
+        "realised": 0.1949,
+        "error": 0.0189
       },
       {
         "bin": "0.2-0.3",
-        "n": 2762,
-        "predicted": 0.2632,
-        "realised": 0.2759,
-        "error": 0.0127
+        "n": 2781,
+        "predicted": 0.2631,
+        "realised": 0.2744,
+        "error": 0.0112
       },
       {
         "bin": "0.3-0.4",
-        "n": 5546,
+        "n": 5608,
         "predicted": 0.3494,
-        "realised": 0.3529,
-        "error": 0.0035
+        "realised": 0.3534,
+        "error": 0.0041
       },
       {
         "bin": "0.4-0.5",
-        "n": 2650,
-        "predicted": 0.4384,
-        "realised": 0.4362,
-        "error": -0.0022
+        "n": 2660,
+        "predicted": 0.4385,
+        "realised": 0.4361,
+        "error": -0.0024
       },
       {
         "bin": "0.5-0.6",
-        "n": 420,
-        "predicted": 0.5313,
-        "realised": 0.5524,
-        "error": 0.0211
+        "n": 422,
+        "predicted": 0.531,
+        "realised": 0.5521,
+        "error": 0.0212
       },
       {
         "bin": "0.6-0.7",
-        "n": 32,
-        "predicted": 0.6202,
-        "realised": 0.7188,
-        "error": 0.0986
+        "n": 33,
+        "predicted": 0.6193,
+        "realised": 0.7273,
+        "error": 0.1079
       }
     ]
   },
   "total": {
     "point": 8.5,
-    "over_rate": 0.48772,
-    "log_loss": 0.68788,
-    "brier": 0.24733,
-    "calibration_error": 0.01988,
+    "over_rate": 0.48743,
+    "log_loss": 0.68776,
+    "brier": 0.24727,
+    "calibration_error": 0.01996,
     "calibration": [
       {
         "bin": "0.2-0.3",
-        "n": 109,
-        "predicted": 0.27,
-        "realised": 0.3853,
-        "error": 0.1153
+        "n": 110,
+        "predicted": 0.2694,
+        "realised": 0.3727,
+        "error": 0.1034
       },
       {
         "bin": "0.3-0.4",
@@ -136,46 +136,46 @@
       },
       {
         "bin": "0.4-0.5",
-        "n": 4690,
+        "n": 4734,
         "predicted": 0.4577,
-        "realised": 0.4557,
-        "error": -0.0021
+        "realised": 0.4535,
+        "error": -0.0042
       },
       {
         "bin": "0.5-0.6",
-        "n": 4811,
+        "n": 4853,
         "predicted": 0.5416,
-        "realised": 0.5136,
-        "error": -0.028
+        "realised": 0.5141,
+        "error": -0.0275
       },
       {
         "bin": "0.6-0.7",
-        "n": 950,
-        "predicted": 0.6366,
-        "realised": 0.5968,
-        "error": -0.0398
+        "n": 957,
+        "predicted": 0.6363,
+        "realised": 0.6008,
+        "error": -0.0355
       },
       {
         "bin": "0.7-0.8",
         "n": 125,
-        "predicted": 0.7271,
-        "realised": 0.68,
-        "error": -0.0471
+        "predicted": 0.7274,
+        "realised": 0.688,
+        "error": -0.0394
       }
     ]
   },
   "expected_runs": {
     "home": {
-      "mean_predicted": 4.4967,
-      "mean_actual": 4.4537,
-      "mae": 2.4081,
+      "mean_predicted": 4.4964,
+      "mean_actual": 4.4534,
+      "mae": 2.4093,
       "bias": 0.0431
     },
     "away": {
-      "mean_predicted": 4.4172,
-      "mean_actual": 4.4285,
-      "mae": 2.5016,
-      "bias": -0.0113
+      "mean_predicted": 4.4178,
+      "mean_actual": 4.4274,
+      "mae": 2.5021,
+      "bias": -0.0096
     }
   },
   "market_comparison": {
@@ -193,28 +193,28 @@
     "close": {
       "h2h": {
         "games": 2230,
-        "delta": 0.00584,
+        "delta": 0.00585,
         "delta_ci90_date_clustered": [
-          0.00236,
-          0.00921
+          0.00238,
+          0.00922
         ],
         "verdict": "market better; interval excludes zero"
       },
       "spreads": {
         "games": 2013,
-        "delta": 0.00526,
+        "delta": 0.00527,
         "delta_ci90_date_clustered": [
           0.00159,
-          0.00889
+          0.0089
         ],
         "verdict": "market better; interval excludes zero"
       },
       "totals": {
         "games": 2093,
-        "delta": 0.00502,
+        "delta": 0.005,
         "delta_ci90_date_clustered": [
-          0.00088,
-          0.00899
+          0.00087,
+          0.009
         ],
         "verdict": "market better; interval excludes zero"
       }
@@ -224,23 +224,23 @@
   "forward_evidence": {
     "status": "available",
     "source": "clv_signals",
-    "repository_revision": "bf7263155438",
+    "repository_revision": "0d8cedf4124b",
     "staking_policy_version": "paper-ev-mainline-riskbucket-v3",
-    "independent_games": 123,
+    "independent_games": 174,
     "accepted_fill_rate": 0.0,
-    "sharp_close_matches": 219,
-    "mean_clv_probability": -0.007176,
+    "sharp_close_matches": 318,
+    "mean_clv_probability": -0.007679,
     "clv_ci95_date_clustered": [
-      -0.009766,
-      -0.00393
+      -0.00971,
+      -0.005232
     ],
     "promotion_status": "research_only",
     "promotion_failures": [
-      "123 independent games < 500",
+      "174 independent games < 500",
       "accepted fill rate 0.0% < 95.0%",
       "positive sharp-close CLV is not established"
     ],
-    "signals": 244,
+    "signals": 350,
     "paper_ledger_settled_roi": 0.389311
   },
   "live_gate": {
@@ -248,7 +248,7 @@
     "reason": "The model beats the closing price on 0 of 3 markets with an interval excluding zero. Beating a closing price on log loss would in any case be a necessary condition for staking, not a sufficient one. Forward evidence is research_only; it requires independent games, accepted fills, and positive sharp-close CLV before any promotion review. This repository does not place wagers."
   },
   "model_kind": "glm",
-  "model_revision": "bf7263155438",
+  "model_revision": "0d8cedf4124b",
   "feature_schema": "50fd9812bfa1",
-  "model_version": "diamond-v1-glm-bf7263155438-features-50fd9812bfa1"
+  "model_version": "diamond-v1-glm-0d8cedf4124b-features-50fd9812bfa1"
 }

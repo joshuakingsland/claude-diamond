@@ -1719,7 +1719,7 @@ game_pk,official_date,game_date_utc,season,game_type,double_header,game_number,s
 632912,2021-08-12,2021-08-12T16:15:00Z,2021,R,Y,2,3,day,7,Final,121,New York Mets,120,Washington Nationals,5,4,1,9,1,592866,Trevor Williams,607200,Erick Fedde,3289,Citi Field,Clear,94,"12 mph, Out To CF",7,1
 632914,2021-08-12,2021-08-13T01:40:00Z,2021,R,N,1,1,night,9,Final,109,Arizona Diamondbacks,135,San Diego Padres,12,3,1,15,9,676840,Matt Peacock,506433,Yu Darvish,15,Chase Field,Roof Closed,76,"0 mph, None",9,0
 632918,2021-08-12,2021-08-13T01:38:00Z,2021,R,N,1,4,night,9,Final,108,Los Angeles Angels,141,Toronto Blue Jays,6,3,1,9,3,660271,Shohei Ohtani,621244,José Berríos,1,Angel Stadium,Clear,82,"10 mph, Out To LF",9,0
-632924,2021-08-12,2021-08-12T23:00:00Z,2021,R,N,1,1,day,9,Final,145,Chicago White Sox,147,New York Yankees,9,8,1,17,1,458681,Lance Lynn,571760,Andrew Heaney,,,Clear,82,"7 mph, Out To RF",9,1
+632924,2021-08-12,2021-08-12T23:00:00Z,2021,R,N,1,1,night,9,Final,145,Chicago White Sox,147,New York Yankees,9,8,1,17,1,458681,Lance Lynn,571760,Andrew Heaney,5445,Field of Dreams,Clear,82,"7 mph, Out To RF",9,1
 632929,2021-08-12,2021-08-12T21:10:00Z,2021,R,N,1,3,night,9,Final,144,Atlanta Braves,113,Cincinnati Reds,3,12,0,15,-9,666205,Kyle Muller,661269,Vladimir Gutierrez,4705,Truist Park,Partly Cloudy,86,"1 mph, Calm",9,1
 632938,2021-08-12,2021-08-12T20:05:00Z,2021,R,N,1,3,day,9,Final,110,Baltimore Orioles,116,Detroit Tigers,4,6,0,10,-2,607644,John Means,666159,Matt Manning,2,Oriole Park at Camden Yards,Sunny,97,"9 mph, Out To CF",9,1
 632939,2021-08-12,2021-08-13T01:45:00Z,2021,R,N,1,1,night,9,Final,137,San Francisco Giants,115,Colorado Rockies,7,0,1,7,7,657277,Logan Webb,608566,Germán Márquez,2395,Oracle Park,Clear,60,"17 mph, Out To CF",9,0
@@ -4101,7 +4101,7 @@ game_pk,official_date,game_date_utc,season,game_type,double_header,game_number,s
 662722,2022-08-11,2022-08-11T18:10:00Z,2022,R,N,1,3,day,9,Final,117,Houston Astros,140,Texas Rangers,7,3,1,10,4,664285,Framber Valdez,666142,Cole Ragans,2392,Minute Maid Park,Roof Closed,73,"0 mph, None",9,0
 662790,2022-08-11,2022-08-11T17:10:00Z,2022,R,N,1,3,day,9,Final,116,Detroit Tigers,114,Cleveland Guardians,3,4,0,7,-1,682051,Garrett Hill,668676,Zach Plesac,2394,Comerica Park,Sunny,77,"9 mph, L To R",10,1
 662891,2022-08-11,2022-08-11T19:10:00Z,2022,R,N,1,3,day,9,Final,115,Colorado Rockies,138,St. Louis Cardinals,8,6,1,14,2,608566,Germán Márquez,641712,Dakota Hudson,19,Coors Field,Partly Cloudy,91,"4 mph, In From CF",9,0
-663023,2022-08-11,2022-08-11T23:15:00Z,2022,R,N,1,1,day,9,Final,113,Cincinnati Reds,112,Chicago Cubs,2,4,0,6,-2,666157,Nick Lodolo,592767,Drew Smyly,,,Clear,77,"6 mph, In From LF",9,1
+663023,2022-08-11,2022-08-11T23:15:00Z,2022,R,N,1,1,night,9,Final,113,Cincinnati Reds,112,Chicago Cubs,2,4,0,6,-2,666157,Nick Lodolo,592767,Drew Smyly,5445,Field of Dreams,Clear,77,"6 mph, In From LF",9,1
 663274,2022-08-11,2022-08-11T23:10:00Z,2022,R,N,1,1,night,9,Final,111,Boston Red Sox,110,Baltimore Orioles,4,3,1,7,1,670174,Josh Winckowski,665152,Dean Kremer,3,Fenway Park,Partly Cloudy,75,"12 mph, Out To LF",9,0
 663293,2022-08-11,2022-08-11T19:40:00Z,2022,R,N,1,4,day,9,Final,109,Arizona Diamondbacks,134,Pittsburgh Pirates,9,3,1,12,6,518876,Merrill Kelly,664141,JT Brubaker,15,Chase Field,Roof Closed,73,"0 mph, None",9,0
 661366,2022-08-12,2022-08-12T22:40:00Z,2022,R,N,1,1,night,9,Final,146,Miami Marlins,144,Atlanta Braves,3,4,0,7,-1,641154,Pablo López,543606,Jake Odorizzi,4169,loanDepot park,Roof Closed,72,"0 mph, None",9,1

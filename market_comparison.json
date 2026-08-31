@@ -1,5 +1,5 @@
 {
-  "repository_revision": "bf7263155438",
+  "repository_revision": "0d8cedf4124b",
   "coverage": {
     "odds_events": 2395,
     "unmatched_events": 39,
@@ -16,14 +16,14 @@
       "price": "close_prob",
       "point_column": "close_point",
       "points": {},
-      "log_loss_model": 0.68193,
+      "log_loss_model": 0.68194,
       "log_loss_market": 0.67609,
-      "delta": 0.00584,
+      "delta": 0.00585,
       "delta_ci90_date_clustered": [
-        0.00236,
-        0.00921
+        0.00238,
+        0.00922
       ],
-      "mean_abs_disagreement_pts": 3.825,
+      "mean_abs_disagreement_pts": 3.827,
       "model_beats_market": false,
       "verdict": "market better; interval excludes zero"
     },
@@ -36,14 +36,14 @@
         "-1.5": 1150,
         "1.5": 863
       },
-      "log_loss_model": 0.67126,
+      "log_loss_model": 0.67128,
       "log_loss_market": 0.66601,
-      "delta": 0.00526,
+      "delta": 0.00527,
       "delta_ci90_date_clustered": [
         0.00159,
-        0.00889
+        0.0089
       ],
-      "mean_abs_disagreement_pts": 3.953,
+      "mean_abs_disagreement_pts": 3.957,
       "model_beats_market": false,
       "verdict": "market better; interval excludes zero"
     },
@@ -68,12 +68,12 @@
         "12.5": 3,
         "6.0": 1
       },
-      "log_loss_model": 0.69779,
+      "log_loss_model": 0.69777,
       "log_loss_market": 0.69277,
-      "delta": 0.00502,
+      "delta": 0.005,
       "delta_ci90_date_clustered": [
-        0.00088,
-        0.00899
+        0.00087,
+        0.009
       ],
       "mean_abs_disagreement_pts": 4.217,
       "model_beats_market": false,
@@ -87,14 +87,14 @@
       "price": "entry_prob",
       "point_column": "entry_point",
       "points": {},
-      "log_loss_model": 0.68061,
+      "log_loss_model": 0.68062,
       "log_loss_market": 0.67458,
-      "delta": 0.00602,
+      "delta": 0.00603,
       "delta_ci90_date_clustered": [
-        0.00211,
+        0.00212,
         0.00992
       ],
-      "mean_abs_disagreement_pts": 3.718,
+      "mean_abs_disagreement_pts": 3.721,
       "model_beats_market": false,
       "verdict": "market better; interval excludes zero"
     },
@@ -107,14 +107,14 @@
         "-1.5": 495,
         "1.5": 413
       },
-      "log_loss_model": 0.67775,
+      "log_loss_model": 0.67776,
       "log_loss_market": 0.66881,
-      "delta": 0.00894,
+      "delta": 0.00895,
       "delta_ci90_date_clustered": [
-        0.0033,
-        0.01435
+        0.00332,
+        0.01436
       ],
-      "mean_abs_disagreement_pts": 3.745,
+      "mean_abs_disagreement_pts": 3.747,
       "model_beats_market": false,
       "verdict": "market better; interval excludes zero"
     },
@@ -138,14 +138,14 @@
         "12.0": 5,
         "12.5": 1
       },
-      "log_loss_model": 0.69424,
+      "log_loss_model": 0.69421,
       "log_loss_market": 0.69339,
-      "delta": 0.00085,
+      "delta": 0.00082,
       "delta_ci90_date_clustered": [
-        -0.00431,
-        0.00595
+        -0.00432,
+        0.00592
       ],
-      "mean_abs_disagreement_pts": 3.992,
+      "mean_abs_disagreement_pts": 3.993,
       "model_beats_market": false,
       "verdict": "undecided; interval spans zero"
     }
