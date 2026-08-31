@@ -129,3 +129,8 @@ alerted_at,fetched_at,event_id,commence_time,home_team,away_team,market,point,si
 2026-08-30T17:53:10Z,2026-08-30T17:53:10Z,cd304593a01b05fbfdceca7ab3654067,2026-08-30T20:07:00Z,Los Angeles Angels,Philadelphia Phillies,h2h,,home,Los Angeles Angels ML,betrivers,170,1.652,0.386893,0.370370,11,133.8,0.005
 2026-08-30T18:37:17Z,2026-08-30T18:36:02Z,cd304593a01b05fbfdceca7ab3654067,2026-08-30T20:07:00Z,Los Angeles Angels,Philadelphia Phillies,h2h,,home,Los Angeles Angels ML,betrivers,165,0.527,0.382632,0.377358,11,91.0,0.005
 2026-08-30T21:56:26Z,2026-08-30T21:55:04Z,fad352c2e9cdf4ad800e2693f20256b7,2026-08-30T23:21:00Z,Chicago Cubs,Cincinnati Reds,spreads,-1.5,home,Chicago Cubs -1.5,betrivers,140,1.061,0.427277,0.416667,11,85.9,0.005
+2026-08-30T22:11:22Z,2026-08-30T22:11:21Z,fad352c2e9cdf4ad800e2693f20256b7,2026-08-30T23:21:00Z,Chicago Cubs,Cincinnati Reds,spreads,-1.5,home,Chicago Cubs -1.5,betrivers,138,0.711,0.427277,0.420168,11,69.7,0.005
+2026-08-30T22:58:08Z,2026-08-30T22:58:07Z,fad352c2e9cdf4ad800e2693f20256b7,2026-08-30T23:46:00Z,Chicago Cubs,Cincinnati Reds,totals,9,home,Over 9,lowvig,-106,0.656,0.521120,0.514563,10,47.9,0.005
+2026-08-30T23:13:13Z,2026-08-30T23:13:12Z,fad352c2e9cdf4ad800e2693f20256b7,2026-08-30T23:46:00Z,Chicago Cubs,Cincinnati Reds,h2h,,away,Cincinnati Reds ML,fanduel,148,0.661,0.409836,0.403226,11,32.8,0.005
+2026-08-30T23:14:44Z,2026-08-30T23:14:43Z,fad352c2e9cdf4ad800e2693f20256b7,2026-08-30T23:46:00Z,Chicago Cubs,Cincinnati Reds,spreads,-1.5,home,Chicago Cubs -1.5,lowvig,141,0.523,0.420168,0.414938,11,31.3,0.005
+2026-08-30T23:22:16Z,2026-08-30T23:22:16Z,fad352c2e9cdf4ad800e2693f20256b7,2026-08-30T23:46:00Z,Chicago Cubs,Cincinnati Reds,spreads,-1.5,home,Chicago Cubs -1.5,lowvig,146,1.175,0.418251,0.406504,11,23.7,0.005
