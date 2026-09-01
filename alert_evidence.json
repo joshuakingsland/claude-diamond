@@ -1,57 +1,55 @@
 {
-  "repository_revision": "1ff126cd7b7d",
-  "alerts_logged": 135,
-  "alerts_awaiting_first_pitch": 0,
+  "repository_revision": "8f23c545413b",
+  "alerts_logged": 155,
+  "alerts_awaiting_first_pitch": 3,
   "against_panel_median": {
-    "alerts": 127,
-    "dates": 11,
-    "mean_clv_probability_points": 0.943,
+    "alerts": 144,
+    "dates": 13,
+    "mean_clv_probability_points": 0.9177,
     "ci90_date_clustered_points": [
-      0.6854,
-      1.1675
+      0.6991,
+      1.1278
     ],
     "interval_note": null,
-    "share_beating_close": 0.8189,
-    "mean_deviation_at_alert_points": 1.122,
+    "share_beating_close": 0.8333,
+    "mean_deviation_at_alert_points": 1.1058,
     "by_book": {
-      "betrivers": 66,
-      "williamhill_us": 17,
+      "betrivers": 76,
+      "williamhill_us": 18,
+      "fanduel": 15,
       "lowvig": 11,
-      "fanduel": 10,
       "draftkings": 10,
       "betus": 4,
       "bovada": 4,
-      "betonlineag": 3,
+      "betonlineag": 4,
       "fanatics": 2
     }
   },
   "against_sharp_close": {
-    "alerts": 132,
-    "dates": 11,
-    "mean_clv_probability_points": 0.8399,
+    "alerts": 148,
+    "dates": 13,
+    "mean_clv_probability_points": 0.8324,
     "ci90_date_clustered_points": [
-      0.6044,
-      1.0432
+      0.6228,
+      1.0311
     ],
     "interval_note": null,
-    "share_beating_close": 0.7576,
-    "mean_deviation_at_alert_points": 1.1127,
+    "share_beating_close": 0.7703,
+    "mean_deviation_at_alert_points": 1.1017,
     "by_book": {
-      "betrivers": 66,
-      "williamhill_us": 18,
+      "betrivers": 75,
+      "williamhill_us": 19,
+      "fanduel": 15,
       "lowvig": 13,
-      "fanduel": 10,
       "draftkings": 10,
       "bovada": 5,
       "betus": 4,
-      "betonlineag": 3,
+      "betonlineag": 4,
       "fanatics": 2,
       "mybookieag": 1
     }
   },
-  "forward_status": "research_only",
-  "forward_failures": [
-    "11 dates < 13"
-  ],
+  "forward_status": "consistent_with_the_study",
+  "forward_failures": [],
   "stake_recommendation": "none"
 }
