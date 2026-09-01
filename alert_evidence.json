@@ -1,55 +1,57 @@
 {
-  "repository_revision": "8f23c545413b",
-  "alerts_logged": 155,
-  "alerts_awaiting_first_pitch": 3,
+  "repository_revision": "705c5c62ab6e",
+  "alerts_logged": 137,
+  "alerts_awaiting_first_pitch": 0,
   "against_panel_median": {
-    "alerts": 144,
-    "dates": 13,
-    "mean_clv_probability_points": 0.9177,
+    "alerts": 129,
+    "dates": 12,
+    "mean_clv_probability_points": 0.9307,
     "ci90_date_clustered_points": [
-      0.6991,
-      1.1278
+      0.6728,
+      1.1558
     ],
     "interval_note": null,
-    "share_beating_close": 0.8333,
-    "mean_deviation_at_alert_points": 1.1058,
+    "share_beating_close": 0.814,
+    "mean_deviation_at_alert_points": 1.1158,
     "by_book": {
-      "betrivers": 76,
+      "betrivers": 67,
       "williamhill_us": 18,
-      "fanduel": 15,
       "lowvig": 11,
+      "fanduel": 10,
       "draftkings": 10,
       "betus": 4,
       "bovada": 4,
-      "betonlineag": 4,
+      "betonlineag": 3,
       "fanatics": 2
     }
   },
   "against_sharp_close": {
-    "alerts": 148,
-    "dates": 13,
-    "mean_clv_probability_points": 0.8324,
+    "alerts": 134,
+    "dates": 12,
+    "mean_clv_probability_points": 0.8354,
     "ci90_date_clustered_points": [
-      0.6228,
-      1.0311
+      0.6081,
+      1.0346
     ],
     "interval_note": null,
-    "share_beating_close": 0.7703,
-    "mean_deviation_at_alert_points": 1.1017,
+    "share_beating_close": 0.7537,
+    "mean_deviation_at_alert_points": 1.1069,
     "by_book": {
-      "betrivers": 75,
+      "betrivers": 67,
       "williamhill_us": 19,
-      "fanduel": 15,
       "lowvig": 13,
+      "fanduel": 10,
       "draftkings": 10,
       "bovada": 5,
       "betus": 4,
-      "betonlineag": 4,
+      "betonlineag": 3,
       "fanatics": 2,
       "mybookieag": 1
     }
   },
-  "forward_status": "consistent_with_the_study",
-  "forward_failures": [],
+  "forward_status": "research_only",
+  "forward_failures": [
+    "12 dates < 13"
+  ],
   "stake_recommendation": "none"
 }
