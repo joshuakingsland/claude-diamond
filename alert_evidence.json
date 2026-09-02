@@ -1,52 +1,53 @@
 {
-  "repository_revision": "8646158c21be",
-  "alerts_logged": 137,
-  "alerts_awaiting_first_pitch": 0,
+  "repository_revision": "a707e5e8b808",
+  "alerts_logged": 161,
+  "alerts_awaiting_first_pitch": 5,
   "against_panel_median": {
-    "alerts": 129,
+    "alerts": 148,
     "dates": 12,
-    "mean_clv_probability_points": 0.9307,
+    "mean_clv_probability_points": 1.0322,
     "ci90_date_clustered_points": [
-      0.6728,
-      1.1558
+      0.7676,
+      1.2555
     ],
     "interval_note": null,
-    "share_beating_close": 0.814,
-    "mean_deviation_at_alert_points": 1.1158,
+    "share_beating_close": 0.8243,
+    "mean_deviation_at_alert_points": 1.1077,
     "by_book": {
-      "betrivers": 67,
-      "williamhill_us": 18,
-      "lowvig": 11,
+      "betrivers": 75,
+      "williamhill_us": 22,
+      "draftkings": 12,
+      "lowvig": 12,
       "fanduel": 10,
-      "draftkings": 10,
-      "betus": 4,
+      "betus": 7,
       "bovada": 4,
-      "betonlineag": 3,
-      "fanatics": 2
-    }
-  },
-  "against_sharp_close": {
-    "alerts": 134,
-    "dates": 12,
-    "mean_clv_probability_points": 0.8354,
-    "ci90_date_clustered_points": [
-      0.6081,
-      1.0346
-    ],
-    "interval_note": null,
-    "share_beating_close": 0.7537,
-    "mean_deviation_at_alert_points": 1.1069,
-    "by_book": {
-      "betrivers": 67,
-      "williamhill_us": 19,
-      "lowvig": 13,
-      "fanduel": 10,
-      "draftkings": 10,
-      "bovada": 5,
-      "betus": 4,
       "betonlineag": 3,
       "fanatics": 2,
       "mybookieag": 1
+    }
+  },
+  "against_sharp_close": {
+    "alerts": 153,
+    "dates": 12,
+    "mean_clv_probability_points": 0.9582,
+    "ci90_date_clustered_points": [
+      0.6931,
+      1.2052
+    ],
+    "interval_note": null,
+    "share_beating_close": 0.7843,
+    "mean_deviation_at_alert_points": 1.1002,
+    "by_book": {
+      "betrivers": 75,
+      "williamhill_us": 23,
+      "lowvig": 14,
+      "draftkings": 12,
+      "fanduel": 10,
+      "betus": 7,
+      "bovada": 5,
+      "betonlineag": 3,
+      "fanatics": 2,
+      "mybookieag": 2
     }
   },
   "forward_status": "research_only",
