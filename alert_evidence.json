@@ -1,53 +1,52 @@
 {
-  "repository_revision": "1b222608cd7a",
-  "alerts_logged": 164,
-  "alerts_awaiting_first_pitch": 1,
+  "repository_revision": "fdd8276be0a0",
+  "alerts_logged": 155,
+  "alerts_awaiting_first_pitch": 0,
   "against_panel_median": {
-    "alerts": 155,
-    "dates": 13,
-    "mean_clv_probability_points": 0.8909,
+    "alerts": 147,
+    "dates": 14,
+    "mean_clv_probability_points": 0.8987,
     "ci90_date_clustered_points": [
-      0.6849,
-      1.1012
+      0.6672,
+      1.1103
     ],
     "interval_note": null,
-    "share_beating_close": 0.8065,
-    "mean_deviation_at_alert_points": 1.0705,
+    "share_beating_close": 0.8027,
+    "mean_deviation_at_alert_points": 1.095,
     "by_book": {
-      "betrivers": 79,
-      "williamhill_us": 26,
+      "betrivers": 76,
+      "williamhill_us": 23,
       "lowvig": 13,
-      "fanduel": 10,
+      "fanduel": 11,
       "draftkings": 10,
-      "betus": 6,
+      "betus": 5,
       "bovada": 4,
-      "betonlineag": 4,
-      "fanatics": 2,
-      "mybookieag": 1
+      "betonlineag": 3,
+      "fanatics": 2
     }
   },
   "against_sharp_close": {
-    "alerts": 160,
-    "dates": 13,
-    "mean_clv_probability_points": 0.8269,
+    "alerts": 152,
+    "dates": 14,
+    "mean_clv_probability_points": 0.8328,
     "ci90_date_clustered_points": [
-      0.6361,
-      1.0072
+      0.631,
+      1.0173
     ],
     "interval_note": null,
-    "share_beating_close": 0.7625,
-    "mean_deviation_at_alert_points": 1.0645,
+    "share_beating_close": 0.7632,
+    "mean_deviation_at_alert_points": 1.0879,
     "by_book": {
-      "betrivers": 79,
-      "williamhill_us": 27,
+      "betrivers": 76,
+      "williamhill_us": 24,
       "lowvig": 15,
-      "fanduel": 10,
+      "fanduel": 11,
       "draftkings": 10,
-      "betus": 6,
+      "betus": 5,
       "bovada": 5,
-      "betonlineag": 4,
+      "betonlineag": 3,
       "fanatics": 2,
-      "mybookieag": 2
+      "mybookieag": 1
     }
   },
   "forward_status": "consistent_with_the_study",
