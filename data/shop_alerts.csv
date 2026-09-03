@@ -154,3 +154,4 @@ alerted_at,fetched_at,event_id,commence_time,home_team,away_team,market,point,si
 2026-09-03T01:01:40Z,2026-09-03T01:01:40Z,6467c41d2b7da8c9e8efcda4c5d5f7b8,2026-09-03T01:39:00Z,Los Angeles Angels,New York Yankees,spreads,1.5,away,New York Yankees -1.5,lowvig,129,1.072,0.447406,0.436681,11,37.3,0.005
 2026-09-03T01:10:46Z,2026-09-03T01:10:46Z,8cc27a7b0c6903978e605ba541bed625,2026-09-03T02:11:00Z,Los Angeles Dodgers,St. Louis Cardinals,h2h,,away,St. Louis Cardinals ML,williamhill_us,265,0.772,0.281690,0.273973,11,60.2,0.005
 2026-09-03T01:10:46Z,2026-09-03T01:10:46Z,6467c41d2b7da8c9e8efcda4c5d5f7b8,2026-09-03T01:39:00Z,Los Angeles Angels,New York Yankees,h2h,,home,Los Angeles Angels ML,williamhill_us,150,0.663,0.406630,0.400000,11,28.2,0.005
+2026-09-03T21:45:05Z,2026-09-03T21:42:24Z,b27b102032634f4f3dc542889c7d62e9,2026-09-03T23:15:00Z,Baltimore Orioles,Boston Red Sox,h2h,,home,Baltimore Orioles ML,betrivers,117,1.063,0.471458,0.460829,11,92.6,0.005
