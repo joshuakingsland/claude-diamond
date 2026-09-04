@@ -165,3 +165,4 @@ alerted_at,fetched_at,event_id,commence_time,home_team,away_team,market,point,si
 2026-09-03T22:47:16Z,2026-09-03T22:47:15Z,a7447a61565d33b1dcfb229c623b45cb,2026-09-04T02:10:00Z,Los Angeles Dodgers,St. Louis Cardinals,h2h,,away,St. Louis Cardinals ML,betrivers,255,0.862,0.290310,0.281690,11,202.8,0.005
 2026-09-03T22:51:48Z,2026-09-03T22:51:47Z,b27b102032634f4f3dc542889c7d62e9,2026-09-03T23:15:00Z,Baltimore Orioles,Boston Red Sox,h2h,,away,Boston Red Sox ML,betrivers,-106,1.244,0.527001,0.514563,11,23.2,0.005
 2026-09-03T22:56:20Z,2026-09-03T22:56:19Z,d64025a75ea543bf8f87ab2a697704d8,2026-09-03T23:40:00Z,Kansas City Royals,Miami Marlins,totals,9,home,Over 9,bovada,-105,0.954,0.521739,0.512195,10,43.7,0.005
+2026-09-04T21:26:51Z,2026-09-04T21:25:04Z,c3750e470b5141a39a1efd04ef2e7b25,2026-09-04T22:46:00Z,Pittsburgh Pirates,Los Angeles Angels,spreads,-1.5,home,Pittsburgh Pirates -1.5,fanatics,120,0.882,0.463369,0.454545,11,80.9,0.005
