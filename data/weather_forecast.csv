@@ -48,7 +48,6 @@ game_pk,weather_source,weather_hour_utc,temp_c,humidity_pct,pressure_hpa,wind_sp
 824791,open-meteo-forecast,2026-09-09T22:00,32.9,33,1014.4,4.49,212,0.0,4.489,0.078,open
 824790,open-meteo-forecast,2026-09-18T23:00,23.6,33,1015.0,6.3,340,0.0,-3.965,4.896,open
 824788,open-meteo-forecast,2026-09-19T20:00,18.3,27,1019.0,4.8,359,0.0,-4.071,2.544,open
-823905,open-meteo-forecast,2026-09-05T02:00,23.0,66,992.3,2.77,257,0.0,1.743,2.153,open
 823904,open-meteo-forecast,2026-09-06T01:00,26.2,43,992.8,2.73,262,0.0,1.527,2.263,open
 823903,open-meteo-forecast,2026-09-07T02:00,25.2,67,992.0,0.57,135,0.0,0.186,-0.539,open
 823902,open-meteo-forecast,2026-09-08T01:00,28.3,26,992.1,4.19,237,0.0,3.592,2.158,open
@@ -129,7 +128,7 @@ game_pk,weather_source,weather_hour_utc,temp_c,humidity_pct,pressure_hpa,wind_sp
 823736,open-meteo-forecast,2026-09-11T23:00,18.9,64,995.3,2.58,126,0.0,-2.576,0.135,retractable
 823737,open-meteo-forecast,2026-09-12T23:00,25.4,69,988.8,5.82,185,0.0,-3.255,-4.825,retractable
 823734,open-meteo-forecast,2026-09-13T18:00,35.4,37,990.9,5.89,220,0.0,0.103,-5.889,retractable
-823577,open-meteo-forecast,2026-09-05T20:00,26.5,42,1010.3,3.92,341,0.0,-3.324,2.077,open
+823577,open-meteo-forecast,2026-09-05T20:00,26.3,43,1010.2,4.39,348,0.0,-3.979,1.855,open
 823578,open-meteo-forecast,2026-09-06T17:00,21.5,62,1017.0,3.61,19,0.0,-3.59,-0.377,open
 823575,open-meteo-forecast,2026-09-14T23:00,24.2,68,1023.6,5.12,176,0.0,4.896,-1.497,open
 823574,open-meteo-forecast,2026-09-15T23:00,25.9,63,1022.1,4.64,173,0.0,4.36,-1.587,open
@@ -162,7 +161,7 @@ game_pk,weather_source,weather_hour_utc,temp_c,humidity_pct,pressure_hpa,wind_sp
 824548,open-meteo-forecast,2026-09-17T23:00,25.2,23,1000.7,3.36,330,0.0,3.093,1.313,open
 824547,open-meteo-forecast,2026-09-18T23:00,14.9,51,1007.0,6.07,17,0.0,2.076,5.704,open
 824545,open-meteo-forecast,2026-09-19T23:00,14.5,56,1006.6,4.9,20,0.0,1.433,4.686,open
-823823,open-meteo-forecast,2026-09-05T20:00,30.1,76,1013.7,2.86,155,0.0,-2.548,-1.298,retractable
+823823,open-meteo-forecast,2026-09-05T20:00,29.8,80,1014.1,3.26,140,0.0,-3.189,-0.678,retractable
 823822,open-meteo-forecast,2026-09-06T17:00,30.1,79,1014.2,2.42,240,0.0,0.907,-2.244,retractable
 823820,open-meteo-forecast,2026-09-07T17:00,34.3,47,1015.0,3.8,153,0.0,-3.444,-1.606,retractable
 823821,open-meteo-forecast,2026-09-08T22:00,33.2,50,1017.6,3.91,122,0.0,-3.889,0.409,retractable
