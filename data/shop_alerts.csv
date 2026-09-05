@@ -170,3 +170,4 @@ alerted_at,fetched_at,event_id,commence_time,home_team,away_team,market,point,si
 2026-09-04T21:58:08Z,2026-09-04T21:58:07Z,d08cd8d7e7ee9c4a2c546a19da42d129,2026-09-05T00:06:00Z,Texas Rangers,Tampa Bay Rays,h2h,,home,Texas Rangers ML,williamhill_us,-105,0.735,0.519549,0.512195,11,127.9,0.005
 2026-09-04T22:19:14Z,2026-09-04T22:19:14Z,1b0e8aa1b257757991d6d1e3d3d0bab9,2026-09-05T00:41:00Z,Colorado Rockies,St. Louis Cardinals,totals,11,away,Under 11,bovada,100,0.810,0.508105,0.500000,10,141.8,0.005
 2026-09-04T23:58:43Z,2026-09-04T23:58:43Z,2d3ba8f32a3003fe2c9866328f0b1a2b,2026-09-05T01:41:00Z,San Diego Padres,New York Yankees,h2h,,home,San Diego Padres ML,betrivers,107,0.607,0.489166,0.483092,11,102.3,0.005
+2026-09-05T20:20:11Z,2026-09-05T20:18:16Z,c5179877e1918c6fb96b0d90a77e9ef9,2026-09-05T23:16:00Z,San Diego Padres,New York Yankees,spreads,-1.5,home,San Diego Padres -1.5,fanduel,188,1.737,0.364596,0.347222,11,177.7,0.005
