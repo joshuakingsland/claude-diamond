@@ -1,6 +1,6 @@
 {
   "version": "full-game-24h-close-probe-v1",
-  "repository_revision": "0d8cedf4124b",
+  "repository_revision": "bafeb39fd5e8",
   "source_protocol": "full-game-entry-close-v2",
   "source_protocol_hash": "a87c9f6017d92a79",
   "target": "24h_entry_to_20m_close",
@@ -88,20 +88,20 @@
       "intercept": 0.008139864364,
       "confirmation_2024": {
         "rows": 1438,
-        "implied_clv_logit": 0.01780498,
-        "implied_clv_probability_points": 0.4451,
+        "implied_clv_logit": 0.01767387,
+        "implied_clv_probability_points": 0.4418,
         "rmse_no_move_logit": 0.09796692,
-        "rmse_candidate_logit": 0.09557899,
-        "mse_improvement": 0.0004621748,
-        "relative_mse_reduction": 0.04815566,
+        "rmse_candidate_logit": 0.09557025,
+        "mse_improvement": 0.000463846,
+        "relative_mse_reduction": 0.04832979,
         "improvement_ci95_date_clustered": [
-          0.00025375,
-          0.00067081
+          0.00025486,
+          0.00067391
         ],
-        "direction_accuracy_nontrivial_moves": 0.592764,
-        "movement_correlation": 0.181404,
+        "direction_accuracy_nontrivial_moves": 0.591994,
+        "movement_correlation": 0.181689,
         "mean_actual_move_logit": 0.01642433,
-        "mean_predicted_move_logit": 0.00572211
+        "mean_predicted_move_logit": 0.0057554
       }
     },
     "spreads": {
@@ -177,17 +177,17 @@
         "implied_clv_logit": 0.02199328,
         "implied_clv_probability_points": 0.5498,
         "rmse_no_move_logit": 0.0930295,
-        "rmse_candidate_logit": 0.09000225,
-        "mse_improvement": 0.0005540829,
-        "relative_mse_reduction": 0.06402261,
+        "rmse_candidate_logit": 0.08997104,
+        "mse_improvement": 0.0005596991,
+        "relative_mse_reduction": 0.06467155,
         "improvement_ci95_date_clustered": [
-          0.000236,
-          0.00084628
+          0.00024086,
+          0.00085241
         ],
         "direction_accuracy_nontrivial_moves": 0.601449,
-        "movement_correlation": 0.267999,
+        "movement_correlation": 0.268938,
         "mean_actual_move_logit": 0.01991007,
-        "mean_predicted_move_logit": -0.00094698
+        "mean_predicted_move_logit": -0.0009118
       }
     },
     "totals": {
