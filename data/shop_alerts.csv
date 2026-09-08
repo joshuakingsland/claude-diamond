@@ -190,3 +190,5 @@ alerted_at,fetched_at,event_id,commence_time,home_team,away_team,market,point,si
 2026-09-07T23:55:12Z,2026-09-07T23:55:11Z,a58a90b8a19f48d680546cac451b77ec,2026-09-08T01:11:00Z,Los Angeles Dodgers,Cincinnati Reds,h2h,,home,Los Angeles Dodgers ML,betrivers,-157,0.506,0.615958,0.610895,11,75.8,0.005
 2026-09-07T23:58:13Z,2026-09-07T23:58:12Z,56329e0195eb8df1d61a2ced249e623d,2026-09-08T02:06:00Z,Athletics,Toronto Blue Jays,totals,8,away,Under 8,betmgm,-102,0.588,0.510834,0.504950,10,127.8,0.005
 2026-09-07T23:58:13Z,2026-09-07T23:58:12Z,a58a90b8a19f48d680546cac451b77ec,2026-09-08T01:11:00Z,Los Angeles Dodgers,Cincinnati Reds,spreads,-1.5,home,Los Angeles Dodgers -1.5,betrivers,132,0.588,0.436917,0.431034,11,72.8,0.005
+2026-09-08T21:51:51Z,2026-09-08T21:49:43Z,a10aaa5c39074d6ea18faef14d18bfb5,2026-09-08T23:06:00Z,New York Yankees,Colorado Rockies,h2h,,away,Colorado Rockies ML,betrivers,300,0.572,0.255723,0.250000,11,76.3,0.005
+2026-09-08T21:51:51Z,2026-09-08T21:49:43Z,9320b01114d200ee9f8d2fb0848e6496,2026-09-09T01:41:00Z,Seattle Mariners,Texas Rangers,h2h,,away,Texas Rangers ML,betrivers,120,0.509,0.459632,0.454545,11,231.3,0.005
