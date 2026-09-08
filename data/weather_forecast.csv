@@ -52,7 +52,7 @@ game_pk,weather_source,weather_hour_utc,temp_c,humidity_pct,pressure_hpa,wind_sp
 824789,open-meteo-forecast,2026-09-20T23:00,20.9,34,1018.4,1.94,235,0.0,1.772,0.789,open
 824787,open-meteo-forecast,2026-09-21T22:00,24.1,37,1023.0,3.4,133,0.0,0.707,-3.326,open
 824785,open-meteo-forecast,2026-09-22T22:00,24.1,40,1019.3,1.33,103,0.0,-0.411,-1.265,open
-823902,open-meteo-forecast,2026-09-08T01:00,29.9,52,993.0,2.95,242,0.0,2.387,1.734,open
+823902,open-meteo-forecast,2026-09-08T01:00,30.3,49,991.9,2.51,247,0.0,1.894,1.647,open
 823901,open-meteo-forecast,2026-09-09T02:00,30.2,41,993.5,1.91,264,0.0,1.012,1.62,open
 823900,open-meteo-forecast,2026-09-10T02:00,33.2,31,992.5,3.63,188,0.0,3.452,-1.122,open
 823898,open-meteo-forecast,2026-09-19T02:00,29.9,29,993.8,2.82,207,0.0,2.82,0.049,open
@@ -72,7 +72,7 @@ game_pk,weather_source,weather_hour_utc,temp_c,humidity_pct,pressure_hpa,wind_sp
 824225,open-meteo-forecast,2026-09-13T16:00,24.8,37,1000.3,1.73,80,0.0,-0.592,1.626,open
 824221,open-meteo-forecast,2026-09-21T22:00,24.1,49,997.8,5.0,200,0.0,-3.214,-3.83,open
 824222,open-meteo-forecast,2026-09-22T22:00,22.8,48,996.4,1.0,37,0.0,0.391,0.921,open
-823175,open-meteo-forecast,2026-09-08T00:00,23.4,54,1012.0,5.73,282,0.0,5.48,1.675,open
+823175,open-meteo-forecast,2026-09-08T00:00,25.1,48,1012.2,4.81,282,0.0,4.6,1.406,open
 823174,open-meteo-forecast,2026-09-09T01:00,25.7,35,1013.7,5.58,285,0.0,5.243,1.908,open
 823172,open-meteo-forecast,2026-09-09T19:00,31.1,18,1015.1,1.7,28,0.0,-0.926,1.426,open
 823173,open-meteo-forecast,2026-09-12T02:00,17.5,72,1010.7,5.36,261,0.0,5.347,-0.374,open
@@ -80,7 +80,7 @@ game_pk,weather_source,weather_hour_utc,temp_c,humidity_pct,pressure_hpa,wind_sp
 823171,open-meteo-forecast,2026-09-13T23:00,19.7,56,1011.4,4.7,269,0.0,4.689,0.328,open
 823169,open-meteo-forecast,2026-09-22T01:00,18.5,69,1012.4,5.91,273,0.0,5.852,0.823,open
 823166,open-meteo-forecast,2026-09-23T01:00,19.0,65,1013.0,4.0,271,0.0,3.978,0.418,open
-824958,open-meteo-forecast,2026-09-08T02:00,28.2,21,1011.6,1.75,24,0.0,-1.623,0.656,open
+824958,open-meteo-forecast,2026-09-08T02:00,27.9,24,1011.2,1.99,18,0.0,-1.757,0.934,open
 824957,open-meteo-forecast,2026-09-09T01:00,34.4,14,1012.5,1.86,324,0.0,-0.259,1.842,open
 824956,open-meteo-forecast,2026-09-09T19:00,34.5,13,1014.6,2.64,331,0.0,-0.683,2.55,open
 824954,open-meteo-forecast,2026-09-12T01:00,29.2,30,1006.0,5.97,194,0.0,5.063,-3.164,open
