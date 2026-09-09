@@ -213,3 +213,4 @@ alerted_at,fetched_at,event_id,commence_time,home_team,away_team,market,point,si
 2026-09-08T23:51:08Z,2026-09-08T23:51:07Z,9320b01114d200ee9f8d2fb0848e6496,2026-09-09T01:41:00Z,Seattle Mariners,Texas Rangers,h2h,,away,Texas Rangers ML,betrivers,117,0.638,0.467212,0.460829,11,109.9,0.005
 2026-09-09T00:19:45Z,2026-09-09T00:19:45Z,bbab891f2a9defcd506aafce495b42dc,2026-09-09T01:41:00Z,Athletics,Toronto Blue Jays,h2h,,home,Athletics ML,betrivers,170,1.376,0.384134,0.370370,11,81.2,0.005
 2026-09-09T00:51:24Z,2026-09-09T00:51:24Z,24d1608c7ffefab567006f6da92fc5f0,2026-09-09T01:41:00Z,San Diego Padres,Washington Nationals,spreads,-1.5,home,San Diego Padres -1.5,betrivers,128,0.842,0.447018,0.438596,11,49.6,0.005
+2026-09-09T21:43:14Z,2026-09-09T21:40:55Z,df53cc747b6ef1e7688d8595a1d6aec6,2026-09-09T23:41:00Z,Milwaukee Brewers,Chicago Cubs,spreads,-1.5,home,Milwaukee Brewers -1.5,fanduel,172,0.534,0.372989,0.367647,11,120.1,0.005
