@@ -217,5 +217,3 @@ alerted_at,fetched_at,event_id,commence_time,home_team,away_team,market,point,si
 2026-09-09T21:58:16Z,2026-09-09T21:58:16Z,f1963b019550753f962dfa7a7fa3e781,2026-09-09T22:41:00Z,Philadelphia Phillies,Houston Astros,totals,8,home,Over 8,lowvig,103,0.739,0.500000,0.492611,10,42.7,0.005
 2026-09-10T01:24:35Z,2026-09-10T01:24:35Z,2c0c5fa6dfe40dcd60cf3217261fb2d9,2026-09-10T02:11:00Z,Los Angeles Dodgers,Cincinnati Reds,spreads,-1.5,home,Los Angeles Dodgers -1.5,betrivers,-112,0.833,0.536631,0.528302,11,46.4,0.005
 2026-09-10T01:27:37Z,2026-09-10T01:27:36Z,2c0c5fa6dfe40dcd60cf3217261fb2d9,2026-09-10T02:11:00Z,Los Angeles Dodgers,Cincinnati Reds,spreads,-1.5,home,Los Angeles Dodgers -1.5,betrivers,-110,1.288,0.536694,0.523810,10,43.4,0.005
-2026-09-10T17:46:04Z,2026-09-10T17:46:04Z,36a89478e8db28447dfe1b5d1f656477,2026-09-10T20:10:00Z,Seattle Mariners,Texas Rangers,h2h,,home,Seattle Mariners ML,betrivers,-109,1.541,0.536940,0.521531,11,143.9,0.005
-2026-09-10T19:28:26Z,2026-09-10T19:28:26Z,36a89478e8db28447dfe1b5d1f656477,2026-09-10T20:10:00Z,Seattle Mariners,Texas Rangers,h2h,,away,Texas Rangers ML,betrivers,114,1.097,0.478261,0.467290,11,41.6,0.005
