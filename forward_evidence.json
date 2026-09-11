@@ -1,5 +1,5 @@
 {
-  "repository_revision": "4697c075b7e3",
+  "repository_revision": "d805b0a0e2a1",
   "staking_policy_version": "paper-ev-mainline-riskbucket-v3",
   "independent_games": 272,
   "accepted_fill_rate": 0.0,
@@ -16,6 +16,6 @@
     "positive sharp-close CLV is not established"
   ],
   "source": "clv_signals",
-  "signals": 540,
+  "signals": 541,
   "paper_ledger_settled_roi": 0.389311
 }
