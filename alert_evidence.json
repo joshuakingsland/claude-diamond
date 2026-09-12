@@ -1,23 +1,23 @@
 {
-  "repository_revision": "cfbe97e9d59b",
-  "alerts_logged": 218,
+  "repository_revision": "ff1d64a00096",
+  "alerts_logged": 237,
   "alerts_awaiting_first_pitch": 0,
   "against_panel_median": {
-    "alerts": 208,
-    "dates": 21,
-    "mean_clv_probability_points": 0.8537,
+    "alerts": 227,
+    "dates": 22,
+    "mean_clv_probability_points": 0.8695,
     "ci90_date_clustered_points": [
-      0.6864,
-      1.0208
+      0.7135,
+      1.0283
     ],
     "interval_note": null,
-    "share_beating_close": 0.8029,
-    "mean_deviation_at_alert_points": 1.0499,
+    "share_beating_close": 0.815,
+    "mean_deviation_at_alert_points": 1.0815,
     "by_book": {
-      "betrivers": 110,
+      "betrivers": 128,
       "williamhill_us": 34,
       "lowvig": 19,
-      "fanduel": 13,
+      "fanduel": 14,
       "draftkings": 10,
       "bovada": 8,
       "betus": 5,
@@ -27,21 +27,21 @@
     }
   },
   "against_sharp_close": {
-    "alerts": 214,
-    "dates": 21,
-    "mean_clv_probability_points": 0.8121,
+    "alerts": 233,
+    "dates": 22,
+    "mean_clv_probability_points": 0.8048,
     "ci90_date_clustered_points": [
-      0.6513,
-      0.9676
+      0.6552,
+      0.949
     ],
     "interval_note": null,
-    "share_beating_close": 0.771,
-    "mean_deviation_at_alert_points": 1.0437,
+    "share_beating_close": 0.7768,
+    "mean_deviation_at_alert_points": 1.075,
     "by_book": {
-      "betrivers": 110,
+      "betrivers": 128,
       "williamhill_us": 35,
       "lowvig": 21,
-      "fanduel": 13,
+      "fanduel": 14,
       "draftkings": 10,
       "bovada": 9,
       "betus": 5,
