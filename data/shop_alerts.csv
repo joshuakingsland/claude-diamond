@@ -243,3 +243,7 @@ alerted_at,fetched_at,event_id,commence_time,home_team,away_team,market,point,si
 2026-09-13T00:06:01Z,2026-09-13T00:06:00Z,5829b429dfb2b487aaca727451b8c55c,2026-09-13T01:41:00Z,Athletics,Seattle Mariners,spreads,1.5,home,Athletics +1.5,fanduel,-104,1.194,0.521739,0.509804,11,95.0,0.005
 2026-09-13T00:58:51Z,2026-09-13T00:58:51Z,5829b429dfb2b487aaca727451b8c55c,2026-09-13T01:41:00Z,Athletics,Seattle Mariners,spreads,1.5,away,Seattle Mariners -1.5,lowvig,118,1.061,0.469325,0.458716,11,42.1,0.005
 2026-09-13T01:01:53Z,2026-09-13T01:01:53Z,5829b429dfb2b487aaca727451b8c55c,2026-09-13T01:41:00Z,Athletics,Seattle Mariners,spreads,1.5,away,Seattle Mariners -1.5,lowvig,117,0.670,0.467532,0.460829,11,39.1,0.005
+2026-09-13T17:55:57Z,2026-09-13T17:55:57Z,119261d49b81854e942bebf7f44afa6b,2026-09-13T19:06:00Z,Boston Red Sox,Kansas City Royals,spreads,-1.5,home,Boston Red Sox -1.5,betrivers,130,1.224,0.447018,0.434783,11,70.0,0.005
+2026-09-13T18:06:33Z,2026-09-13T18:06:32Z,119261d49b81854e942bebf7f44afa6b,2026-09-13T19:06:00Z,Boston Red Sox,Kansas City Royals,spreads,-1.5,home,Boston Red Sox -1.5,betrivers,133,1.822,0.447406,0.429185,10,59.5,0.005
+2026-09-13T18:06:33Z,2026-09-13T18:06:32Z,119261d49b81854e942bebf7f44afa6b,2026-09-13T19:06:00Z,Boston Red Sox,Kansas City Royals,h2h,,home,Boston Red Sox ML,betrivers,-167,1.309,0.638554,0.625468,10,59.5,0.005
+2026-09-13T21:12:33Z,2026-09-13T21:12:32Z,6f96adeb30e87f1372ad951bf3404d21,2026-09-13T23:21:00Z,San Francisco Giants,San Diego Padres,totals,7.5,away,Under 7.5,lowvig,-105,0.517,0.517364,0.512195,10,128.5,0.005
