@@ -12301,6 +12301,7 @@ game_pk,weather_source,weather_hour_utc,temp_c,humidity_pct,pressure_hpa,wind_sp
 822837,open-meteo-historical-forecast,2026-03-29T17:00,8.9,57,1015.7,3.06,191,0.0,2.75,1.341,retractable
 822838,open-meteo-historical-forecast,2026-03-28T19:00,1.8,45,1022.2,5.82,258,0.0,-0.305,5.812,retractable
 822839,open-meteo-historical-forecast,2026-03-27T23:00,-2.0,54,1015.4,1.53,148,0.0,1.463,-0.447,retractable
+822845,open-meteo-historical-forecast,2026-09-18T00:00,35.8,35,998.3,4.33,109,0.0,-0.826,-4.25,retractable
 822846,open-meteo-historical-forecast,2026-09-17T00:00,34.7,41,998.1,3.7,161,0.0,2.427,-2.792,retractable
 822848,open-meteo-historical-forecast,2026-09-06T18:00,36.1,45,992.4,2.43,99,0.0,-0.871,-2.269,retractable
 822849,open-meteo-historical-forecast,2026-09-16T00:00,37.0,31,993.6,4.53,149,0.0,2.196,-3.962,retractable
@@ -12375,6 +12376,7 @@ game_pk,weather_source,weather_hour_utc,temp_c,humidity_pct,pressure_hpa,wind_sp
 822918,open-meteo-historical-forecast,2026-04-07T00:00,21.8,24,1000.3,2.75,100,0.0,-0.941,-2.584,retractable
 822919,open-meteo-historical-forecast,2026-04-03T20:00,27.3,67,991.3,6.36,164,0.0,4.418,-4.575,retractable
 822920,open-meteo-historical-forecast,2026-04-04T23:00,21.3,39,999.1,5.77,351,0.0,-4.484,3.631,retractable
+822924,open-meteo-historical-forecast,2026-09-17T17:00,30.7,61,1018.4,5.25,59,0.0,0.0,0.0,dome
 822925,open-meteo-historical-forecast,2026-09-15T22:00,29.5,76,1015.8,0.92,41,0.0,0.0,0.0,dome
 822926,open-meteo-historical-forecast,2026-09-16T22:00,30.4,59,1017.4,6.11,58,0.0,0.0,0.0,dome
 822927,open-meteo-historical-forecast,2026-09-12T22:00,27.7,86,1013.6,1.61,353,0.0,0.0,0.0,dome
@@ -12757,6 +12759,7 @@ game_pk,weather_source,weather_hour_utc,temp_c,humidity_pct,pressure_hpa,wind_sp
 823325,open-meteo-historical-forecast,2026-03-26T20:00,24.7,58,1011.7,3.33,311,0.0,-2.185,2.513,open
 823332,open-meteo-historical-forecast,2026-09-16T22:00,28.4,81,997.3,0.54,158,0.0,-0.401,-0.361,open
 823333,open-meteo-historical-forecast,2026-09-15T22:00,26.8,59,995.8,1.5,143,0.0,-1.337,-0.681,open
+823334,open-meteo-historical-forecast,2026-09-17T16:00,25.8,88,996.5,3.05,229,0.0,1.192,-2.808,open
 823335,open-meteo-historical-forecast,2026-09-05T22:00,25.4,72,985.4,2.11,355,0.0,1.087,1.809,open
 823336,open-meteo-historical-forecast,2026-09-06T17:00,23.9,65,990.1,3.56,38,0.0,-0.74,3.482,open
 823337,open-meteo-historical-forecast,2026-09-03T16:00,25.8,85,990.4,3.42,165,0.0,-2.244,-2.581,open
@@ -12978,6 +12981,7 @@ game_pk,weather_source,weather_hour_utc,temp_c,humidity_pct,pressure_hpa,wind_sp
 823567,open-meteo-historical-forecast,2026-04-07T23:00,6.4,26,1026.8,7.01,312,0.0,3.818,5.879,open
 823568,open-meteo-historical-forecast,2026-04-03T17:00,11.6,86,1023.2,3.47,224,0.0,2.974,-1.787,open
 823569,open-meteo-historical-forecast,2026-04-04T23:00,10.6,71,1023.1,5.0,102,0.0,-4.455,-2.27,open
+823573,open-meteo-historical-forecast,2026-09-17T23:00,25.8,70,1018.3,2.88,160,0.0,2.415,-1.569,open
 823574,open-meteo-historical-forecast,2026-09-15T23:00,19.4,59,1027.1,3.31,151,0.0,2.46,-2.215,open
 823575,open-meteo-historical-forecast,2026-09-14T23:00,22.8,31,1020.0,3.5,329,0.0,-2.518,2.431,open
 823576,open-meteo-historical-forecast,2026-09-16T23:00,22.7,75,1024.5,3.68,158,0.0,3.014,-2.111,open
@@ -13364,6 +13368,7 @@ game_pk,weather_source,weather_hour_utc,temp_c,humidity_pct,pressure_hpa,wind_sp
 823972,open-meteo-historical-forecast,2026-03-31T02:00,18.3,75,995.0,2.53,252,0.0,1.757,1.82,open
 823973,open-meteo-historical-forecast,2026-03-29T01:00,23.5,49,993.4,3.14,261,0.0,1.801,2.572,open
 823974,open-meteo-historical-forecast,2026-03-27T00:00,24.1,54,991.3,3.69,257,0.0,2.322,2.868,open
+823978,open-meteo-historical-forecast,2026-09-18T01:00,24.1,60,1010.4,3.98,242,0.0,3.777,1.256,open
 823979,open-meteo-historical-forecast,2026-09-17T01:00,24.0,59,1007.6,3.32,224,0.0,3.32,0.023,open
 823980,open-meteo-historical-forecast,2026-09-16T01:00,24.1,61,1005.8,3.44,216,0.0,3.41,-0.456,open
 823981,open-meteo-historical-forecast,2026-09-15T01:00,24.8,69,1002.3,3.28,211,0.0,3.201,-0.716,open
@@ -13517,6 +13522,7 @@ game_pk,weather_source,weather_hour_utc,temp_c,humidity_pct,pressure_hpa,wind_sp
 824135,open-meteo-historical-forecast,2026-03-30T20:00,29.5,46,977.9,7.62,194,0.0,6.462,-4.038,open
 824136,open-meteo-historical-forecast,2026-04-01T23:00,12.8,97,978.0,4.54,82,0.0,-3.673,-2.669,open
 824140,open-meteo-historical-forecast,2026-09-17T00:00,29.5,79,1017.1,1.75,121,0.0,1.301,-1.171,retractable
+824141,open-meteo-historical-forecast,2026-09-17T23:00,28.2,91,1017.5,1.56,135,0.0,1.377,-0.732,retractable
 824142,open-meteo-historical-forecast,2026-09-06T18:00,27.3,87,1011.5,2.02,189,0.4,1.816,0.886,retractable
 824143,open-meteo-historical-forecast,2026-09-16T00:00,29.9,77,1014.2,3.68,135,0.0,3.249,-1.728,retractable
 824144,open-meteo-historical-forecast,2026-09-03T18:00,30.9,82,1012.1,1.75,13,0.0,-1.516,-0.875,retractable
@@ -13668,6 +13674,7 @@ game_pk,weather_source,weather_hour_utc,temp_c,humidity_pct,pressure_hpa,wind_sp
 824296,open-meteo-historical-forecast,2026-04-05T23:00,6.3,45,997.1,6.63,281,0.0,4.35,-5.004,open
 824297,open-meteo-historical-forecast,2026-04-10T22:00,10.0,79,1001.7,4.55,327,0.0,4.544,-0.238,open
 824299,open-meteo-historical-forecast,2026-04-03T17:00,23.0,52,994.2,8.64,250,0.0,1.5,-8.509,open
+824305,open-meteo-historical-forecast,2026-09-17T19:00,25.2,56,847.8,2.46,297,0.0,-0.961,2.264,open
 824306,open-meteo-historical-forecast,2026-09-17T00:00,23.4,46,849.3,3.38,304,0.0,-1.69,2.927,open
 824307,open-meteo-historical-forecast,2026-09-16T00:00,23.6,34,846.2,3.95,81,0.0,-0.889,-3.849,open
 824308,open-meteo-historical-forecast,2026-09-15T00:00,28.2,22,839.1,3.38,341,0.0,-3.111,1.321,open
@@ -13820,6 +13827,7 @@ game_pk,weather_source,weather_hour_utc,temp_c,humidity_pct,pressure_hpa,wind_sp
 824458,open-meteo-historical-forecast,2026-04-03T20:00,21.8,76,993.0,4.65,279,0.0,-0.727,4.593,open
 824459,open-meteo-historical-forecast,2026-04-05T17:00,5.6,67,990.7,6.44,264,0.0,0.673,6.405,open
 824460,open-meteo-historical-forecast,2026-04-05T17:00,5.6,67,990.7,6.44,264,0.0,0.673,6.405,open
+824464,open-meteo-historical-forecast,2026-09-17T16:00,32.0,53,1006.7,2.6,254,0.0,1.74,-1.932,open
 824465,open-meteo-historical-forecast,2026-09-14T22:00,25.2,39,1003.7,2.47,58,0.0,-1.083,2.22,open
 824466,open-meteo-historical-forecast,2026-09-15T22:00,33.4,45,1002.6,3.1,201,0.0,-0.592,-3.043,open
 824467,open-meteo-historical-forecast,2026-09-16T22:00,32.6,53,1005.8,2.9,226,0.0,0.702,-2.814,open
@@ -13897,6 +13905,7 @@ game_pk,weather_source,weather_hour_utc,temp_c,humidity_pct,pressure_hpa,wind_sp
 824539,open-meteo-historical-forecast,2026-03-30T22:00,24.1,51,999.3,6.76,204,0.0,-0.941,-6.694,open
 824540,open-meteo-historical-forecast,2026-03-28T20:00,9.8,31,1016.8,0.78,140,0.0,-0.742,-0.241,open
 824541,open-meteo-historical-forecast,2026-03-26T20:00,27.8,48,990.5,8.5,208,0.0,-0.593,-8.479,open
+824548,open-meteo-historical-forecast,2026-09-17T23:00,20.4,98,1000.1,4.32,13,2.5,1.757,3.947,open
 824549,open-meteo-historical-forecast,2026-09-09T23:00,25.3,77,993.5,1.55,255,0.0,0.954,-1.221,open
 824550,open-meteo-historical-forecast,2026-09-10T23:00,21.9,65,994.6,2.59,62,0.0,-1.095,2.347,open
 824551,open-meteo-historical-forecast,2026-09-08T23:00,28.4,46,995.8,4.04,171,0.0,-2.906,-2.806,open
