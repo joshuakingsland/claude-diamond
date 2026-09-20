@@ -20228,3 +20228,15 @@ screened_at,game_pk,market,point,side,disagreement,gate,detail
 2026-09-20T18:13:34Z,824789,h2h,nan,away,0.0,below_edge_rule,0.0000 < 0.03
 2026-09-20T18:13:34Z,824789,spreads,1.5,away,-0.0,below_edge_rule,0.0000 < 0.03
 2026-09-20T18:13:34Z,824789,totals,7.5,away,-0.0,below_edge_rule,0.0000 < 0.03
+2026-09-20T21:32:00Z,824546,h2h,nan,away,0.0,below_edge_rule,0.0000 < 0.03
+2026-09-20T21:32:00Z,824546,spreads,1.5,away,-0.0,below_edge_rule,0.0000 < 0.03
+2026-09-20T21:32:00Z,824546,totals,8.0,away,0.0,below_edge_rule,0.0000 < 0.03
+2026-09-20T21:32:00Z,824789,h2h,nan,away,-0.0,below_edge_rule,0.0000 < 0.03
+2026-09-20T21:32:00Z,824789,spreads,1.5,away,-0.0,below_edge_rule,0.0000 < 0.03
+2026-09-20T21:32:00Z,824789,totals,7.5,away,0.0,below_edge_rule,0.0000 < 0.03
+2026-09-20T21:32:00Z,824787,h2h,nan,away,0.0,below_edge_rule,0.0000 < 0.03
+2026-09-20T21:32:00Z,824787,spreads,1.5,away,0.0,below_edge_rule,0.0000 < 0.03
+2026-09-20T21:32:00Z,824787,totals,7.5,away,0.0,below_edge_rule,0.0000 < 0.03
+2026-09-20T21:32:00Z,823169,h2h,nan,away,0.0,below_edge_rule,0.0000 < 0.03
+2026-09-20T21:32:00Z,823169,spreads,1.5,away,0.0,below_edge_rule,0.0000 < 0.03
+2026-09-20T21:32:00Z,823169,totals,8.0,away,0.0,below_edge_rule,0.0000 < 0.03
