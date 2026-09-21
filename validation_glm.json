@@ -1,5 +1,5 @@
 {
-  "games": 11964,
+  "games": 12058,
   "seasons": [
     2022,
     2023,
@@ -8,11 +8,11 @@
     2026
   ],
   "moneyline": {
-    "home_win_rate": 0.52967,
-    "log_loss": 0.67952,
+    "home_win_rate": 0.52961,
+    "log_loss": 0.67927,
     "log_loss_home_field_baseline": 0.69139,
-    "brier": 0.24329,
-    "calibration_error": 0.01019,
+    "brier": 0.24317,
+    "calibration_error": 0.01023,
     "calibration": [
       {
         "bin": "0.2-0.3",
@@ -23,31 +23,31 @@
       },
       {
         "bin": "0.3-0.4",
-        "n": 889,
-        "predicted": 0.367,
-        "realised": 0.4038,
-        "error": 0.0369
+        "n": 900,
+        "predicted": 0.3671,
+        "realised": 0.4022,
+        "error": 0.0351
       },
       {
         "bin": "0.4-0.5",
-        "n": 3865,
-        "predicted": 0.4569,
-        "realised": 0.4706,
-        "error": 0.0138
+        "n": 3896,
+        "predicted": 0.4568,
+        "realised": 0.47,
+        "error": 0.0132
       },
       {
         "bin": "0.5-0.6",
-        "n": 5064,
-        "predicted": 0.5462,
-        "realised": 0.5509,
-        "error": 0.0048
+        "n": 5104,
+        "predicted": 0.5461,
+        "realised": 0.5511,
+        "error": 0.005
       },
       {
         "bin": "0.6-0.7",
-        "n": 1860,
+        "n": 1872,
         "predicted": 0.6366,
-        "realised": 0.6392,
-        "error": 0.0026
+        "realised": 0.641,
+        "error": 0.0044
       },
       {
         "bin": "0.7-0.8",
@@ -59,15 +59,15 @@
     ],
     "log_loss_ci90_season_clustered": [
       0.67684,
-      0.68236
+      0.68173
     ]
   },
   "runline": {
     "point": -1.5,
-    "cover_rate": 0.35791,
-    "log_loss": 0.63943,
-    "brier": 0.22395,
-    "calibration_error": 0.00681,
+    "cover_rate": 0.35802,
+    "log_loss": 0.63939,
+    "brier": 0.22393,
+    "calibration_error": 0.00694,
     "calibration": [
       {
         "bin": "0.1-0.2",
@@ -78,31 +78,31 @@
       },
       {
         "bin": "0.2-0.3",
-        "n": 2812,
+        "n": 2840,
         "predicted": 0.2633,
-        "realised": 0.2742,
-        "error": 0.0109
+        "realised": 0.2736,
+        "error": 0.0103
       },
       {
         "bin": "0.3-0.4",
-        "n": 5713,
+        "n": 5762,
         "predicted": 0.3494,
-        "realised": 0.3534,
-        "error": 0.004
+        "realised": 0.3539,
+        "error": 0.0045
       },
       {
         "bin": "0.4-0.5",
-        "n": 2709,
+        "n": 2724,
         "predicted": 0.4385,
-        "realised": 0.4352,
-        "error": -0.0033
+        "realised": 0.4354,
+        "error": -0.0031
       },
       {
         "bin": "0.5-0.6",
-        "n": 425,
-        "predicted": 0.5309,
-        "realised": 0.5553,
-        "error": 0.0244
+        "n": 427,
+        "predicted": 0.5308,
+        "realised": 0.5574,
+        "error": 0.0266
       },
       {
         "bin": "0.6-0.7",
@@ -115,10 +115,10 @@
   },
   "total": {
     "point": 8.5,
-    "over_rate": 0.48863,
-    "log_loss": 0.68766,
-    "brier": 0.24723,
-    "calibration_error": 0.01862,
+    "over_rate": 0.48914,
+    "log_loss": 0.68763,
+    "brier": 0.24721,
+    "calibration_error": 0.01806,
     "calibration": [
       {
         "bin": "0.2-0.3",
@@ -136,24 +136,24 @@
       },
       {
         "bin": "0.4-0.5",
-        "n": 4819,
+        "n": 4870,
         "predicted": 0.4577,
-        "realised": 0.4545,
-        "error": -0.0032
+        "realised": 0.4548,
+        "error": -0.0029
       },
       {
         "bin": "0.5-0.6",
-        "n": 4943,
+        "n": 4980,
         "predicted": 0.5415,
-        "realised": 0.5161,
-        "error": -0.0255
+        "realised": 0.5167,
+        "error": -0.0248
       },
       {
         "bin": "0.6-0.7",
-        "n": 966,
-        "predicted": 0.6365,
-        "realised": 0.6014,
-        "error": -0.0351
+        "n": 972,
+        "predicted": 0.6366,
+        "realised": 0.6029,
+        "error": -0.0337
       },
       {
         "bin": "0.7-0.8",
@@ -166,16 +166,16 @@
   },
   "expected_runs": {
     "home": {
-      "mean_predicted": 4.4977,
-      "mean_actual": 4.4622,
-      "mae": 2.411,
-      "bias": 0.0354
+      "mean_predicted": 4.4969,
+      "mean_actual": 4.4602,
+      "mae": 2.41,
+      "bias": 0.0367
     },
     "away": {
-      "mean_predicted": 4.4184,
-      "mean_actual": 4.4303,
-      "mae": 2.5021,
-      "bias": -0.0119
+      "mean_predicted": 4.4196,
+      "mean_actual": 4.4299,
+      "mae": 2.4989,
+      "bias": -0.0103
     }
   },
   "market_comparison": {
@@ -224,23 +224,23 @@
   "forward_evidence": {
     "status": "available",
     "source": "clv_signals",
-    "repository_revision": "c10e876d2dec",
+    "repository_revision": "2d31aa4c49b7",
     "staking_policy_version": "paper-ev-mainline-riskbucket-v3",
-    "independent_games": 293,
+    "independent_games": 351,
     "accepted_fill_rate": 0.0,
-    "sharp_close_matches": 547,
-    "mean_clv_probability": -0.008691,
+    "sharp_close_matches": 670,
+    "mean_clv_probability": -0.008823,
     "clv_ci95_date_clustered": [
-      -0.010138,
-      -0.007112
+      -0.01048,
+      -0.007233
     ],
     "promotion_status": "research_only",
     "promotion_failures": [
-      "293 independent games < 500",
+      "351 independent games < 500",
       "accepted fill rate 0.0% < 95.0%",
       "positive sharp-close CLV is not established"
     ],
-    "signals": 577,
+    "signals": 692,
     "paper_ledger_settled_roi": 0.389311
   },
   "live_gate": {
@@ -248,7 +248,7 @@
     "reason": "The model beats the closing price on 0 of 3 markets with an interval excluding zero. Beating a closing price on log loss would in any case be a necessary condition for staking, not a sufficient one. Forward evidence is research_only; it requires independent games, accepted fills, and positive sharp-close CLV before any promotion review. This repository does not place wagers."
   },
   "model_kind": "glm",
-  "model_revision": "c10e876d2dec",
+  "model_revision": "2d31aa4c49b7",
   "feature_schema": "50fd9812bfa1",
-  "model_version": "diamond-v1-glm-c10e876d2dec-features-50fd9812bfa1"
+  "model_version": "diamond-v1-glm-2d31aa4c49b7-features-50fd9812bfa1"
 }
