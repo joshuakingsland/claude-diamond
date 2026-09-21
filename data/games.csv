@@ -14488,9 +14488,9 @@ game_pk,official_date,game_date_utc,season,game_type,double_header,game_number,s
 824546,2026-09-20,2026-09-20T18:10:00Z,2026,R,N,1,4,day,9,Final,145,Chicago White Sox,116,Detroit Tigers,8,1,1,9,7,663436,Davis Martin,675512,Troy Melton,4,Rate Field,Rain,65,"10 mph, L To R",9,0
 824789,2026-09-20,2026-09-20T23:20:00Z,2026,R,N,1,3,night,9,Final,110,Baltimore Orioles,158,Milwaukee Brewers,0,3,0,3,-3,687064,Brandon Young,694819,Jacob Misiorowski,2,Oriole Park at Camden Yards,Cloudy,81,"6 mph, Out To RF",9,1
 825028,2026-09-20,2026-09-20T20:10:00Z,2026,R,N,1,3,day,9,Final,109,Arizona Diamondbacks,147,New York Yankees,8,4,1,12,4,669203,Corbin Burnes,701542,Will Warren,15,Chase Field,Roof Closed,73,"0 mph, None",9,0
-823169,2026-09-21,2026-09-22T01:45:00Z,2026,R,N,1,1,night,9,Preview,137,San Francisco Giants,142,Minnesota Twins,,,,,,694918,Blade Tidwell,805673,Zebby Matthews,2395,Oracle Park,,,,,
-824221,2026-09-21,2026-09-21T22:40:00Z,2026,R,N,1,1,night,9,Preview,116,Detroit Tigers,120,Washington Nationals,,,,,,689981,River Ryan,687792,DJ Herz,2394,Comerica Park,Partly Cloudy,61,"12 mph, L To R",1,
-824787,2026-09-21,2026-09-21T22:35:00Z,2026,R,N,1,1,night,9,Preview,110,Baltimore Orioles,141,Toronto Blue Jays,,,,,,669358,Shane Baz,702056,Trey Yesavage,2,Oriole Park at Camden Yards,Partly Cloudy,69,"9 mph, In From CF",1,
+823169,2026-09-21,2026-09-22T01:45:00Z,2026,R,N,1,1,night,9,Preview,137,San Francisco Giants,142,Minnesota Twins,,,,,,694918,Blade Tidwell,805673,Zebby Matthews,2395,Oracle Park,Partly Cloudy,60,"15 mph, Out To CF",,
+824221,2026-09-21,2026-09-21T22:40:00Z,2026,R,N,1,1,night,9,Live,116,Detroit Tigers,120,Washington Nationals,,,,,,689981,River Ryan,687792,DJ Herz,2394,Comerica Park,Partly Cloudy,60,"11 mph, L To R",2,
+824787,2026-09-21,2026-09-21T22:35:00Z,2026,R,N,1,1,night,9,Live,110,Baltimore Orioles,141,Toronto Blue Jays,,,,,,669358,Shane Baz,702056,Trey Yesavage,2,Oriole Park at Camden Yards,Overcast,65,"3 mph, In From RF",1,
 822840,2026-09-22,2026-09-23T00:05:00Z,2026,R,N,1,1,night,9,Preview,140,Texas Rangers,121,New York Mets,,,,,,669022,MacKenzie Gore,640455,Sean Manaea,5325,Globe Life Field,,,,,
 823089,2026-09-22,2026-09-23T01:40:00Z,2026,R,N,1,1,night,9,Preview,136,Seattle Mariners,117,Houston Astros,,,,,,669302,Logan Gilbert,664299,Cristian Javier,680,T-Mobile Park,,,,,
 823166,2026-09-22,2026-09-23T01:45:00Z,2026,R,N,1,2,night,9,Preview,137,San Francisco Giants,142,Minnesota Twins,,,,,,683627,Anthony Molina,671737,Taj Bradley,2395,Oracle Park,,,,,
