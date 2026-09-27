@@ -1,13 +1,13 @@
 {
-  "repository_revision": "ffd862a63f27",
+  "repository_revision": "942c32f23efa",
   "staking_policy_version": "paper-ev-mainline-riskbucket-v3",
   "independent_games": 398,
   "accepted_fill_rate": 0.0,
-  "sharp_close_matches": 757,
-  "mean_clv_probability": -0.008754,
+  "sharp_close_matches": 759,
+  "mean_clv_probability": -0.008826,
   "clv_ci95_date_clustered": [
-    -0.010188,
-    -0.007302
+    -0.010252,
+    -0.007364
   ],
   "promotion_status": "research_only",
   "promotion_failures": [
