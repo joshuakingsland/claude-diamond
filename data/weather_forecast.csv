@@ -1,4 +1,2 @@
 game_pk,weather_source,weather_hour_utc,temp_c,humidity_pct,pressure_hpa,wind_speed_ms,wind_direction_deg,precip_mm,wind_out_to_center_ms,wind_left_to_right_ms,roof_category
-824948,open-meteo-forecast,2026-09-27T19:00,20.5,63,1010.4,3.11,228,0.0,3.108,0.109,open
 823490,open-meteo-forecast,2026-09-27T17:00,17.2,94,1003.3,6.87,48,0.0,-6.121,3.119,open
-823084,open-meteo-forecast,2026-09-27T19:00,15.3,67,1016.1,2.33,25,0.0,-2.129,0.948,retractable

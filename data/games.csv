@@ -14566,7 +14566,7 @@ game_pk,official_date,game_date_utc,season,game_type,double_header,game_number,s
 824949,2026-09-26,2026-09-27T01:40:00Z,2026,R,N,1,3,night,9,Final,133,Athletics,117,Houston Astros,2,13,0,15,-11,678022,Jack Perkins,669713,Hayden Wesneski,2529,Sutter Health Park,Partly Cloudy,79,"6 mph, Out To LF",9,1
 822679,2026-09-27,2026-09-27T17:05:00Z,2026,R,N,1,3,day,9,Final,120,Washington Nationals,121,New York Mets,6,4,1,10,2,687792,DJ Herz,640455,Sean Manaea,3309,Nationals Park,Rain,62,"14 mph, L To R",9,0
 822761,2026-09-27,2026-09-27T19:07:00Z,2026,R,N,1,3,day,9,Final,141,Toronto Blue Jays,113,Cincinnati Reds,5,1,1,6,4,453286,Max Scherzer,682227,Brandon Williamson,14,Rogers Centre,Sunny,76,"15 mph, In From CF",9,0
-823084,2026-09-27,2026-09-27T19:10:00Z,2026,R,N,1,4,day,9,Live,136,Seattle Mariners,108,Los Angeles Angels,,,,,,669302,Logan Gilbert,579328,Yusei Kikuchi,680,T-Mobile Park,Sunny,59,"11 mph, In From LF",9,
+823084,2026-09-27,2026-09-27T19:10:00Z,2026,R,N,1,4,day,9,Final,136,Seattle Mariners,108,Los Angeles Angels,7,3,1,10,4,669302,Logan Gilbert,579328,Yusei Kikuchi,680,T-Mobile Park,Sunny,59,"11 mph, In From LF",9,0
 823164,2026-09-27,2026-09-27T19:05:00Z,2026,R,N,1,3,day,9,Final,137,San Francisco Giants,119,Los Angeles Dodgers,1,5,0,6,-4,693313,Carson Seymour,676263,Jack Dreyer,2395,Oracle Park,Partly Cloudy,61,"8 mph, Out To CF",10,1
 823246,2026-09-27,2026-09-27T19:10:00Z,2026,R,N,1,3,day,9,Final,135,San Diego Padres,109,Arizona Diamondbacks,9,4,1,13,5,681190,Randy Vásquez,647336,Michael Soroka,2680,Petco Park,Cloudy,78,"7 mph, L To R",9,0
 823408,2026-09-27,2026-09-27T18:30:00Z,2026,R,N,1,3,day,9,Final,143,Philadelphia Phillies,139,Tampa Bay Rays,7,3,1,10,4,554430,Zack Wheeler,607259,Nick Martinez,2681,Citizens Bank Park,Overcast,65,"19 mph, In From RF",9,0
@@ -14578,4 +14578,4 @@ game_pk,official_date,game_date_utc,season,game_type,double_header,game_number,s
 824217,2026-09-27,2026-09-27T19:10:00Z,2026,R,N,1,3,day,9,Final,116,Detroit Tigers,134,Pittsburgh Pirates,2,4,0,6,-2,689981,River Ryan,683003,Jared Jones,2394,Comerica Park,Sunny,76,"8 mph, Out To RF",9,1
 824542,2026-09-27,2026-09-27T19:10:00Z,2026,R,N,1,3,day,9,Final,145,Chicago White Sox,115,Colorado Rockies,4,2,1,6,2,641743,Anthony Kay,607536,Kyle Freeland,4,Rate Field,Partly Cloudy,70,"6 mph, L To R",9,0
 824705,2026-09-27,2026-09-27T19:05:00Z,2026,R,N,1,3,day,9,Final,111,Boston Red Sox,112,Chicago Cubs,2,6,0,8,-4,656557,Tanner Houck,684007,Shota Imanaga,12,Tropicana Field,Dome,72,"0 mph, None",9,1
-824948,2026-09-27,2026-09-27T19:05:00Z,2026,R,N,1,4,day,9,Live,133,Athletics,117,Houston Astros,,,,,,686751,Seth Johnson,663567,Peter Lambert,2529,Sutter Health Park,Partly Cloudy,66,"6 mph, Out To CF",9,
+824948,2026-09-27,2026-09-27T19:05:00Z,2026,R,N,1,4,day,9,Final,133,Athletics,117,Houston Astros,0,9,0,9,-9,686751,Seth Johnson,663567,Peter Lambert,2529,Sutter Health Park,Partly Cloudy,66,"6 mph, Out To CF",9,1
