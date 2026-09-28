@@ -1,16 +1,2 @@
 game_pk,weather_source,weather_hour_utc,temp_c,humidity_pct,pressure_hpa,wind_speed_ms,wind_direction_deg,precip_mm,wind_out_to_center_ms,wind_left_to_right_ms,roof_category
-824705,open-meteo-forecast,2026-09-27T19:00,28.8,42,1011.2,1.81,96,0.0,0.0,0.0,dome
-822761,open-meteo-forecast,2026-09-27T19:00,24.4,35,1005.5,5.47,18,0.0,-4.588,-2.979,retractable
-824217,open-meteo-forecast,2026-09-27T19:00,23.7,35,995.8,4.61,4,0.0,3.822,2.578,open
-823164,open-meteo-forecast,2026-09-27T19:00,18.2,70,1012.0,6.99,283,0.0,6.648,2.16,open
-824948,open-meteo-forecast,2026-09-27T19:00,23.6,40,1010.0,2.78,218,0.0,2.753,-0.387,open
-823246,open-meteo-forecast,2026-09-27T19:00,27.5,64,1011.5,2.44,235,0.0,1.4,1.999,open
-823408,open-meteo-forecast,2026-09-27T19:00,17.1,89,1000.1,7.38,28,0.0,-6.978,-2.403,open
-823731,open-meteo-forecast,2026-09-27T19:00,19.8,61,997.2,2.8,55,0.0,-0.772,2.692,retractable
-822679,open-meteo-forecast,2026-09-27T17:00,16.4,84,1005.2,5.23,315,1.1,-1.529,5.001,open
-823650,open-meteo-forecast,2026-09-27T19:00,18.0,91,989.4,1.17,110,0.0,-1.106,0.381,open
-823490,open-meteo-forecast,2026-09-27T17:00,17.7,90,1002.7,5.57,69,0.0,-5.539,0.582,open
-824542,open-meteo-forecast,2026-09-27T19:00,17.8,74,998.2,2.86,36,0.0,0.05,2.86,open
-823814,open-meteo-forecast,2026-09-27T19:00,28.2,73,1011.9,3.5,90,0.0,-2.758,2.155,retractable
-823084,open-meteo-forecast,2026-09-27T19:00,15.0,72,1016.0,3.23,16,0.0,-2.709,1.759,retractable
-824055,open-meteo-forecast,2026-09-27T19:00,24.5,71,985.8,3.14,81,0.0,-2.572,-1.801,open
+823490,open-meteo-forecast,2026-09-27T17:00,17.2,94,1003.3,6.87,48,0.0,-6.121,3.119,open
