@@ -1,5 +1,5 @@
 {
-  "games": 12058,
+  "games": 12148,
   "seasons": [
     2022,
     2023,
@@ -8,11 +8,11 @@
     2026
   ],
   "moneyline": {
-    "home_win_rate": 0.52961,
-    "log_loss": 0.67927,
-    "log_loss_home_field_baseline": 0.69139,
-    "brier": 0.24317,
-    "calibration_error": 0.01023,
+    "home_win_rate": 0.52939,
+    "log_loss": 0.67923,
+    "log_loss_home_field_baseline": 0.69142,
+    "brier": 0.24315,
+    "calibration_error": 0.01,
     "calibration": [
       {
         "bin": "0.2-0.3",
@@ -23,31 +23,31 @@
       },
       {
         "bin": "0.3-0.4",
-        "n": 900,
+        "n": 903,
         "predicted": 0.3671,
-        "realised": 0.4022,
-        "error": 0.0351
+        "realised": 0.4009,
+        "error": 0.0338
       },
       {
         "bin": "0.4-0.5",
-        "n": 3896,
-        "predicted": 0.4568,
-        "realised": 0.47,
-        "error": 0.0132
+        "n": 3931,
+        "predicted": 0.4569,
+        "realised": 0.4699,
+        "error": 0.013
       },
       {
         "bin": "0.5-0.6",
-        "n": 5104,
-        "predicted": 0.5461,
+        "n": 5146,
+        "predicted": 0.5462,
         "realised": 0.5511,
-        "error": 0.005
+        "error": 0.0049
       },
       {
         "bin": "0.6-0.7",
-        "n": 1872,
+        "n": 1882,
         "predicted": 0.6366,
-        "realised": 0.641,
-        "error": 0.0044
+        "realised": 0.6408,
+        "error": 0.0043
       },
       {
         "bin": "0.7-0.8",
@@ -59,50 +59,50 @@
     ],
     "log_loss_ci90_season_clustered": [
       0.67684,
-      0.68173
+      0.68163
     ]
   },
   "runline": {
     "point": -1.5,
-    "cover_rate": 0.35802,
-    "log_loss": 0.63939,
-    "brier": 0.22393,
-    "calibration_error": 0.00694,
+    "cover_rate": 0.35784,
+    "log_loss": 0.63931,
+    "brier": 0.2239,
+    "calibration_error": 0.00709,
     "calibration": [
       {
         "bin": "0.1-0.2",
-        "n": 272,
-        "predicted": 0.1759,
-        "realised": 0.1949,
-        "error": 0.0189
+        "n": 274,
+        "predicted": 0.176,
+        "realised": 0.1934,
+        "error": 0.0174
       },
       {
         "bin": "0.2-0.3",
-        "n": 2840,
+        "n": 2853,
         "predicted": 0.2633,
-        "realised": 0.2736,
-        "error": 0.0103
+        "realised": 0.2737,
+        "error": 0.0104
       },
       {
         "bin": "0.3-0.4",
-        "n": 5762,
-        "predicted": 0.3494,
-        "realised": 0.3539,
-        "error": 0.0045
+        "n": 5815,
+        "predicted": 0.3493,
+        "realised": 0.3537,
+        "error": 0.0044
       },
       {
         "bin": "0.4-0.5",
-        "n": 2724,
+        "n": 2745,
         "predicted": 0.4385,
-        "realised": 0.4354,
-        "error": -0.0031
+        "realised": 0.4346,
+        "error": -0.0039
       },
       {
         "bin": "0.5-0.6",
-        "n": 427,
-        "predicted": 0.5308,
-        "realised": 0.5574,
-        "error": 0.0266
+        "n": 428,
+        "predicted": 0.5307,
+        "realised": 0.5584,
+        "error": 0.0277
       },
       {
         "bin": "0.6-0.7",
@@ -115,10 +115,10 @@
   },
   "total": {
     "point": 8.5,
-    "over_rate": 0.48914,
-    "log_loss": 0.68763,
-    "brier": 0.24721,
-    "calibration_error": 0.01806,
+    "over_rate": 0.48905,
+    "log_loss": 0.68764,
+    "brier": 0.24722,
+    "calibration_error": 0.01821,
     "calibration": [
       {
         "bin": "0.2-0.3",
@@ -129,28 +129,28 @@
       },
       {
         "bin": "0.3-0.4",
-        "n": 997,
+        "n": 1010,
         "predicted": 0.3651,
-        "realised": 0.3962,
-        "error": 0.0311
+        "realised": 0.398,
+        "error": 0.0329
       },
       {
         "bin": "0.4-0.5",
-        "n": 4870,
+        "n": 4926,
         "predicted": 0.4577,
-        "realised": 0.4548,
-        "error": -0.0029
+        "realised": 0.4541,
+        "error": -0.0036
       },
       {
         "bin": "0.5-0.6",
-        "n": 4980,
-        "predicted": 0.5415,
-        "realised": 0.5167,
-        "error": -0.0248
+        "n": 4996,
+        "predicted": 0.5414,
+        "realised": 0.5172,
+        "error": -0.0242
       },
       {
         "bin": "0.6-0.7",
-        "n": 972,
+        "n": 977,
         "predicted": 0.6366,
         "realised": 0.6029,
         "error": -0.0337
@@ -166,16 +166,16 @@
   },
   "expected_runs": {
     "home": {
-      "mean_predicted": 4.4969,
-      "mean_actual": 4.4602,
-      "mae": 2.41,
-      "bias": 0.0367
+      "mean_predicted": 4.4958,
+      "mean_actual": 4.4567,
+      "mae": 2.4103,
+      "bias": 0.0391
     },
     "away": {
-      "mean_predicted": 4.4196,
-      "mean_actual": 4.4299,
-      "mae": 2.4989,
-      "bias": -0.0103
+      "mean_predicted": 4.4184,
+      "mean_actual": 4.4316,
+      "mae": 2.4977,
+      "bias": -0.0132
     }
   },
   "market_comparison": {
@@ -224,23 +224,23 @@
   "forward_evidence": {
     "status": "available",
     "source": "clv_signals",
-    "repository_revision": "2d31aa4c49b7",
+    "repository_revision": "cad414bccd25",
     "staking_policy_version": "paper-ev-mainline-riskbucket-v3",
-    "independent_games": 351,
+    "independent_games": 398,
     "accepted_fill_rate": 0.0,
-    "sharp_close_matches": 670,
-    "mean_clv_probability": -0.008823,
+    "sharp_close_matches": 762,
+    "mean_clv_probability": -0.008927,
     "clv_ci95_date_clustered": [
-      -0.01048,
-      -0.007233
+      -0.010398,
+      -0.007451
     ],
     "promotion_status": "research_only",
     "promotion_failures": [
-      "351 independent games < 500",
+      "398 independent games < 500",
       "accepted fill rate 0.0% < 95.0%",
       "positive sharp-close CLV is not established"
     ],
-    "signals": 692,
+    "signals": 785,
     "paper_ledger_settled_roi": 0.389311
   },
   "live_gate": {
@@ -248,7 +248,7 @@
     "reason": "The model beats the closing price on 0 of 3 markets with an interval excluding zero. Beating a closing price on log loss would in any case be a necessary condition for staking, not a sufficient one. Forward evidence is research_only; it requires independent games, accepted fills, and positive sharp-close CLV before any promotion review. This repository does not place wagers."
   },
   "model_kind": "glm",
-  "model_revision": "2d31aa4c49b7",
+  "model_revision": "cad414bccd25",
   "feature_schema": "50fd9812bfa1",
-  "model_version": "diamond-v1-glm-2d31aa4c49b7-features-50fd9812bfa1"
+  "model_version": "diamond-v1-glm-cad414bccd25-features-50fd9812bfa1"
 }

@@ -1,6 +1,6 @@
 {
   "version": "market-logit-offset-v1",
-  "repository_revision": "2d31aa4c49b7",
+  "repository_revision": "cad414bccd25",
   "fitted_through": "2025-09-28",
   "promotion_status": "research_only",
   "outcome": {
@@ -79,9 +79,9 @@
       "rows": 1483,
       "leader_rows": 1429,
       "research_model_weight": 0.029515,
-      "research_leader_weight": 0.00485,
+      "research_leader_weight": 0.004851,
       "model_weight": 0.029515,
-      "leader_weight": 0.00485,
+      "leader_weight": 0.004851,
       "weight": 0.029515,
       "rmse_entry_logit": 0.077686,
       "rmse_offset_logit": 0.07745,
