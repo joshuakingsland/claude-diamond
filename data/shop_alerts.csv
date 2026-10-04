@@ -312,3 +312,4 @@ alerted_at,fetched_at,event_id,commence_time,home_team,away_team,market,point,si
 2026-09-29T23:29:46Z,2026-09-29T23:29:45Z,4cb76cceb16eb603c683038d132f4642,2026-09-30T00:10:00Z,New York Yankees,Boston Red Sox,spreads,-1.5,away,Boston Red Sox +1.5,betrivers,-182,0.531,0.650704,0.645390,11,40.2,0.005
 2026-10-03T22:31:50Z,2026-10-03T22:31:49Z,347a2e725dd11a54a1d964eae3d04dd2,2026-10-04T00:30:00Z,Milwaukee Brewers,San Diego Padres,h2h,,away,San Diego Padres ML,betrivers,195,0.949,0.348471,0.338983,11,118.2,0.005
 2026-10-03T23:53:15Z,2026-10-03T23:53:14Z,347a2e725dd11a54a1d964eae3d04dd2,2026-10-04T00:30:00Z,Milwaukee Brewers,San Diego Padres,spreads,-1.5,home,Milwaukee Brewers -1.5,betrivers,116,0.579,0.468750,0.462963,11,36.8,0.005
+2026-10-04T19:16:29Z,2026-10-04T19:16:28Z,6da40e91a31110e51e84ba5671996deb,2026-10-04T20:00:00Z,Milwaukee Brewers,San Diego Padres,totals,7,home,Over 7,betrivers,-103,0.659,0.513980,0.507389,10,43.5,0.005
