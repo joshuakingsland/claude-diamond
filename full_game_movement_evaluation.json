@@ -1,6 +1,6 @@
 {
   "study": "MLB 24-hour entry to 20-minute close movement",
-  "repository_revision": "1edac93a1eaa",
+  "repository_revision": "0b7879b93348",
   "protocol": {
     "version": "full-game-entry-close-v2",
     "entry_snapshot": "24 hours before scheduled first pitch",
@@ -355,7 +355,7 @@
               "direction_accuracy_nontrivial_moves": 0.571219,
               "movement_correlation": 0.197702,
               "mean_actual_move_logit": 0.00689219,
-              "mean_predicted_move_logit": 0.01276378
+              "mean_predicted_move_logit": 0.01276377
             }
           },
           {
@@ -734,8 +734,8 @@
         "implied_clv_probability_points": 0.4418,
         "rmse_no_move_logit": 0.09796692,
         "rmse_candidate_logit": 0.09557025,
-        "mse_improvement": 0.0004638461,
-        "relative_mse_reduction": 0.0483298,
+        "mse_improvement": 0.000463846,
+        "relative_mse_reduction": 0.04832979,
         "improvement_ci95_date_clustered": [
           0.00025486,
           0.00067391
@@ -945,7 +945,7 @@
               "implied_clv_probability_points": 0.4099,
               "rmse_no_move_logit": 0.0864133,
               "rmse_candidate_logit": 0.08414167,
-              "mse_improvement": 0.0003874378,
+              "mse_improvement": 0.0003874379,
               "relative_mse_reduction": 0.05188489,
               "improvement_ci95_date_clustered": [
                 0.00012596,
@@ -1227,7 +1227,7 @@
               "implied_clv_probability_points": 0.3956,
               "rmse_no_move_logit": 0.0864133,
               "rmse_candidate_logit": 0.08422193,
-              "mse_improvement": 0.0003739243,
+              "mse_improvement": 0.0003739244,
               "relative_mse_reduction": 0.05007519,
               "improvement_ci95_date_clustered": [
                 0.0001068,
@@ -1263,7 +1263,7 @@
               "rmse_no_move_logit": 0.0864133,
               "rmse_candidate_logit": 0.08422141,
               "mse_improvement": 0.0003740121,
-              "relative_mse_reduction": 0.05008694,
+              "relative_mse_reduction": 0.05008695,
               "improvement_ci95_date_clustered": [
                 0.00010729,
                 0.00061823
@@ -1331,7 +1331,7 @@
               "implied_clv_logit": 0.01521757,
               "implied_clv_probability_points": 0.3804,
               "rmse_no_move_logit": 0.0864133,
-              "rmse_candidate_logit": 0.08421252,
+              "rmse_candidate_logit": 0.08421251,
               "mse_improvement": 0.0003755103,
               "relative_mse_reduction": 0.05028757,
               "improvement_ci95_date_clustered": [
@@ -1370,8 +1370,8 @@
         "implied_clv_probability_points": 0.5498,
         "rmse_no_move_logit": 0.0930295,
         "rmse_candidate_logit": 0.08997104,
-        "mse_improvement": 0.0005596993,
-        "relative_mse_reduction": 0.06467157,
+        "mse_improvement": 0.0005596991,
+        "relative_mse_reduction": 0.06467155,
         "improvement_ci95_date_clustered": [
           0.00024086,
           0.00085241
@@ -1379,7 +1379,7 @@
         "direction_accuracy_nontrivial_moves": 0.601449,
         "movement_correlation": 0.268938,
         "mean_actual_move_logit": 0.01991007,
-        "mean_predicted_move_logit": -0.00091179
+        "mean_predicted_move_logit": -0.0009118
       },
       "confirmation_signal": true,
       "status": "confirmed research signal; paper CLV only"
