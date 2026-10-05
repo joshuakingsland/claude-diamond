@@ -65,9 +65,9 @@
   "runline": {
     "point": -1.5,
     "cover_rate": 0.35784,
-    "log_loss": 0.63931,
+    "log_loss": 0.63932,
     "brier": 0.2239,
-    "calibration_error": 0.00709,
+    "calibration_error": 0.00711,
     "calibration": [
       {
         "bin": "0.1-0.2",
@@ -78,14 +78,14 @@
       },
       {
         "bin": "0.2-0.3",
-        "n": 2853,
+        "n": 2852,
         "predicted": 0.2633,
-        "realised": 0.2737,
-        "error": 0.0104
+        "realised": 0.2738,
+        "error": 0.0105
       },
       {
         "bin": "0.3-0.4",
-        "n": 5815,
+        "n": 5816,
         "predicted": 0.3493,
         "realised": 0.3537,
         "error": 0.0044
@@ -116,9 +116,9 @@
   "total": {
     "point": 8.5,
     "over_rate": 0.48905,
-    "log_loss": 0.68764,
-    "brier": 0.24722,
-    "calibration_error": 0.01821,
+    "log_loss": 0.68767,
+    "brier": 0.24723,
+    "calibration_error": 0.01834,
     "calibration": [
       {
         "bin": "0.2-0.3",
@@ -129,24 +129,24 @@
       },
       {
         "bin": "0.3-0.4",
-        "n": 1010,
+        "n": 1011,
         "predicted": 0.3651,
-        "realised": 0.398,
-        "error": 0.0329
+        "realised": 0.3986,
+        "error": 0.0335
       },
       {
         "bin": "0.4-0.5",
-        "n": 4926,
+        "n": 4922,
         "predicted": 0.4577,
         "realised": 0.4541,
-        "error": -0.0036
+        "error": -0.0037
       },
       {
         "bin": "0.5-0.6",
-        "n": 4996,
+        "n": 4999,
         "predicted": 0.5414,
-        "realised": 0.5172,
-        "error": -0.0242
+        "realised": 0.5171,
+        "error": -0.0243
       },
       {
         "bin": "0.6-0.7",
@@ -166,16 +166,16 @@
   },
   "expected_runs": {
     "home": {
-      "mean_predicted": 4.4958,
+      "mean_predicted": 4.4959,
       "mean_actual": 4.4567,
       "mae": 2.4103,
-      "bias": 0.0391
+      "bias": 0.0392
     },
     "away": {
-      "mean_predicted": 4.4184,
+      "mean_predicted": 4.4185,
       "mean_actual": 4.4316,
-      "mae": 2.4977,
-      "bias": -0.0132
+      "mae": 2.4978,
+      "bias": -0.0131
     }
   },
   "market_comparison": {
@@ -224,7 +224,7 @@
   "forward_evidence": {
     "status": "available",
     "source": "clv_signals",
-    "repository_revision": "cad414bccd25",
+    "repository_revision": "878a4c279556",
     "staking_policy_version": "paper-ev-mainline-riskbucket-v3",
     "independent_games": 398,
     "accepted_fill_rate": 0.0,
@@ -248,7 +248,7 @@
     "reason": "The model beats the closing price on 0 of 3 markets with an interval excluding zero. Beating a closing price on log loss would in any case be a necessary condition for staking, not a sufficient one. Forward evidence is research_only; it requires independent games, accepted fills, and positive sharp-close CLV before any promotion review. This repository does not place wagers."
   },
   "model_kind": "glm",
-  "model_revision": "cad414bccd25",
+  "model_revision": "878a4c279556",
   "feature_schema": "50fd9812bfa1",
-  "model_version": "diamond-v1-glm-cad414bccd25-features-50fd9812bfa1"
+  "model_version": "diamond-v1-glm-878a4c279556-features-50fd9812bfa1"
 }
