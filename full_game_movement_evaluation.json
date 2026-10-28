@@ -1,6 +1,6 @@
 {
   "study": "MLB 24-hour entry to 20-minute close movement",
-  "repository_revision": "3e968a987155",
+  "repository_revision": "2af6518b6c58",
   "protocol": {
     "version": "full-game-entry-close-v2",
     "entry_snapshot": "24 hours before scheduled first pitch",
