@@ -318,3 +318,4 @@ alerted_at,fetched_at,event_id,commence_time,home_team,away_team,market,point,si
 2026-10-10T20:20:55Z,2026-10-10T20:20:54Z,62bf363a77455f7a8b48838e7792f60b,2026-10-11T00:01:00Z,Cleveland Guardians,Chicago White Sox,totals,7.5,away,Under 7.5,betrivers,-109,0.547,0.527001,0.521531,5,220.1,0.005
 2026-10-11T23:24:52Z,2026-10-11T23:24:51Z,c43e98d4effc9181f21e21225fcbd47a,2026-10-12T00:00:00Z,Milwaukee Brewers,Los Angeles Dodgers,spreads,1.5,away,Los Angeles Dodgers -1.5,lowvig,185,0.627,0.357143,0.350877,10,35.1,0.005
 2026-10-16T23:31:46Z,2026-10-16T23:31:45Z,b9d2e07cf437b5643307aba274c45a74,2026-10-17T00:30:00Z,Cleveland Guardians,Tampa Bay Rays,totals,6.5,home,Over 6.5,lowvig,107,1.146,0.494550,0.483092,11,58.2,0.005
+2026-10-27T22:38:22Z,2026-10-27T22:38:21Z,e03ea0f98bdd5fa277a34fbfe1a47efa,2026-10-28T00:00:00Z,Tampa Bay Rays,Milwaukee Brewers,totals,7,home,Over 7,betrivers,-104,1.303,0.522831,0.509804,8,81.7,0.005
