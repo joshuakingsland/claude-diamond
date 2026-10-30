@@ -70,21 +70,31 @@ class NovigClient:
         return cls(os.environ["NOVIG_KEY_ID"], private_key, env=env, **kwargs)
 
     # ------------------------------------------------------------ transport
-    def call(self, method, path, params=None, body=None):
-        query = encode_query(params)
-        data = (b"" if body is None
-                else json.dumps(body, separators=(",", ":")).encode("utf-8"))
+    def signed_headers(self, method, path, query="", data=b""):
         ts = str(int(time.time() * 1000))
-        headers = {
+        return {
             "Novig-Key-Id": self.key_id,
             "Novig-Timestamp": ts,
             "Novig-Signature": sign(
                 self.private_key,
                 string_to_sign(ts, method, path, query, data)),
-            # Without a content type the server hashes zero bytes, so a
-            # body would never verify.
-            "Content-Type": "application/json",
         }
+
+    def connect_ws(self, **kwargs):
+        """An open, signed websocket on ``/v3/ws`` (needs ``websockets``)."""
+        from websockets.sync.client import connect
+        url = "wss://" + self.host.split("://", 1)[1] + "/v3/ws"
+        return connect(url, additional_headers=self.signed_headers(
+            "GET", "/v3/ws"), max_size=None, **kwargs)
+
+    def call(self, method, path, params=None, body=None):
+        query = encode_query(params)
+        data = (b"" if body is None
+                else json.dumps(body, separators=(",", ":")).encode("utf-8"))
+        headers = self.signed_headers(method, path, query, data)
+        # Without a content type the server hashes zero bytes, so a body
+        # would never verify.
+        headers["Content-Type"] = "application/json"
         url = self.host + path + (f"?{query}" if query else "")
         response = self.session.request(method.upper(), url, data=data,
                                         headers=headers, timeout=self.timeout)

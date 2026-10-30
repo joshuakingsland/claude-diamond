@@ -24,6 +24,37 @@ imports from here, and the MLB code still never places a wager.
 - **Capital is locked until grading**, so turnover is limited by how fast
   Novig settles, not how fast you trade.
 
+## Step one: measure the window
+
+Before trading on anything, record what live tennis books do when a match
+ends. Novig's lifecycle stream sends `END` ("the event ended") and `CLOSE`
+("stopped accepting orders") as separate transitions. If there is a
+reliable gap between them with orders still resting, `END` is a trigger
+from Novig's own data and no outside results feed is needed.
+
+```bash
+# Read-only; a trading::read key is enough. Leave it running for days.
+python -m novig.recorder --env live record
+
+# Per market: jump time, END->CLOSE gap, band liquidity, and whether the
+# side that jumped was graded the winner.
+python -m novig.recorder --env live analyze 'novig_logs/recording-*.jsonl'
+```
+
+The numbers that decide whether this is worth doing:
+
+| Summary field | Want |
+| --- | --- |
+| `jumped_side_lost` | 0. One loss erases ~200 wins |
+| `reverted_below_band` | 0, or rare and explainable |
+| `median_end_to_close_s` | Long enough to send an order (> ~0.5 s) |
+| `markets_with_band_liquidity_after_end` | Most markets, at a size that matters |
+
+Trading the price jump itself (0.992 -> 0.997) without `END` is a weaker
+signal: a 0.997 is also what serving at 40-0 on match point looks like,
+and the orders still resting after the jump are the ones fast traders chose
+not to take. The recording shows how often a jump was not the end.
+
 ## Setup (paper first)
 
 1. Create a paper account and a management key: paper.novig.com -> Profile
