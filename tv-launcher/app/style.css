@@ -1,0 +1,59 @@
+:root {
+  --bg: #0b0d12;
+  --fg: #f2f4f8;
+  --muted: #8a93a6;
+  --focus: #ffffff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; height: 100%;
+  background: radial-gradient(ellipse at top, #1a1f2b 0%, var(--bg) 60%);
+  color: var(--fg);
+  font-family: "LG Smart UI", "Helvetica Neue", Arial, sans-serif;
+  overflow: hidden;
+  cursor: none;
+}
+header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 5vh 6vw 0;
+}
+#greeting { font-size: 2.4vw; font-weight: 300; color: var(--muted); }
+#clock { font-size: 3.4vw; font-weight: 200; letter-spacing: 0.02em; }
+#grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2.4vw;
+  padding: 9vh 6vw 0;
+}
+.tile {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border-radius: 1.2vw;
+  background: var(--tile);
+  display: flex; align-items: flex-end;
+  padding: 1.4vw 1.6vw;
+  font-size: 1.9vw; font-weight: 600;
+  box-shadow: 0 0.6vw 1.6vw rgba(0,0,0,0.45);
+  transition: transform 120ms ease-out, box-shadow 120ms ease-out, outline-color 120ms;
+  outline: 0.35vw solid transparent;
+  outline-offset: 0.35vw;
+  background-image: linear-gradient(160deg, rgba(255,255,255,0.18), rgba(0,0,0,0.25));
+}
+.tile.focused {
+  transform: scale(1.08);
+  outline-color: var(--focus);
+  box-shadow: 0 1.4vw 3vw rgba(0,0,0,0.6);
+  z-index: 1;
+}
+.tile.missing { opacity: 0.35; }
+.tile.missing::after {
+  content: "Not installed";
+  position: absolute; top: 1.2vw; left: 1.6vw;
+  font-size: 1vw; font-weight: 500;
+}
+.tile.launching { animation: pulse 600ms ease-in-out infinite alternate; }
+@keyframes pulse { to { filter: brightness(1.35); } }
+footer {
+  position: fixed; bottom: 5vh; left: 6vw; right: 6vw;
+  font-size: 1.2vw; color: var(--muted); min-height: 1.5em;
+}

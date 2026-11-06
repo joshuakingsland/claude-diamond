@@ -1,0 +1,6 @@
+#!/bin/sh
+# Homebrew Channel boot script: open the launcher once the TV has started.
+(
+  sleep 20
+  luna-send -n 1 luna://com.webos.applicationManager/launch '{"id":"com.local.tvlauncher"}'
+) >/dev/null 2>&1 &
