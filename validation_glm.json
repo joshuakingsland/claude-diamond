@@ -224,7 +224,7 @@
   "forward_evidence": {
     "status": "available",
     "source": "clv_signals",
-    "repository_revision": "f1fe9c3c1e8e",
+    "repository_revision": "2e28dc9bdffc",
     "staking_policy_version": "paper-ev-mainline-riskbucket-v3",
     "independent_games": 398,
     "accepted_fill_rate": 0.0,
@@ -248,7 +248,7 @@
     "reason": "The model beats the closing price on 0 of 3 markets with an interval excluding zero. Beating a closing price on log loss would in any case be a necessary condition for staking, not a sufficient one. Forward evidence is research_only; it requires independent games, accepted fills, and positive sharp-close CLV before any promotion review. This repository does not place wagers."
   },
   "model_kind": "glm",
-  "model_revision": "f1fe9c3c1e8e",
+  "model_revision": "2e28dc9bdffc",
   "feature_schema": "50fd9812bfa1",
-  "model_version": "diamond-v1-glm-f1fe9c3c1e8e-features-50fd9812bfa1"
+  "model_version": "diamond-v1-glm-2e28dc9bdffc-features-50fd9812bfa1"
 }
